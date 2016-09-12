@@ -1,0 +1,5 @@
+Falta:
+
+- Contador de linha
+- Passar valores à union
+- Tratar erro para comentário inacabado
