@@ -41,7 +41,8 @@ typedef enum Token {
 	TK_WORD_RETURN		= 32,
 	TK_WORD_VOID		= 33,
 	TK_CHAR 			= 34,
-	TK_LIT_STRING		= 35
+	TK_LIT_STRING		= 35,
+	TK_INTEGER			= 36
     
 } token;
 
@@ -55,7 +56,7 @@ typedef union Types_var {
 
 extern types_var yyvar;
 extern int yylex(void);
-extern void setOutput(FILE *file);
+extern void setInput(FILE *file);
 
 extern types_var seminfo;
 

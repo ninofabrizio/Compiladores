@@ -14,7 +14,7 @@ int main( int argc, char *argv[]) {
     if (argc > 0) {
 
         file = fopen(argv[0], "r");
-        setOutput(file);
+        setInput(file);
     }
     
     else

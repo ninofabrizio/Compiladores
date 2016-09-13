@@ -4,10 +4,9 @@
 
 %}
 
-E				[Ee]
-OtherLetter		[A-DF-Za-df-z]
+Exp				[Ee]
 Digit			[0-9]
-Letter			{E} | {OtherLetter}
+Letter			[A-Za-z]
 
 StringLit			([^\"\n]|\\'|\\n|\\t|\\\\|\\\"|\\0)
 Character		    ([^'\n]|\\'|\\n|\\t|\\\\|\\\"|\\0)
@@ -16,7 +15,8 @@ Character		    ([^'\n]|\\'|\\n|\\t|\\\\|\\\"|\\0)
 
 %%
 
-[ \t\n]+							{ /* delete */ }
+[ \t\n]+							{ ; }
+
 
 "char"					 			{ return TK_WORD_CHAR; }
 "float"								{ return TK_WORD_FLOAT; }
@@ -28,21 +28,20 @@ Character		    ([^'\n]|\\'|\\n|\\t|\\\\|\\\"|\\0)
 "return"							{ return TK_WORD_RETURN; }
 "void"								{ return TK_WORD_VOID; }
 
+
+({Letter}|_)({Letter}|{Digit}|_)*	        { return TK_ID; }
+
+
+{Digit}+[.]?						        { return TK_INTEGER;}  // Criar o TK_NUMBER. subrotina p/o tipo de variável.
+({Digit}*[.]?{Digit}+)({Exp}[+-]?{Digit})?  { return TK_DOUBLE;}  //  Criar TK_DOUBLE. subrotina p/o tipo de variável.
 {Digit}+{Letter}+ 					        { return NOT_TOKEN; }
-({Letter}|_)({Letter}|{Digit}|_)*	        { return TK_ID; }    
-{Digit}+[.]?						        { check_varType(); return TK_INTEGER;}  // Criar o TK_NUMBER. subrotina p/o tipo de variável.
-({Digit}*[.]{Digit}+)({E}[+-]?{IntLit})?    { check_varType(); return TK_DOUBLE;}  //  Criar TK_DOUBLE. subrotina p/o tipo de variável.
 
-// Trabalhar números hexa-decimais com caracter de escape '\'
-
-
-// \n ... contador de linhas
 
 '\\'								{ return NOT_TOKEN; } // específico demais?
 '{Character}?'						{ return TK_CHAR; }
 '{Character}+'						{ return NOT_TOKEN; }
 \"\\\"								{ return NOT_TOKEN; } // específico demais?
-\"{LiteralString}*\"				{ return TK_LIT_STRING; }
+\"{StringLit}*\"					{ return TK_LIT_STRING; }
 
 
 "/*"								{ printf("hi\n"); BEGIN (Comment); }
@@ -81,7 +80,7 @@ Character		    ([^'\n]|\\'|\\n|\\t|\\\\|\\\"|\\0)
 %%
 
 // Função para guardar arquivo de leitura
-void setOutput (FILE *file) {
+void setInput (FILE *file) {
 
 	yyin = file;
 }
