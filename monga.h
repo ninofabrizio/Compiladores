@@ -7,7 +7,7 @@
 typedef enum Token {
  
  	NOT_TOKEN			= 666,
-    TK_DECIMAL 			= 1,
+    TK_DOUBLE 			= 1,
     TK_ID				= 2,
     TK_PLUS				= 3,
     TK_MULT				= 4,
@@ -45,7 +45,6 @@ typedef enum Token {
     
 } token;
 
-
 typedef union Types_var {
     
     int i;
@@ -54,6 +53,7 @@ typedef union Types_var {
     
 } types_var;
 
+extern types_var yyvar;
 extern int yylex(void);
 extern void setOutput(FILE *file);
 
