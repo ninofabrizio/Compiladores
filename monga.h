@@ -3,10 +3,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 typedef enum Token {
  
- 	NOT_TOKEN			= 666,
     TK_DOUBLE 			= 1,
     TK_ID				= 2,
     TK_PLUS				= 3,
@@ -46,18 +46,15 @@ typedef enum Token {
     
 } token;
 
-typedef union Types_var {
+union {
     
     int i;
-    double f;
+    float f;
     const char *s;
     
-} types_var;
+} yyvar;
 
-extern types_var yyvar;
 extern int yylex(void);
 extern void setInput(FILE *file);
-
-extern types_var seminfo;
 
 #endif

@@ -8,8 +8,8 @@ int main( int argc, char *argv[]) {
 	FILE *file;
 	
 	// just tests...
-	//char _[] = "";
-	//printf("%s a", _);
+	//char _ = 97;
+	//printf("%c", _);
 
     if (argc > 0) {
 
@@ -20,6 +20,16 @@ int main( int argc, char *argv[]) {
     else
         file = stdin;
     
-	while( token = yylex() )
-		printf("\ntoken: %d\n", token);
+	while( token = yylex() ) {
+
+		if(token != -1) {
+			printf("\ntoken: %d\n", token);
+
+			if(token == 34 || token == 35)
+				printf("\nString: %s\n", yyvar.s);
+		}
+
+		else
+			break;
+	}
 }

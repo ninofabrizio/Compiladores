@@ -2,6 +2,21 @@
 
 #include "monga.h"
 
+/* Variável para posição de linha corrente no arquivo de leitura */
+int currentLine = 1;
+
+/* Variável para guardar linha onde começou comentário */
+int openComment;
+
+/* Função para fazer copia de string */
+char * strDup (char *s);
+
+/* Função para notificação de erro */
+void errorMsg (char *msg);
+
+/* Função para notificação de erro de comentário não fechado */
+void commentError();
+
 %}
 
 Exp				[Ee]
@@ -15,7 +30,8 @@ Character		    ([^'\n]|\\'|\\n|\\t|\\\\|\\\"|\\0)
 
 %%
 
-[ \t\n]+							{ ; }
+[ \t]+						{ ; }
+\n 							{ currentLine++; }
 
 
 "char"					 			{ return TK_WORD_CHAR; }
@@ -34,20 +50,24 @@ Character		    ([^'\n]|\\'|\\n|\\t|\\\\|\\\"|\\0)
 
 {Digit}+[.]?						        { return TK_INTEGER;}  // Criar o TK_NUMBER. subrotina p/o tipo de variável.
 ({Digit}*[.]?{Digit}+)({Exp}[+-]?{Digit})?  { return TK_DOUBLE;}  //  Criar TK_DOUBLE. subrotina p/o tipo de variável.
-{Digit}+{Letter}+ 					        { return NOT_TOKEN; }
+{Digit}+{Letter}+ 					        { errorMsg("Digit before letter"); return -1; }
 
 
-'\\'								{ return NOT_TOKEN; } // específico demais?
-'{Character}?'						{ return TK_CHAR; }
-'{Character}+'						{ return NOT_TOKEN; }
-\"\\\"								{ return NOT_TOKEN; } // específico demais?
-\"{StringLit}*\"					{ return TK_LIT_STRING; }
+'\\'								{ errorMsg("Invalid character"); return -1; } // específico demais?
+'{Character}?'						{ yyvar.s = strDup(yytext); return TK_CHAR; }
+'{Character}+'						{ errorMsg("Invalid character"); return -1; }
 
 
-"/*"								{ printf("hi\n"); BEGIN (Comment); }
+\"\\\"								{ errorMsg("Invalid string"); return -1; } // específico demais?
+\"{StringLit}*\"					{ yyvar.s = strDup(yytext); return TK_LIT_STRING; }
+
+
+"/*"								{ openComment = currentLine; BEGIN (Comment); }
 <Comment>[^*\n]*        			{ ; }
 <Comment>"*"+[^*/\n]*   			{ ; }
-<Comment>"*"+"/"        			{ printf("bye\n"); BEGIN(INITIAL); }
+<Comment>\n 						{ currentLine++; }
+<Comment>"*"+"/"        			{ printf("%d\n", currentLine); BEGIN(INITIAL); } // nao esquecer de tirar o printf
+<Comment><<EOF>>					{ commentError(); return -1; }
 
 
 "=="	 							{ return TK_EQUAL; }
@@ -74,13 +94,33 @@ Character		    ([^'\n]|\\'|\\n|\\t|\\\\|\\\"|\\0)
 ";"      							{ return TK_SEMIC; }
 
 
-.									{ return NOT_TOKEN; }
+.									{ errorMsg("Invalid token entry"); return -1; }
 
 
 %%
 
-// Função para guardar arquivo de leitura
+/* Função externa para guardar arquivo de leitura */
 void setInput (FILE *file) {
 
 	yyin = file;
+}
+
+void errorMsg (char *msg) {
+
+	printf("\nError type '%s': token '%s' in line %d\n", msg, yytext, currentLine);
+}
+
+void commentError() {
+
+	printf("\nError type 'Comment not closed': from line %d to line %d\n", openComment, currentLine);
+}
+
+char * strDup (char *s) {
+
+    char *d = (char *) malloc (sizeof(char)*(strlen(s) + 1));  
+    if (d == NULL)
+    	return NULL;         
+
+    strcpy (d,s);                        
+    return d;                            
 }

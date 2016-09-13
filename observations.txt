@@ -1,5 +1,7 @@
 Falta:
 
-- Contador de linha
-- Passar valores à union
-- Tratar erro para comentário inacabado
+- Passar valores numéricos à union
+- Tratar floats
+- Tratar hexadecimais
+- Arquivo de escrita na main
+- Shell para testes automatizados
