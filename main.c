@@ -7,10 +7,6 @@ int main( int argc, char *argv[]) {
 	int token;
 	FILE *file;
 	
-	// just tests...
-	//char _ = 97;
-	//printf("%c", _);
-
     if (argc > 0) {
 
         file = fopen(argv[0], "r");
@@ -20,16 +16,13 @@ int main( int argc, char *argv[]) {
     else
         file = stdin;
     
-	while( token = yylex() ) {
-
-		if(token != -1) {
-			printf("\ntoken: %d\n", token);
-
-			if(token == 34 || token == 35)
-				printf("\nString: %s\n", yyvar.s);
-		}
-
+	while ( token = yylex()  ) {
+		
+		if(token == 37)
+			printf("\nString: %d\n", yyvar.i);
 		else
-			break;
+			printf("\ntoken: %d\n", token);
+			
 	}
+	
 }

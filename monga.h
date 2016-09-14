@@ -7,7 +7,7 @@
 
 typedef enum Token {
  
-    TK_DOUBLE 			= 1,
+    TK_FLOAT 			= 1,
     TK_ID				= 2,
     TK_PLUS				= 3,
     TK_MULT				= 4,
@@ -42,18 +42,20 @@ typedef enum Token {
 	TK_WORD_VOID		= 33,
 	TK_CHAR 			= 34,
 	TK_LIT_STRING		= 35,
-	TK_INTEGER			= 36
+	TK_INTEGER			= 36,
+	TK_HEXA             = 37
     
 } token;
 
-union {
+typedef union Types_var {
     
     int i;
     float f;
     const char *s;
     
-} yyvar;
+} types_var;
 
+extern types_var yyvar;
 extern int yylex(void);
 extern void setInput(FILE *file);
 

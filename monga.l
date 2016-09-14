@@ -1,6 +1,7 @@
 %{
 
 #include "monga.h"
+#include <stdlib.h>
 
 /* Variável para posição de linha corrente no arquivo de leitura */
 int currentLine = 1;
@@ -8,14 +9,15 @@ int currentLine = 1;
 /* Variável para guardar linha onde começou comentário */
 int openComment;
 
-/* Função para fazer copia de string */
-char * strDup (char *s);
+/* Variável para guardar o valor(ou string) lido pelo Lex*/
+types_var yyvar;
 
 /* Função para notificação de erro */
 void errorMsg (char *msg);
 
 /* Função para notificação de erro de comentário não fechado */
 void commentError();
+
 
 %}
 
@@ -45,21 +47,21 @@ Character		    ([^'\n]|\\'|\\n|\\t|\\\\|\\\"|\\0)
 "void"								{ return TK_WORD_VOID; }
 
 
-({Letter}|_)({Letter}|{Digit}|_)*	        { return TK_ID; }
-
-
-{Digit}+[.]?						        { return TK_INTEGER;}  // Criar o TK_NUMBER. subrotina p/o tipo de variável.
-({Digit}*[.]?{Digit}+)({Exp}[+-]?{Digit})?  { return TK_DOUBLE;}  //  Criar TK_DOUBLE. subrotina p/o tipo de variável.
-{Digit}+{Letter}+ 					        { errorMsg("Digit before letter"); return -1; }
+({Letter}|_)({Letter}|{Digit}|_)*	        			{ return TK_ID;}
+{Digit}+[.]?						                    { yyvar.i = strtol(yytext, NULL, 10); return TK_INTEGER;}
+({Digit}*[.]{Digit}+)({Exp}[+-]?{Digit}+)?              { yyvar.f = strtof(yytext, NULL);     return TK_FLOAT;  } 
+{Digit}+({Exp}[+-]?{Digit}+)							{ yyvar.f = strtof(yytext, NULL);     return TK_FLOAT;  }
+[0][Xx]({Digit}+|[A-Fa-f]+)+							{ yyvar.i = strtol(yytext, NULL, 16); return TK_HEXA;   }
+({Digit}+{Letter}+)+ 					                { errorMsg("Digit before letter");    return -1; }
 
 
 '\\'								{ errorMsg("Invalid character"); return -1; } // específico demais?
-'{Character}?'						{ yyvar.s = strDup(yytext); return TK_CHAR; }
+'{Character}?'						{ yyvar.s = yytext; return TK_CHAR; }
 '{Character}+'						{ errorMsg("Invalid character"); return -1; }
 
 
 \"\\\"								{ errorMsg("Invalid string"); return -1; } // específico demais?
-\"{StringLit}*\"					{ yyvar.s = strDup(yytext); return TK_LIT_STRING; }
+\"{StringLit}*\"					{ yyvar.s = yytext; return TK_LIT_STRING; }
 
 
 "/*"								{ openComment = currentLine; BEGIN (Comment); }
@@ -96,7 +98,6 @@ Character		    ([^'\n]|\\'|\\n|\\t|\\\\|\\\"|\\0)
 
 .									{ errorMsg("Invalid token entry"); return -1; }
 
-
 %%
 
 /* Função externa para guardar arquivo de leitura */
@@ -113,14 +114,4 @@ void errorMsg (char *msg) {
 void commentError() {
 
 	printf("\nError type 'Comment not closed': from line %d to line %d\n", openComment, currentLine);
-}
-
-char * strDup (char *s) {
-
-    char *d = (char *) malloc (sizeof(char)*(strlen(s) + 1));  
-    if (d == NULL)
-    	return NULL;         
-
-    strcpy (d,s);                        
-    return d;                            
 }
