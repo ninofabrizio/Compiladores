@@ -1,7 +1,9 @@
 %{
 
 #include "monga.h"
-#include <stdlib.h>
+
+/* Union para os valores semânticos */
+types_var yyvar;
 
 /* Variável para posição de linha corrente no arquivo de leitura */
 int currentLine = 1;
@@ -9,8 +11,11 @@ int currentLine = 1;
 /* Variável para guardar linha onde começou comentário */
 int openComment;
 
-/* Variável para guardar o valor(ou string) lido pelo Lex*/
-types_var yyvar;
+/* Função para tratar char */
+char charTreat(char ini, char fim);
+
+/* Função para tratar copia de string */
+char * strDup (char *s);
 
 /* Função para notificação de erro */
 void errorMsg (char *msg);
@@ -18,14 +23,13 @@ void errorMsg (char *msg);
 /* Função para notificação de erro de comentário não fechado */
 void commentError();
 
-
 %}
 
 Exp				[Ee]
 Digit			[0-9]
 Letter			[A-Za-z]
 
-StringLit			([^\"\n]|\\'|\\n|\\t|\\\\|\\\"|\\0)
+StringLit			([^\"\n\\]|\\'|\\n|\\t|\\\\|\\\"|\\0)
 Character		    ([^'\n]|\\'|\\n|\\t|\\\\|\\\"|\\0)
 
 %x Comment	
@@ -47,7 +51,9 @@ Character		    ([^'\n]|\\'|\\n|\\t|\\\\|\\\"|\\0)
 "void"								{ return TK_WORD_VOID; }
 
 
-({Letter}|_)({Letter}|{Digit}|_)*	        			{ return TK_ID;}
+({Letter}|_)({Letter}|{Digit}|_)*	        { return TK_ID; }
+
+
 {Digit}+[.]?						                    { yyvar.i = strtol(yytext, NULL, 10); return TK_INTEGER;}
 ({Digit}*[.]{Digit}+)({Exp}[+-]?{Digit}+)?              { yyvar.f = strtof(yytext, NULL);     return TK_FLOAT;  } 
 {Digit}+({Exp}[+-]?{Digit}+)							{ yyvar.f = strtof(yytext, NULL);     return TK_FLOAT;  }
@@ -55,13 +61,13 @@ Character		    ([^'\n]|\\'|\\n|\\t|\\\\|\\\"|\\0)
 ({Digit}+{Letter}+)+ 					                { errorMsg("Digit before letter");    return -1; }
 
 
-'\\'								{ errorMsg("Invalid character"); return -1; } // específico demais?
-'{Character}?'						{ yyvar.s = yytext; return TK_CHAR; }
+('\\')|('')							{ errorMsg("Invalid character"); return -1; }
+'{Character}?'						{ yyvar.i = charTreat(yytext[1], yytext[2]); return TK_CHAR; }
 '{Character}+'						{ errorMsg("Invalid character"); return -1; }
 
 
-\"\\\"								{ errorMsg("Invalid string"); return -1; } // específico demais?
-\"{StringLit}*\"					{ yyvar.s = yytext; return TK_LIT_STRING; }
+\"\\\"								{ errorMsg("Invalid string"); return -1; }
+\"{StringLit}*\"					{ yyvar.s = strDup(yytext); return TK_LIT_STRING; }
 
 
 "/*"								{ openComment = currentLine; BEGIN (Comment); }
@@ -98,6 +104,7 @@ Character		    ([^'\n]|\\'|\\n|\\t|\\\\|\\\"|\\0)
 
 .									{ errorMsg("Invalid token entry"); return -1; }
 
+
 %%
 
 /* Função externa para guardar arquivo de leitura */
@@ -108,10 +115,78 @@ void setInput (FILE *file) {
 
 void errorMsg (char *msg) {
 
-	printf("\nError type '%s': token '%s' in line %d\n", msg, yytext, currentLine);
+	printf("\nError type '%s': symbol '%s' in line %d\n", msg, yytext, currentLine);
 }
 
 void commentError() {
 
 	printf("\nError type 'Comment not closed': from line %d to line %d\n", openComment, currentLine);
+}
+
+char charTreat(char ini, char fim) {
+
+	// Se for escape
+	if(ini == '\\'){
+
+    	switch(fim){
+    		case '\'':
+    			return '\'';
+    			break;
+    				
+    		case 'n':
+    			return '\n';
+    			break;
+    				
+    		case 't':
+    			return '\t';
+    			break;
+
+    		case '\\':
+    			return '\\';
+    			break;
+
+    		case '\"':
+    			return '\"';
+    			break;
+
+    		case '0':
+    			return '\0';
+    			break;
+
+    		default:
+    			break;
+    	}
+    }
+
+    return ini;
+}
+
+char * strDup (char *s) {
+
+	int i, j, length;
+	char *dup;
+
+	length = strlen(s) - 1; // Lembrando o '\0' (+1) menos as duas aspas (-2)
+
+	dup = (char *) malloc (sizeof(char)*length);
+    if (dup == NULL) {
+    	printf("\nMemory allocation error\n");
+    	return NULL; 
+    }
+
+    // Eliminando aspas duplas e tratando escapes
+    for(i = 1, j = 0; i < (strlen(s) - 1); i++, j++) {
+
+		if(s[i] == '\\') {
+
+			dup[j] = charTreat(s[i], s[i+1]);
+			i++;
+		}
+		else
+	   		dup[j] = s[i];
+    }
+
+    dup[j] = '\0';
+
+    return dup;
 }
