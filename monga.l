@@ -49,9 +49,9 @@ Character		    ([^'\n]|\\'|\\n|\\t|\\\\|\\\"|\\0)
 
 ({Letter}|_)({Letter}|{Digit}|_)*	        			{ return TK_ID;}
 {Digit}+[.]?						                    { yyvar.i = strtol(yytext, NULL, 10); return TK_INTEGER;}
-({Digit}*[.]{Digit}+)({Exp}[+-]?{Digit}+)?              { yyvar.f = strtof(yytext, NULL);     return TK_FLOAT;  } 
-{Digit}+({Exp}[+-]?{Digit}+)							{ yyvar.f = strtof(yytext, NULL);     return TK_FLOAT;  }
-[0][Xx]({Digit}+|[A-Fa-f]+)+							{ yyvar.i = strtol(yytext, NULL, 16); return TK_HEXA;   }
+({Digit}*[.]{Digit}+)({Exp}[+-]?{Digit}+)?	          	{ yyvar.f = strtof(yytext, NULL);     return TK_FLOAT; } 
+{Digit}+({Exp}[+-]?{Digit}+)							{ yyvar.f = strtof(yytext, NULL);     return TK_FLOAT; }
+[0][Xx]({Digit}+|[A-Fa-f]+)+							{ yyvar.i = strtol(yytext, NULL, 16); return TK_HEXA;  }
 ({Digit}+{Letter}+)+ 					                { errorMsg("Digit before letter");    return -1; }
 
 

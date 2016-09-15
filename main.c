@@ -18,11 +18,14 @@ int main( int argc, char *argv[]) {
     
 	while ( token = yylex()  ) {
 		
-		if(token == 37)
-			printf("\nString: %d\n", yyvar.i);
+		if(token == 1){
+			printf("\nString: %f\n", yyvar.f);
+			printf("\ntoken: %d\n", token);
+		}	
 		else
 			printf("\ntoken: %d\n", token);
-			
+	
+	
 	}
 	
 }
