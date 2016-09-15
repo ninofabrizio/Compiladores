@@ -55,26 +55,36 @@ Character		    ([^'\n]|\\'|\\n|\\t|\\\\|\\\"|\\0)
 
 
 {Digit}+[.]?						                    { yyvar.i = strtol(yytext, NULL, 10); return TK_INTEGER;}
-({Digit}*[.]{Digit}+)({Exp}[+-]?{Digit}+)?[Ff]?	          	{ yyvar.f = strtof(yytext, NULL);     return TK_FLOAT; } 
-{Digit}+({Exp}[+-]?{Digit}+)[Ff]?							{ yyvar.f = strtof(yytext, NULL);     return TK_FLOAT; }
+({Digit}*[.]{Digit}+)({Exp}[+-]?{Digit}+)?[Ff]?	        { yyvar.f = strtof(yytext, NULL);     return TK_FLOAT; } 
+{Digit}+({Exp}[+-]?{Digit}+)[Ff]?						{ yyvar.f = strtof(yytext, NULL);     return TK_FLOAT; }
 [0][Xx]({Digit}+|[A-Fa-f]+)+							{ yyvar.i = strtol(yytext, NULL, 16); return TK_HEXA;  }
 ({Digit}+{Letter}+)+ 					                { errorMsg("Digit before letter");    return -1; }
 
 
 ('\\')|('')							{ errorMsg("Invalid character"); return -1; }
-'{Character}?'						{ yyvar.i = charTreat(yytext[1], yytext[2]); return TK_CHAR; }
+'{Character}?'						{ yyvar.i = charTreat(yytext[1], yytext[2]);
+                                      if(yyvar.i == -1) {
+                                        errorMsg("Invalid character");
+                                        return -1;
+                                      }
+                                      return TK_CHAR; }
 '{Character}+'						{ errorMsg("Invalid character"); return -1; }
 
 
 \"\\\"								{ errorMsg("Invalid string"); return -1; }
-\"{StringLit}*\"					{ yyvar.s = strDup(yytext); return TK_LIT_STRING; }
+\"{StringLit}*\"					{ yyvar.s = strDup(yytext);
+                                      if(yyvar.s == NULL) {
+                                        errorMsg("Invalid string");
+                                        return -1; 
+                                      }
+                                      return TK_LIT_STRING; }
 
 
 "/*"								{ openComment = currentLine; BEGIN (Comment); }
 <Comment>[^*\n]*        			{ ; }
 <Comment>"*"+[^*/\n]*   			{ ; }
 <Comment>\n 						{ currentLine++; }
-<Comment>"*"+"/"        			{ printf("%d\n", currentLine); BEGIN(INITIAL); } // nao esquecer de tirar o printf
+<Comment>"*"+"/"        			{ BEGIN(INITIAL); }
 <Comment><<EOF>>					{ commentError(); return -1; }
 
 
@@ -115,7 +125,7 @@ void setInput (FILE *file) {
 
 void errorMsg (char *msg) {
 
-	printf("\nError type '%s': symbol '%s' in line %d\n", msg, yytext, currentLine);
+	printf("\nError type '%s': in line %d\n", msg, currentLine);
 }
 
 void commentError() {
@@ -154,6 +164,7 @@ char charTreat(char first, char second) {
     			break;
 
     		default:
+                return -1;
     			break;
     	}
     }
@@ -165,8 +176,9 @@ char * strDup (char *s) {
 
 	int i, j, length;
 	char *dup;
+    char c;
 
-	length = strlen(s) - 1; // Lembrando o '\0' (+1) menos as duas aspas (-2)
+	length = strlen(s) - 1; // Lembrando: '\0' (+1) menos as duas aspas (-2)
 
 	dup = (char *) malloc (sizeof(char)*length);
     if (dup == NULL) {
@@ -179,8 +191,17 @@ char * strDup (char *s) {
 
 		if(s[i] == '\\') {
 
-			dup[j] = charTreat(s[i], s[i+1]);
-			i++;
+			c = charTreat(s[i], s[i+1]);
+
+            if(c == -1) { // Caso de escape indevido
+
+                free(dup);
+                return NULL;
+            }
+            else {
+                dup[j] = c;
+                i++;
+            }
 		}
 		else
 	   		dup[j] = s[i];

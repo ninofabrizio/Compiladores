@@ -22,9 +22,9 @@ int main( int argc, char *argv[]) {
     
 	while( token = yylex() ) {
 
-		printf("\ntoken: %d\n", token);
-
 		if(token != -1) {
+
+			printf("\ntoken: %d\n", token);
 
 			if(token == 34)
 				printf("\nChar: %c\n", yyvar.i);
@@ -39,7 +39,9 @@ int main( int argc, char *argv[]) {
 		}
 
 		else
-			break;
+			break; // return -1;
 
 	}
+
+	return 0;
 }
