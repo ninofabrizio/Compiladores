@@ -40,25 +40,26 @@ Character		    ([^'\n]|\\'|\\n|\\t|\\\\|\\\"|\\0)
 \n 							{ currentLine++; }
 
 
-"char"					 			{ return TK_WORD_CHAR; }
-"float"								{ return TK_WORD_FLOAT; }
-"int"								{ return TK_WORD_INT; }
-"if" 								{ return TK_WORD_IF; }
-"else" 								{ return TK_WORD_ELSE; }
-"while"								{ return TK_WORD_WHILE; }
-"new"								{ return TK_WORD_NEW; }
-"return"							{ return TK_WORD_RETURN; }
-"void"								{ return TK_WORD_VOID; }
+"char"					 			{ yyvar.s = yytext; return TK_WORD_CHAR; }
+"float"								{ yyvar.s = yytext; return TK_WORD_FLOAT; }
+"int"								{ yyvar.s = yytext; return TK_WORD_INT; }
+"if" 								{ yyvar.s = yytext; return TK_WORD_IF; }
+"else" 								{ yyvar.s = yytext; return TK_WORD_ELSE; }
+"while"								{ yyvar.s = yytext; return TK_WORD_WHILE; }
+"new"								{ yyvar.s = yytext; return TK_WORD_NEW; }
+"return"							{ yyvar.s = yytext; return TK_WORD_RETURN; }
+"void"								{ yyvar.s = yytext; return TK_WORD_VOID; }
 
 
-({Letter}|_)({Letter}|{Digit}|_)*	        { return TK_ID; }
+({Letter}|_)({Letter}|{Digit}|_)*	        { yyvar.s = yytext; return TK_ID; }
 
 
 {Digit}+[.]?						                    { yyvar.i = strtol(yytext, NULL, 10); return TK_INTEGER;}
-({Digit}*[.]{Digit}+)({Exp}[+-]?{Digit}+)?[Ff]?	        { yyvar.f = strtof(yytext, NULL);     return TK_FLOAT; } 
+({Digit}*[.]{Digit}+)({Exp}[+-]?{Digit}+)?[Ff]?	        { yyvar.f = strtof(yytext, NULL);     return TK_FLOAT; }
+{Digit}+[Ff]                                            { yyvar.f = strtof(yytext, NULL);     return TK_FLOAT; }
 {Digit}+({Exp}[+-]?{Digit}+)[Ff]?						{ yyvar.f = strtof(yytext, NULL);     return TK_FLOAT; }
 [0][Xx]({Digit}+|[A-Fa-f]+)+							{ yyvar.i = strtol(yytext, NULL, 16); return TK_HEXA;  }
-({Digit}+{Letter}+)+ 					                { errorMsg("Digit before letter");    return -1; }
+({Digit}+{Letter}+)+ 					                { errorMsg("Digit before letter");    return -1; } // CONFERIR ESTA LINHA !!!!!
 
 
 ('\\')|('')							{ errorMsg("Invalid character"); return -1; }
@@ -88,28 +89,28 @@ Character		    ([^'\n]|\\'|\\n|\\t|\\\\|\\\"|\\0)
 <Comment><<EOF>>					{ commentError(); return -1; }
 
 
-"=="	 							{ return TK_EQUAL; }
-"!="     							{ return TK_NOT_EQ; }
-"="      							{ return TK_ASG; }
-"<="     							{ return TK_LESS_OR_EQ; }
-"<"      							{ return TK_LESS; }
-">="     							{ return TK_GREATER_OR_EQ; }
-">"      							{ return TK_GREATER; }
-"+"      							{ return TK_PLUS; }
-"-"      							{ return TK_MINUS; }
-"*"      							{ return TK_MULT; }
-"/"      							{ return TK_DIV; }
-"("      							{ return TK_LEFT_PARENT; }
-")"      							{ return TK_RIGHT_PARENT; }
-"["		 							{ return TK_LEFT_BRAC; }
-"]"		 							{ return TK_RIGHT_BRAC; }
-"{"		 							{ return TK_LEFT_CURV_BRAC; }
-"}"		 							{ return TK_RIGHT_CURV_BRAC; }
-"||"	 							{ return TK_OR;  }
-"&&"	 							{ return TK_AND; }
-"!"									{ return TK_NOT; }
-","		 							{ return TK_COM; }
-";"      							{ return TK_SEMIC; }
+"=="	 							{ yyvar.s = yytext; return TK_EQUAL; }
+"!="     							{ yyvar.s = yytext; return TK_NOT_EQ; }
+"="      							{ yyvar.i = yytext[0]; return TK_ASG; }
+"<="     							{ yyvar.s = yytext; return TK_LESS_OR_EQ; }
+"<"      							{ yyvar.i = yytext[0]; return TK_LESS; }
+">="     							{ yyvar.s = yytext; return TK_GREATER_OR_EQ; }
+">"      							{ yyvar.i = yytext[0]; return TK_GREATER; }
+"+"      							{ yyvar.i = yytext[0]; return TK_PLUS; }
+"-"      							{ yyvar.i = yytext[0]; return TK_MINUS; }
+"*"      							{ yyvar.i = yytext[0]; return TK_MULT; }
+"/"      							{ yyvar.i = yytext[0]; return TK_DIV; }
+"("      							{ yyvar.i = yytext[0]; return TK_LEFT_PARENT; }
+")"      							{ yyvar.i = yytext[0]; return TK_RIGHT_PARENT; }
+"["		 							{ yyvar.i = yytext[0]; return TK_LEFT_BRAC; }
+"]"		 							{ yyvar.i = yytext[0]; return TK_RIGHT_BRAC; }
+"{"		 							{ yyvar.i = yytext[0]; return TK_LEFT_CURV_BRAC; }
+"}"		 							{ yyvar.i = yytext[0]; return TK_RIGHT_CURV_BRAC; }
+"||"	 							{ yyvar.s = strDup(yytext); return TK_OR;  }
+"&&"	 							{ yyvar.s = strDup(yytext); return TK_AND; }
+"!"									{ yyvar.i = yytext[0]; return TK_NOT; }
+","		 							{ yyvar.i = yytext[0]; return TK_COM; }
+";"      							{ yyvar.i = yytext[0]; return TK_SEMIC; }
 
 
 .									{ errorMsg("Invalid token entry"); return -1; }

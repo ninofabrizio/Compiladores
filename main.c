@@ -7,10 +7,6 @@ int main( int argc, char *argv[]) {
 	int token;
 	FILE *file;
 
-	// just tests...
-	//char _ = '.';
-	//printf("\a");
-
     if (argc > 0) {
 
         file = fopen(argv[0], "r");
@@ -24,23 +20,26 @@ int main( int argc, char *argv[]) {
 
 		if(token != -1) {
 
-			printf("\ntoken: %d\n", token);
+			printf("Token: %d\t", token);
 
-			if(token == 34)
-				printf("\nChar: %c\n", yyvar.i);
-			else if(token == 35)
-				printf("\nString: %s$ of Size: %d\n", yyvar.s, strlen(yyvar.s));
-			else if(token == 37)
-				printf("\nHexa: %x\n", yyvar.i);
-			else if(token == 1)
-				printf("\nFloat: %f\n", yyvar.f);
+			if((token >= 2) && (token <= 18))
+				printf("%c\n", yyvar.i);
+			else if((token >= 19) && (token <= 35))
+				printf("%s$\n", yyvar.s);
 			else if(token == 36)
-				printf("\nInteger: %d\n", yyvar.i);
+				printf("%d\n", yyvar.i);
+			else if(token == 37)
+				printf("%x\n", yyvar.i);
+			else if(token == 1)
+				printf("%f\n", yyvar.f);
+			else {
+				printf("Error: token returned to main not acceptable\n");
+				break;
+			}
 		}
 
 		else
-			break; // return -1;
-
+			break;
 	}
 
 	return 0;
