@@ -12,7 +12,7 @@ int currentLine = 1;
 int openComment;
 
 /* Função para tratar char */
-char charTreat(char ini, char fim);
+char charTreat(char first, char second);
 
 /* Função para tratar copia de string */
 char * strDup (char *s);
@@ -55,8 +55,8 @@ Character		    ([^'\n]|\\'|\\n|\\t|\\\\|\\\"|\\0)
 
 
 {Digit}+[.]?						                    { yyvar.i = strtol(yytext, NULL, 10); return TK_INTEGER;}
-({Digit}*[.]{Digit}+)({Exp}[+-]?{Digit}+)?	          	{ yyvar.f = strtof(yytext, NULL);     return TK_FLOAT; } 
-{Digit}+({Exp}[+-]?{Digit}+)							{ yyvar.f = strtof(yytext, NULL);     return TK_FLOAT; }
+({Digit}*[.]{Digit}+)({Exp}[+-]?{Digit}+)?[Ff]?	          	{ yyvar.f = strtof(yytext, NULL);     return TK_FLOAT; } 
+{Digit}+({Exp}[+-]?{Digit}+)[Ff]?							{ yyvar.f = strtof(yytext, NULL);     return TK_FLOAT; }
 [0][Xx]({Digit}+|[A-Fa-f]+)+							{ yyvar.i = strtol(yytext, NULL, 16); return TK_HEXA;  }
 ({Digit}+{Letter}+)+ 					                { errorMsg("Digit before letter");    return -1; }
 
@@ -123,12 +123,12 @@ void commentError() {
 	printf("\nError type 'Comment not closed': from line %d to line %d\n", openComment, currentLine);
 }
 
-char charTreat(char ini, char fim) {
+char charTreat(char first, char second) {
 
 	// Se for escape
-	if(ini == '\\'){
+	if(first == '\\'){
 
-    	switch(fim){
+    	switch(second){
     		case '\'':
     			return '\'';
     			break;
@@ -158,7 +158,7 @@ char charTreat(char ini, char fim) {
     	}
     }
 
-    return ini;
+    return first;
 }
 
 char * strDup (char *s) {

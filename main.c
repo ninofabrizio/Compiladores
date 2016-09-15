@@ -20,22 +20,11 @@ int main( int argc, char *argv[]) {
     else
         file = stdin;
     
-<<<<<<< HEAD
-	while ( token = yylex()  ) {
-		
-		if(token == 1){
-			printf("\nString: %f\n", yyvar.f);
-			printf("\ntoken: %d\n", token);
-		}	
-		else
-			printf("\ntoken: %d\n", token);
-	
-	
-=======
 	while( token = yylex() ) {
 
+		printf("\ntoken: %d\n", token);
+
 		if(token != -1) {
-			printf("\ntoken: %d\n", token);
 
 			if(token == 34)
 				printf("\nChar: %c\n", yyvar.i);
@@ -43,12 +32,14 @@ int main( int argc, char *argv[]) {
 				printf("\nString: %s$ of Size: %d\n", yyvar.s, strlen(yyvar.s));
 			else if(token == 37)
 				printf("\nHexa: %x\n", yyvar.i);
-			else
-				printf("\ntoken: %d\n", token);
+			else if(token == 1)
+				printf("\nFloat: %f\n", yyvar.f);
+			else if(token == 36)
+				printf("\nInteger: %d\n", yyvar.i);
 		}
 
 		else
 			break;
->>>>>>> f1425e61c52bb82e73de77a84b3165fa8ee7973f
+
 	}
 }
