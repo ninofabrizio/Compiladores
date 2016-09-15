@@ -1,0 +1,11 @@
+int main () {
+
+	int eu_mesmo = 0x45fa;
+	char a[] = "eu_mesmo";
+
+	if (eu_mesmo == .98e-3) 
+			while(int i = 0, int j = 1)
+				float b = 3.4f;
+
+	return 0;
+}
