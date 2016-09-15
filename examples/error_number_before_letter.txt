@@ -1,4 +1,0 @@
-'\n'
-"string"
-2a
-/* aqui nao vera nada */
