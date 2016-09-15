@@ -50,12 +50,13 @@ typedef enum Token {
 typedef union Types_var {
     
     int i;
-    float f;
+    double f;
     const char *s;
     
 } types_var;
 
 extern types_var yyvar;
+
 extern int yylex(void);
 extern void setInput(FILE *file);
 
