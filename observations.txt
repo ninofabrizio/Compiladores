@@ -1,4 +1,0 @@
-Falta:
-
-- Arquivo de escrita na main
-- Shell para testes automatizados

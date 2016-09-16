@@ -1,0 +1,32 @@
+float mongaTest(char test[], int p);
+
+int main(int argc, char argv[]) {
+
+	char string[4] = "TEST 1, 2, 3";
+		
+	float out_123 = mongaTest(string, 4);
+
+	if (out_123 != 0)
+		out_123 = 0xff; 
+
+	return 0;
+}
+
+
+/*Funcao para teste da linguagem monga*/
+float mongaTest(char test[], int p) {
+
+	int i_1, i_2 = 0;
+	float out;
+	
+	for( i_1, i_2; (i_1 + i_2) < p; i_1++, i_2++ ) /* E assim mesmo! */
+		if (test[i_1] == p - 4*2) {
+			out = i_1/test[i_2];
+			i_2 = i1;
+		}
+		else
+			return out;
+	
+	return (out + i_1*i_2);
+
+}
