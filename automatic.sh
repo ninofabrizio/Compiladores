@@ -1,22 +1,26 @@
 #! /bin/bash
-echo
-echo
-echo "INICIANDO TESTES - ANALIZADOR LEXICO"
-echo
+echo -e "\n\nINICIANDO TESTES - ANALIZADOR LEXICO\n"
+
 for file in examples/*.in
 do
     filename=$(basename "$file")
     filename="${filename%.*}"
 
-    echo
-    echo "++++++TESTANDO $filename"
-    echo
+    echo -e "\n\n++++++TESTANDO $filename\n"
 
+	echo -e "GERANDO ARQUIVO DE SAIDA\n"
     ./tester < examples/$filename.in > examples/$filename.out
+    echo -e "ARQUIVO DE SAIDA GERADO\n"
     
-    diff -q examples/$filename.out examples/$filename.gab
+    echo -e "COMPARANDO ARQUIVO DE SAIDA COM ARQUIVO GABARITO\n"
+    if(diff examples/$filename.out examples/$filename.gab &>/dev/null) then
+    	echo -e "\n\t*** TESTE PASSOU ***\n\n" #retorna não nulo se arquivos forem iguais
+    else
+    	echo -e "\n\t*** TESTE NAO PASSOU ***\n\n"
+    fi
 
-    echo "------TERMINADO $filename"
-    echo
+    echo -e "------TERMINADO $filename\n"
 
 done
+
+echo -e "\n\nTESTES ACABADOS - ANALIZADOR LEXICO\n"
