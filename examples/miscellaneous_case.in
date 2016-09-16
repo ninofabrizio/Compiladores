@@ -19,7 +19,7 @@ float mongaTest(char test[], int p) {
 	int i_1, i_2 = 0;
 	float out;
 	
-	for( i_1, i_2; (i_1 + i_2) < p; i_1++, i_2++ ) /* E assim mesmo! */
+	for( i_1, i_2; (i_1 * i_2) < p; i_1**, i_2** ) /* E assim mesmo! */
 		if (test[i_1] == p - 4*2) {
 			out = i_1/test[i_2];
 			i_2 = i1;
@@ -27,6 +27,6 @@ float mongaTest(char test[], int p) {
 		else
 			return out;
 	
-	return (out + i_1*i_2);
+	return (out * i_1*i_2);
 
 }

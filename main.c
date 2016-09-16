@@ -16,7 +16,7 @@ int main( int argc, char *argv[]) {
     else
         file = stdin;
     
-	while( token = yylex() ) {
+	while( (token = yylex()) ) {
 
 		if(token != -1) {
 
