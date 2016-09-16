@@ -34,12 +34,12 @@ int main( int argc, char *argv[]) {
 				printf("%f\n", yyvar.f);
 			else {
 				printf("Error: token returned to main not acceptable\n");
-				break;
+				return 1;
 			}
 		}
 
 		else
-			break;
+			return 1;
 	}
 
 	return 0;
