@@ -1,28 +1,28 @@
 #! /bin/bash
-echo "\n\nINICIANDO TESTES - ANALIZADOR LEXICO\n"
+echo -e "\n\nINICIANDO TESTES - ANALIZADOR LEXICO\n"
 
-for file in examples/*.in
+for file in lexical_examples/*.in
 do
     filename=$(basename "$file")
     filename="${filename%.*}"
 
-    echo  "\n\n++++++TESTANDO $filename\n"
+    echo -e "\n\n++++++TESTANDO $filename\n"
 
-	echo  "GERANDO ARQUIVO DE SAIDA\n"	
-    if ( ./tester < examples/$filename.in > examples/$filename.out ) then
-    	echo  "ARQUIVO DE SAIDA GERADO\n"
+	echo -e "GERANDO ARQUIVO DE SAIDA\n"	
+    if ( ./tester < lexical_examples/$filename.in > lexical_examples/$filename.out ) then
+    	echo -e "ARQUIVO DE SAIDA GERADO\n"
     
-    	echo "COMPARANDO ARQUIVO DE SAIDA COM ARQUIVO GABARITO\n"
-    	if(diff examples/$filename.out examples/$filename.gab) then
-    		echo "\n\t*** TESTE PASSOU ***\n\n" #retorna não nulo se arquivos forem iguais
+    	echo -e "COMPARANDO ARQUIVO DE SAIDA COM ARQUIVO GABARITO\n"
+    	if(diff lexical_examples/$filename.out lexical_examples/$filename.gab &>/dev/null) then
+    		echo -e "\n\t*** TESTE PASSOU ***\n\n" #retorna não nulo se arquivos forem iguais
     	else
-    		echo "\n\t*** TESTE NAO PASSOU ***\n\n"
+    		echo -e "\n\t*** TESTE NAO PASSOU ***\n\n"
     	fi
     else
-    	echo "PROBLEMA NA MAIN - TESTE $filename ABORTADO\n"
+    	echo -e "PROBLEMA NA MAIN - TESTE $filename ABORTADO\n"
 	fi
 
-    echo "------TERMINADO $filename\n"
+    echo -e "------TERMINADO $filename\n"
 done
 
-echo "\n\nTESTES ACABADOS - ANALIZADOR LEXICO\n"
+echo -e "\n\nTESTES ACABADOS - ANALIZADOR LEXICO\n"

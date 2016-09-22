@@ -1,9 +1,9 @@
 %{
 
+#include <stdlib.h>
+#include <string.h>
+#include "monga.tab.h"
 #include "monga.h"
-
-/* Union para os valores semânticos */
-types_var yyvar;
 
 /* Variável para posição de linha corrente no arquivo de leitura */
 int currentLine = 1;
@@ -40,30 +40,30 @@ Character		    ([^'\n]|\\'|\\n|\\t|\\\\|\\\"|\\0)
 \n 							{ currentLine++; }
 
 
-"char"					 			{ yyvar.s = yytext; return TK_WORD_CHAR; }
-"float"								{ yyvar.s = yytext; return TK_WORD_FLOAT; }
-"int"								{ yyvar.s = yytext; return TK_WORD_INT; }
-"if" 								{ yyvar.s = yytext; return TK_WORD_IF; }
-"else" 								{ yyvar.s = yytext; return TK_WORD_ELSE; }
-"while"								{ yyvar.s = yytext; return TK_WORD_WHILE; }
-"new"								{ yyvar.s = yytext; return TK_WORD_NEW; }
-"return"							{ yyvar.s = yytext; return TK_WORD_RETURN; }
-"void"								{ yyvar.s = yytext; return TK_WORD_VOID; }
+"char"					 			{ yylval.s = yytext; return TK_WORD_CHAR; }
+"float"								{ yylval.s = yytext; return TK_WORD_FLOAT; }
+"int"								{ yylval.s = yytext; return TK_WORD_INT; }
+"if" 								{ yylval.s = yytext; return TK_WORD_IF; }
+"else" 								{ yylval.s = yytext; return TK_WORD_ELSE; }
+"while"								{ yylval.s = yytext; return TK_WORD_WHILE; }
+"new"								{ yylval.s = yytext; return TK_WORD_NEW; }
+"return"							{ yylval.s = yytext; return TK_WORD_RETURN; }
+"void"								{ yylval.s = yytext; return TK_WORD_VOID; }
 
 
-({Letter}|_)({Letter}|{Digit}|_)*	        { yyvar.s = yytext; return TK_ID; }
+({Letter}|_)({Letter}|{Digit}|_)*	        { yylval.s = yytext; return TK_ID; }
 
-{Digit}+[.]?[Ff]                                        { yyvar.f = strtof(yytext, NULL);     return TK_FLOAT; }
-({Digit}*[.]{Digit}+)({Exp}[+-]?{Digit}+)?[Ff]?	        { yyvar.f = strtof(yytext, NULL);     return TK_FLOAT; }
-{Digit}+[.]?						                    { yyvar.i = strtol(yytext, NULL, 10); return TK_INTEGER;}
-{Digit}+({Exp}[+-]?{Digit}+)[Ff]?						{ yyvar.f = strtof(yytext, NULL);     return TK_FLOAT; }
-[0][Xx]({Digit}+|[A-Fa-f]+)+							{ yyvar.i = strtol(yytext, NULL, 16); return TK_HEXA;  }
+{Digit}+[.]?[Ff]                                        { yylval.f = strtof(yytext, NULL);     return TK_FLOAT; }
+({Digit}*[.]{Digit}+)({Exp}[+-]?{Digit}+)?[Ff]?	        { yylval.f = strtof(yytext, NULL);     return TK_FLOAT; }
+{Digit}+[.]?						                    { yylval.i = strtol(yytext, NULL, 10); return TK_INTEGER;}
+{Digit}+({Exp}[+-]?{Digit}+)[Ff]?						{ yylval.f = strtof(yytext, NULL);     return TK_FLOAT; }
+[0][Xx]({Digit}+|[A-Fa-f]+)+							{ yylval.i = strtol(yytext, NULL, 16); return TK_HEXA;  }
 ({Digit}+{Letter}+)+ 					                { errorMsg("Digit before letter");    return -1; } // CONFERIR ESTA LINHA !!!!!
 
 
 ('\\')|('')							{ errorMsg("Invalid character"); return -1; }
-'{Character}?'						{ yyvar.i = charTreat(yytext[1], yytext[2]);
-                                      if(yyvar.i == -1) {
+'{Character}?'						{ yylval.i = charTreat(yytext[1], yytext[2]);
+                                      if(yylval.i == -1) {
                                         errorMsg("Invalid character");
                                         return -1;
                                       }
@@ -72,8 +72,8 @@ Character		    ([^'\n]|\\'|\\n|\\t|\\\\|\\\"|\\0)
 
 
 \"\\\"								{ errorMsg("Invalid string"); return -1; }
-\"{StringLit}*\"					{ yyvar.s = strDup(yytext);
-                                      if(yyvar.s == NULL) {
+\"{StringLit}*\"					{ yylval.s = strDup(yytext);
+                                      if(yylval.s == NULL) {
                                         errorMsg("Invalid string");
                                         return -1; 
                                       }
@@ -88,28 +88,28 @@ Character		    ([^'\n]|\\'|\\n|\\t|\\\\|\\\"|\\0)
 <Comment><<EOF>>					{ commentError(); return -1; }
 
 
-"=="	 							{ yyvar.s = yytext; return TK_EQUAL; }
-"!="     							{ yyvar.s = yytext; return TK_NOT_EQ; }
-"="      							{ yyvar.i = yytext[0]; return TK_ASG; }
-"<="     							{ yyvar.s = yytext; return TK_LESS_OR_EQ; }
-"<"      							{ yyvar.i = yytext[0]; return TK_LESS; }
-">="     							{ yyvar.s = yytext; return TK_GREATER_OR_EQ; }
-">"      							{ yyvar.i = yytext[0]; return TK_GREATER; }
-"+"      							{ yyvar.i = yytext[0]; return TK_PLUS; }
-"-"      							{ yyvar.i = yytext[0]; return TK_MINUS; }
-"*"      							{ yyvar.i = yytext[0]; return TK_MULT; }
-"/"      							{ yyvar.i = yytext[0]; return TK_DIV; }
-"("      							{ yyvar.i = yytext[0]; return TK_LEFT_PARENT; }
-")"      							{ yyvar.i = yytext[0]; return TK_RIGHT_PARENT; }
-"["		 							{ yyvar.i = yytext[0]; return TK_LEFT_BRAC; }
-"]"		 							{ yyvar.i = yytext[0]; return TK_RIGHT_BRAC; }
-"{"		 							{ yyvar.i = yytext[0]; return TK_LEFT_CURV_BRAC; }
-"}"		 							{ yyvar.i = yytext[0]; return TK_RIGHT_CURV_BRAC; }
-"||"	 							{ yyvar.s = strDup(yytext); return TK_OR;  }
-"&&"	 							{ yyvar.s = strDup(yytext); return TK_AND; }
-"!"									{ yyvar.i = yytext[0]; return TK_NOT; }
-","		 							{ yyvar.i = yytext[0]; return TK_COM; }
-";"      							{ yyvar.i = yytext[0]; return TK_SEMIC; }
+"=="	 							{ yylval.s = yytext; return TK_EQUAL; }
+"!="     							{ yylval.s = yytext; return TK_NOT_EQ; }
+"="      							{ yylval.i = yytext[0]; return TK_ASG; }
+"<="     							{ yylval.s = yytext; return TK_LESS_OR_EQ; }
+"<"      							{ yylval.i = yytext[0]; return TK_LESS; }
+">="     							{ yylval.s = yytext; return TK_GREATER_OR_EQ; }
+">"      							{ yylval.i = yytext[0]; return TK_GREATER; }
+"+"      							{ yylval.i = yytext[0]; return TK_PLUS; }
+"-"      							{ yylval.i = yytext[0]; return TK_MINUS; }
+"*"      							{ yylval.i = yytext[0]; return TK_MULT; }
+"/"      							{ yylval.i = yytext[0]; return TK_DIV; }
+"("      							{ yylval.i = yytext[0]; return TK_LEFT_PARENT; }
+")"      							{ yylval.i = yytext[0]; return TK_RIGHT_PARENT; }
+"["		 							{ yylval.i = yytext[0]; return TK_LEFT_BRAC; }
+"]"		 							{ yylval.i = yytext[0]; return TK_RIGHT_BRAC; }
+"{"		 							{ yylval.i = yytext[0]; return TK_LEFT_CURV_BRAC; }
+"}"		 							{ yylval.i = yytext[0]; return TK_RIGHT_CURV_BRAC; }
+"||"	 							{ yylval.s = strDup(yytext); return TK_OR;  }
+"&&"	 							{ yylval.s = strDup(yytext); return TK_AND; }
+"!"									{ yylval.i = yytext[0]; return TK_NOT; }
+","		 							{ yylval.i = yytext[0]; return TK_COM; }
+";"      							{ yylval.i = yytext[0]; return TK_SEMIC; }
 
 
 .									{ errorMsg("Invalid token entry"); return -1; }

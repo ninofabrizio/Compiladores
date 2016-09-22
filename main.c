@@ -1,10 +1,11 @@
+#include "monga.tab.h"
 #include "monga.h"
 
-int main( int argc, char *argv[]) {
+int main( int argc, char *argv[] ) {
 	
-    ++argv, --argc;  /* skip over program name */
+    ++argv, --argc;  // skip over program name
     
-	int token;
+	//int token;
 	FILE *file;
 
     if (argc > 0) {
@@ -16,7 +17,9 @@ int main( int argc, char *argv[]) {
     else
         file = stdin;
     
-	while( (token = yylex()) ) {
+    printf("\n%d\n", yyparse());
+
+	/*while( (token = yylex()) ) {
 
 		if(token != -1) {
 
@@ -40,7 +43,9 @@ int main( int argc, char *argv[]) {
 
 		else
 			return 1;
-	}
+	}*/
+
+	fclose(file);
 
 	return 0;
 }

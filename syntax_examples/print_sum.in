@@ -1,0 +1,12 @@
+
+/* Some stupid Monga program */
+
+int main () {
+	
+	int a = 4;
+	int b = a / 2;
+
+	printThis(b);
+
+	return 0;
+}
