@@ -1,12 +1,11 @@
 %{
 
-	#include <stdio.h>
-	#include <stdlib.h>
 	#include "monga.h"
 
-	void yyerror(char *);
+	extern void yyerror(char *);
 	int yylex(void);
 
+	extern int currentLine;
 %}
 
 %union {
@@ -165,5 +164,5 @@ literal :	TK_LIT_STRING // falta alguem?
 
 void yyerror(char *s) {
 
- 	fprintf(stderr, "%s\n", s);
+ 	fprintf(stderr, "\n%s in line %d\n", s, currentLine);
 }

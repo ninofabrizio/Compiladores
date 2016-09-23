@@ -1,7 +1,5 @@
 %{
 
-#include <stdlib.h>
-#include <string.h>
 #include "monga.tab.h"
 #include "monga.h"
 
@@ -16,9 +14,6 @@ char charTreat(char first, char second);
 
 /* Função para tratar copia de string */
 char * strDup (char *s);
-
-/* Função para notificação de erro */
-void errorMsg (char *msg);
 
 /* Função para notificação de erro de comentário não fechado */
 void commentError();
@@ -55,26 +50,26 @@ Character		    ([^'\n]|\\'|\\n|\\t|\\\\|\\\"|\\0)
 
 {Digit}+[.]?[Ff]                                        { yylval.f = strtof(yytext, NULL);     return TK_FLOAT; }
 ({Digit}*[.]{Digit}+)({Exp}[+-]?{Digit}+)?[Ff]?	        { yylval.f = strtof(yytext, NULL);     return TK_FLOAT; }
-{Digit}+[.]?						                    { yylval.i = strtol(yytext, NULL, 10); return TK_INTEGER;}
+{Digit}+[.]?						                    { yylval.i = strtol(yytext, NULL, 10); return TK_INTEGER; }
 {Digit}+({Exp}[+-]?{Digit}+)[Ff]?						{ yylval.f = strtof(yytext, NULL);     return TK_FLOAT; }
 [0][Xx]({Digit}+|[A-Fa-f]+)+							{ yylval.i = strtol(yytext, NULL, 16); return TK_HEXA;  }
-({Digit}+{Letter}+)+ 					                { errorMsg("Digit before letter");    return -1; } // CONFERIR ESTA LINHA !!!!!
+({Digit}+{Letter}+)+ 					                { yyerror("lexical error type 'Digit before letter'"); return -1; }
 
 
-('\\')|('')							{ errorMsg("Invalid character"); return -1; }
+('\\')|('')							{ yyerror("lexical error type 'Invalid character'"); return -1; }
 '{Character}?'						{ yylval.i = charTreat(yytext[1], yytext[2]);
                                       if(yylval.i == -1) {
-                                        errorMsg("Invalid character");
+                                        yyerror("lexical error type 'Invalid character'");
                                         return -1;
                                       }
                                       return TK_CHAR; }
-'{Character}+'						{ errorMsg("Invalid character"); return -1; }
+'{Character}+'						{ yyerror("lexical error type 'Invalid character'"); return -1; }
 
 
-\"\\\"								{ errorMsg("Invalid string"); return -1; }
+\"\\\"								{ yyerror("lexical error type 'Invalid string'"); return -1; }
 \"{StringLit}*\"					{ yylval.s = strDup(yytext);
                                       if(yylval.s == NULL) {
-                                        errorMsg("Invalid string");
+                                        yyerror("lexical error type 'Invalid string'");
                                         return -1; 
                                       }
                                       return TK_LIT_STRING; }
@@ -112,7 +107,7 @@ Character		    ([^'\n]|\\'|\\n|\\t|\\\\|\\\"|\\0)
 ";"      							{ yylval.i = yytext[0]; return TK_SEMIC; }
 
 
-.									{ errorMsg("Invalid token entry"); return -1; }
+.									{ yyerror("lexical error type 'Invalid token entry'"); return -1; }
 
 
 %%
@@ -123,14 +118,9 @@ void setInput (FILE *file) {
 	yyin = file;
 }
 
-void errorMsg (char *msg) {
-
-	printf("\nError type '%s': in line %d\n", msg, currentLine);
-}
-
 void commentError() {
 
-	printf("\nError type 'Comment not closed': from line %d to line %d\n", openComment, currentLine);
+	printf("\nlexical error type 'Comment not closed': from line %d to line %d\n", openComment, currentLine);
 }
 
 char charTreat(char first, char second) {
