@@ -8,5 +8,6 @@
 extern void setInput(FILE *file);
 extern int yyparse();
 extern void yyerror(char *s);
+extern int currentLine;
 
 #endif
