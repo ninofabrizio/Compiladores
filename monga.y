@@ -56,37 +56,51 @@
 
 %%
 
-program: definitions;
+program: definitions ;
+
 
 definitions: definition definitions | ;
 
-definition: varDefinition | funcDefinition;
 
-varDefinition: type nameList TK_SEMIC;
+definition: varDefinition | funcDefinition ;
 
-nameList: TK_ID nameSequence;
+
+varDefinition: type nameList TK_SEMIC ;
+
+
+nameList: TK_ID nameSequence ;
+
 
 nameSequence: TK_COM TK_ID nameSequence | ;
 
-type : baseType | type TK_LEFT_BRAC TK_RIGHT_BRAC;
 
-baseType : TK_WORD_INT | TK_WORD_CHAR | TK_WORD_FLOAT;
+type : baseType | type TK_LEFT_BRAC TK_RIGHT_BRAC ;
 
-funcDefinition: retType TK_ID TK_LEFT_PARENT parameters TK_RIGHT_PARENT block;
 
-retType: type | TK_WORD_VOID;
+baseType : TK_WORD_INT | TK_WORD_CHAR | TK_WORD_FLOAT ;
 
-parameters: parameters ParametersSequence | ;
 
-ParametersSequence: TK_COM parameter ParametersSequence | ;
+funcDefinition: TK_WORD_VOID TK_ID TK_LEFT_PARENT parameters TK_RIGHT_PARENT block
+				| type  TK_ID TK_LEFT_PARENT parameters TK_RIGHT_PARENT block ;
 
-parameter:	type TK_ID;
 
-block:	TK_LEFT_CURV_BRAC varDefSequence commandSequence TK_RIGHT_CURV_BRAC;
+parameters: parameter parametersSequence | ;
+
+
+parametersSequence: TK_COM parameter parametersSequence | ;
+
+
+parameter:	type TK_ID ;
+
+
+block:	TK_LEFT_CURV_BRAC varDefSequence commandSequence TK_RIGHT_CURV_BRAC ;
+
 
 varDefSequence: varDefinition varDefSequence | ;
 
+
 commandSequence: command commandSequence | ;
+
 
 command: TK_WORD_IF TK_LEFT_PARENT expression TK_RIGHT_PARENT command
 		 | TK_WORD_IF TK_LEFT_PARENT expression TK_RIGHT_PARENT ifElseCommand TK_WORD_ELSE command
@@ -94,49 +108,80 @@ command: TK_WORD_IF TK_LEFT_PARENT expression TK_RIGHT_PARENT command
 		 | variable TK_ASG expression TK_SEMIC
 		 | TK_WORD_RETURN expressionOptional TK_SEMIC
 		 | funcCalling TK_SEMIC
-		 | block;
+		 | block ;
+
 
 ifElseCommand: TK_WORD_IF TK_LEFT_PARENT expression TK_RIGHT_PARENT ifElseCommand TK_WORD_ELSE ifElseCommand
 			   | TK_WORD_WHILE TK_LEFT_PARENT expression TK_RIGHT_PARENT ifElseCommand
 			   | variable TK_ASG expression TK_SEMIC
 			   | TK_WORD_RETURN expressionOptional TK_SEMIC
 			   | funcCalling TK_SEMIC
-			   | block;  
+			   | block ;  
+
 
 expressionOptional: expression | ;
 
-variable: TK_ID | expression TK_LEFT_BRAC expression TK_RIGHT_BRAC ;
 
-expression: 	numeral
+variable: TK_ID | expressionPrim TK_LEFT_BRAC expression TK_RIGHT_BRAC ;
+
+
+expression : expressionOr ;
+
+
+expressionOr :	expressionOr TK_OR expressionAnd
+				| expressionAnd ;
+
+
+expressionAnd :	expressionAnd TK_AND expressionComp
+				| expressionComp ;
+
+
+expressionComp :	expressionComp TK_EQUAL expressionAddMin
+					| expressionComp TK_LESS_OR_EQ expressionAddMin
+					| expressionComp TK_GREATER_OR_EQ expressionAddMin
+					| expressionComp TK_LESS expressionAddMin
+					| expressionComp TK_GREATER expressionAddMin
+					| expressionComp TK_NOT_EQ expressionAddMin
+					| expressionAddMin ;
+
+
+expressionAddMin :	expressionAddMin TK_PLUS expressionMulDiv
+					| expressionAddMin TK_MINUS expressionMulDiv
+					| expressionMulDiv ;
+
+
+expressionMulDiv :	expressionMulDiv TK_MULT expressionUna
+					| expressionMulDiv TK_DIV expressionUna
+					| expressionUna ;
+
+
+expressionUna :	TK_NOT expressionPrim
+				| TK_MINUS expressionPrim
+				| TK_LEFT_PARENT type TK_RIGHT_PARENT expressionPrim // Array pode ser tambem typecast?
+				| expressionPrim ;
+
+
+expressionPrim:	numeral
 				| literal
 				| variable
 				| TK_LEFT_PARENT expression TK_RIGHT_PARENT
 				| funcCalling
-				| TK_WORD_NEW type TK_LEFT_BRAC expression TK_RIGHT_BRAC
-				| TK_MINUS expression
-				| expression TK_PLUS expression
-				| expression TK_MINUS expression
-				| expression TK_MULT expression
-				| expression TK_DIV expression
-				| expression TK_EQUAL expression
-				| expression TK_LESS_OR_EQ expression
-				| expression TK_GREATER_OR_EQ expression
-				| expression TK_LESS expression
-				| expression TK_GREATER expression
-				| TK_NOT expression
-				| expression TK_AND expression
-				| expression TK_OR expression;
+				| TK_WORD_NEW type TK_LEFT_BRAC expression TK_RIGHT_BRAC ;
 
 
-funcCalling: TK_ID TK_LEFT_PARENT expList TK_RIGHT_PARENT;
+funcCalling: TK_ID TK_LEFT_PARENT expList TK_RIGHT_PARENT ;
+
 
 expList: expression expressionSequence | ;
 
-expressionSequence: TK_COM expression expressionSequence |;
 
-numeral: TK_INTEGER | TK_HEXA | TK_FLOAT | TK_CHAR;
+expressionSequence: TK_COM expression expressionSequence | ;
 
-literal: TK_LIT_STRING;
+
+numeral: TK_INTEGER | TK_HEXA | TK_FLOAT | TK_CHAR ;
+
+
+literal: TK_LIT_STRING ;
 
 %%
 
