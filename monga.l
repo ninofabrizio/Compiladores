@@ -3,6 +3,8 @@
 #include "monga.tab.h"
 #include "monga.h"
 
+void yyerror(char *s);
+
 /* Variável para posição de linha corrente no arquivo de leitura */
 int currentLine = 1;
 

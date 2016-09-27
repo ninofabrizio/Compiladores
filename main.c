@@ -1,6 +1,8 @@
 #include "monga.tab.h"
 #include "monga.h"
 
+int yyparse();
+
 int main( int argc, char *argv[] ) {
 	
     ++argv, --argc;  // skip over program name

@@ -1,10 +1,12 @@
 %{
 
-	#include "monga.h"
-
+	#include "monga.h"	
+	
 	extern void yyerror(char *);
+	extern int yyparse(void);
 	int yylex(void);
 	int currentLine;
+
 %}
 
 %union {

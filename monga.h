@@ -6,8 +6,7 @@
 #include <string.h>
 
 extern void setInput(FILE *file);
-extern int yyparse();
-extern void yyerror(char *s);
+extern int yylex(void);
 extern int currentLine;
 
 #endif
