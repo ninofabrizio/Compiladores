@@ -55,24 +55,20 @@ Character		    ([^'\n]|\\'|\\n|\\t|\\\\|\\\"|\\0)
 {Digit}+[.]?						                    { yylval.i = strtol(yytext, NULL, 10); return TK_INTEGER; }
 {Digit}+({Exp}[+-]?{Digit}+)[Ff]?						{ yylval.f = strtof(yytext, NULL);     return TK_FLOAT; }
 [0][Xx]({Digit}+|[A-Fa-f]+)+							{ yylval.i = strtol(yytext, NULL, 16); return TK_HEXA;  }
-({Digit}+{Letter}+)+ 					                { yyerror("lexical error type 'Digit before letter'"); return -1; }
 
 
-('\\')|('')							{ yyerror("lexical error type 'Invalid character'"); return -1; }
+('\\')|('')							{ return yytext[0]; }
 '{Character}?'						{ yylval.i = charTreat(yytext[1], yytext[2]);
                                       if(yylval.i == -1) {
-                                        yyerror("lexical error type 'Invalid character'");
-                                        return -1;
+                                        return yytext[0];
                                       }
                                       return TK_CHAR; }
-'{Character}+'						{ yyerror("lexical error type 'Invalid character'"); return -1; }
 
 
-\"\\\"								{ yyerror("lexical error type 'Invalid string'"); return -1; }
+\"\\\"								{ return yytext[0]; }
 \"{StringLit}*\"					{ yylval.s = strDup(yytext);
                                       if(yylval.s == NULL) {
-                                        yyerror("lexical error type 'Invalid string'");
-                                        return -1; 
+                                        return yytext[0]; 
                                       }
                                       return TK_LIT_STRING; }
 
@@ -87,29 +83,29 @@ Character		    ([^'\n]|\\'|\\n|\\t|\\\\|\\\"|\\0)
 
 "=="	 							{ yylval.s = yytext; return TK_EQUAL; }
 "!="     							{ yylval.s = yytext; return TK_NOT_EQ; }
-"="      							{ yylval.i = yytext[0]; return TK_ASG; }
+"="      							{ yylval.i = yytext[0]; return yytext[0]; }
 "<="     							{ yylval.s = yytext; return TK_LESS_OR_EQ; }
-"<"      							{ yylval.i = yytext[0]; return TK_LESS; }
+"<"      							{ yylval.i = yytext[0]; return yytext[0]; }
 ">="     							{ yylval.s = yytext; return TK_GREATER_OR_EQ; }
-">"      							{ yylval.i = yytext[0]; return TK_GREATER; }
-"+"      							{ yylval.i = yytext[0]; return TK_PLUS; }
-"-"      							{ yylval.i = yytext[0]; return TK_MINUS; }
-"*"      							{ yylval.i = yytext[0]; return TK_MULT; }
-"/"      							{ yylval.i = yytext[0]; return TK_DIV; }
-"("      							{ yylval.i = yytext[0]; return TK_LEFT_PARENT; }
-")"      							{ yylval.i = yytext[0]; return TK_RIGHT_PARENT; }
-"["		 							{ yylval.i = yytext[0]; return TK_LEFT_BRAC; }
-"]"		 							{ yylval.i = yytext[0]; return TK_RIGHT_BRAC; }
-"{"		 							{ yylval.i = yytext[0]; return TK_LEFT_CURV_BRAC; }
-"}"		 							{ yylval.i = yytext[0]; return TK_RIGHT_CURV_BRAC; }
+">"      							{ yylval.i = yytext[0]; return yytext[0]; }
+"+"      							{ yylval.i = yytext[0]; return yytext[0]; }
+"-"      							{ yylval.i = yytext[0]; return yytext[0]; }
+"*"      							{ yylval.i = yytext[0]; return yytext[0]; }
+"/"      							{ yylval.i = yytext[0]; return yytext[0]; }
+"("      							{ yylval.i = yytext[0]; return yytext[0]; }
+")"      							{ yylval.i = yytext[0]; return yytext[0]; }
+"["		 							{ yylval.i = yytext[0]; return yytext[0]; }
+"]"		 							{ yylval.i = yytext[0]; return yytext[0]; }
+"{"		 							{ yylval.i = yytext[0]; return yytext[0]; }
+"}"		 							{ yylval.i = yytext[0]; return yytext[0]; }
 "||"	 							{ yylval.s = strDup(yytext); return TK_OR;  }
 "&&"	 							{ yylval.s = strDup(yytext); return TK_AND; }
-"!"									{ yylval.i = yytext[0]; return TK_NOT; }
-","		 							{ yylval.i = yytext[0]; return TK_COM; }
-";"      							{ yylval.i = yytext[0]; return TK_SEMIC; }
+"!"									{ yylval.i = yytext[0]; return yytext[0]; }
+","		 							{ yylval.i = yytext[0]; return yytext[0]; }
+";"      							{ yylval.i = yytext[0]; return yytext[0]; }
 
 
-.									{ yyerror("lexical error type 'Invalid token entry'"); return -1; }
+.									{ return yytext[0]; }
 
 
 %%
@@ -122,7 +118,7 @@ void setInput (FILE *file) {
 
 void commentError() {
 
-	printf("\nlexical error type 'Comment not closed': from line %d to line %d\n", openComment, currentLine);
+	printf("\nlexical error type 'Comment not closed': from line %d\n", openComment);
 }
 
 char charTreat(char first, char second) {
