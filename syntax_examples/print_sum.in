@@ -1,0 +1,14 @@
+
+/* Some stupid Monga program */
+
+void main () {
+	
+	int a, b; /* remember that in Monga, we have to declare
+				AND THEN, we can assign values to the variables */
+	a = 4 ;
+	b = a / 2 ;
+
+	printThis(b);
+
+	return 0;
+}
