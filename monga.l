@@ -120,7 +120,7 @@ void setInput (FILE *file) {
 
 void commentError() {
 
-	printf("\nlexical error type 'Comment not closed': from line %d\n", openComment);
+	printf("\nerror type 'Comment not closed': from line %d\n", openComment);
 }
 
 char charTreat(char first, char second) {

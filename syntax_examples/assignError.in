@@ -1,0 +1,11 @@
+
+int main () {
+
+	float x, y, z;
+	int [] v;
+
+	y = x + z;
+	
+	new int [exp] + 3; /* expressao sem atribuicao */
+	
+}
