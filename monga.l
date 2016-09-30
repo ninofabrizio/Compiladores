@@ -60,6 +60,7 @@ Character		    ([^'\n]|\\'|\\n|\\t|\\\\|\\\"|\\0)
 ('\\')|('')							{ return yytext[0]; }
 '{Character}?'						{ yylval.i = charTreat(yytext[1], yytext[2]);
                                       if(yylval.i == -1) {
+                                        yylval.s = yytext;
                                         return yytext[0];
                                       }
                                       return TK_CHAR; }
@@ -68,6 +69,7 @@ Character		    ([^'\n]|\\'|\\n|\\t|\\\\|\\\"|\\0)
 \"\\\"								{ return yytext[0]; }
 \"{StringLit}*\"					{ yylval.s = strDup(yytext);
                                       if(yylval.s == NULL) {
+                                        yylval.s = yytext;
                                         return yytext[0]; 
                                       }
                                       return TK_LIT_STRING; }
@@ -78,34 +80,34 @@ Character		    ([^'\n]|\\'|\\n|\\t|\\\\|\\\"|\\0)
 <Comment>"*"+[^*/\n]*   			{ ; }
 <Comment>\n 						{ currentLine++; }
 <Comment>"*"+"/"        			{ BEGIN(INITIAL); }
-<Comment><<EOF>>					{ commentError(); return -1; }
+<Comment><<EOF>>					{ commentError(); return yytext[0]; }
 
 
 "=="	 							{ yylval.s = yytext; return TK_EQUAL; }
 "!="     							{ yylval.s = yytext; return TK_NOT_EQ; }
-"="      							{ yylval.i = yytext[0]; return yytext[0]; }
+"="      							{ return yytext[0]; }
 "<="     							{ yylval.s = yytext; return TK_LESS_OR_EQ; }
-"<"      							{ yylval.i = yytext[0]; return yytext[0]; }
+"<"      							{ return yytext[0]; }
 ">="     							{ yylval.s = yytext; return TK_GREATER_OR_EQ; }
-">"      							{ yylval.i = yytext[0]; return yytext[0]; }
-"+"      							{ yylval.i = yytext[0]; return yytext[0]; }
-"-"      							{ yylval.i = yytext[0]; return yytext[0]; }
-"*"      							{ yylval.i = yytext[0]; return yytext[0]; }
-"/"      							{ yylval.i = yytext[0]; return yytext[0]; }
-"("      							{ yylval.i = yytext[0]; return yytext[0]; }
-")"      							{ yylval.i = yytext[0]; return yytext[0]; }
-"["		 							{ yylval.i = yytext[0]; return yytext[0]; }
-"]"		 							{ yylval.i = yytext[0]; return yytext[0]; }
-"{"		 							{ yylval.i = yytext[0]; return yytext[0]; }
-"}"		 							{ yylval.i = yytext[0]; return yytext[0]; }
+">"      							{ return yytext[0]; }
+"+"      							{ return yytext[0]; }
+"-"      							{ return yytext[0]; }
+"*"      							{ return yytext[0]; }
+"/"      							{ return yytext[0]; }
+"("      							{ return yytext[0]; }
+")"      							{ return yytext[0]; }
+"["		 							{ return yytext[0]; }
+"]"		 							{ return yytext[0]; }
+"{"		 							{ return yytext[0]; }
+"}"		 							{ return yytext[0]; }
 "||"	 							{ yylval.s = strDup(yytext); return TK_OR;  }
 "&&"	 							{ yylval.s = strDup(yytext); return TK_AND; }
-"!"									{ yylval.i = yytext[0]; return yytext[0]; }
-","		 							{ yylval.i = yytext[0]; return yytext[0]; }
-";"      							{ yylval.i = yytext[0]; return yytext[0]; }
+"!"									{ return yytext[0]; }
+","		 							{ return yytext[0]; }
+";"      							{ return yytext[0]; }
 
 
-.									{ return yytext[0]; }
+.									{ yylval.s = yytext; return yytext[0]; }
 
 
 %%
@@ -170,7 +172,7 @@ char * strDup (char *s) {
 
 	dup = (char *) malloc (sizeof(char)*length);
     if (dup == NULL) {
-    	printf("\nMemory allocation error\n");
+    	printf("\nMemory allocation error in line %d\n", currentLine);
     	return NULL; 
     }
 

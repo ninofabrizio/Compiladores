@@ -173,5 +173,20 @@ literal: TK_LIT_STRING ;
 
 void yyerror(char *s) {
 
- 	fprintf(stderr, "\n%s in line %d\n", s, currentLine);
+ 	fprintf(stderr, "\n%s in line %d with symbol ", s, currentLine);
+
+ 	if((yychar >= 32) && (yychar <= 126))
+		fprintf(stderr, "'%c'\n", yychar);
+	else if((yychar >= 260) && (yychar <= 276))
+		fprintf(stderr, "'%s'\n", yylval.s);
+	else if(yychar == 258)
+		fprintf(stderr, "'%f'\n", yylval.f);
+	else if(yychar == 259)
+		fprintf(stderr, "'%c'\n", yylval.i);
+	else if(yychar == 277)
+		fprintf(stderr, "'%d'\n", yylval.i);
+	else if(yychar == 278)
+		fprintf(stderr, "'%x'\n", yylval.i);
+	else
+		fprintf(stderr, "number %d\n", yychar);
 }
