@@ -5,21 +5,36 @@
 #include <stdlib.h>
 
 typedef enum nodeEnum nodeEnum;
-typedef enum structEnum structEnum;
-typedef struct AST_NodeType AST_NodeType;
+typedef enum nodeTypeEnum nodeTypeEnum;
+typedef struct Call Call;
+typedef struct Type Type;
+typedef struct Var Var;
+typedef struct Exp Exp;
+typedef struct Param Param;
+typedef struct Defvar DefVar;
+typedef struct Block Block;
+typedef struct Def Def;
+typedef struct Stat Stat;
+typedef struct IfElse IfElse;
+typedef struct AST_Node AST_Node;
+typedef struct AST_PrimaryExp_Node AST_PrimaryExp_Node;
 
-// For the type of the node
+
+AST_Node* new_ast_node ( int node, int node_type, AST_Node* left, AST_Node* right, AST_Node* center );
+AST_PrimaryExp_Node* new_ast_primary_node ( int node, int node_type, Exp *primary );
+
+
+
 enum nodeEnum {
 
 	EXPR,
-	VARI,
-	DEFI,
+	VAR,
+	DEF,
 	STAT,
 	TYPE
 };
 
-// For all the types of structs
-enum structEnum {
+enum nodeTypeEnum {
 	
 	TChar,
 	TInt,
@@ -28,6 +43,8 @@ enum structEnum {
 	
 	VarID,
 	VarINDEXED,
+	
+	STAT_WHILE,
 	
 	EXPR_OR,
 	EXPR_AND,
@@ -41,157 +58,120 @@ enum structEnum {
 	EXPR_NEW
 };
 
-
-typedef struct Call {
+struct Call {
 	
-	const char* id;
+	const char *funcName;
 	int openPar;
 	int closePar;
-	Exp *e;
+	Exp *expression;
 	
-} Call;
+};
 
-
-typedef struct Type {
+struct Type {
 	
 	int tokenType;
-		
-} Type;
+};
 
-
-typedef struct Var {
+struct Var {
 	
-	struct Var *prox; // p/Array
+	struct Var *proxElement; 
 	
-	union {
-		
-		const char *id;		
-		struct { struct exp *exp1, *exp2; } indexed;			
-		
+	union {	
+		const char *varName;		
+		struct { struct Exp *exp01, *exp02; } indexed;					
 	} u;
+};
 
-} Var;
-
-
-typedef struct Exp {
+struct Exp {
 	
-	Exp *proxExp;
+	struct Exp *proxExp;
 	
 	union {
-	
-		struct { Exp *e1, *e2 } bin;	
-		struct { int symbol; Exp *e } una;
-		struct { int open; int close; Exp *e } par;
-		struct { int new; Type* type; int open; int close; Exp *exp } new;
-		
 		Var *var;	
-		int ki;
+		int ki;	
 		float kf;
-	
 		Call *functionCall;
-
+		struct { struct Exp *exp01, *exp02; } bin;	
+		struct { int symbol; Exp *exp00; } una;
+		struct { int openPar; int closePar; Exp *exp00; } par;
+		struct { int newWord; Type* dataType; int openBracket; int closeBracket; Exp *exp00; } new;	
 	} u;
-		
-} Exp;
+};
 
-
-typedef struct Param {
+struct Param {
 	
-	Type *type;
-	const char* id;
-	struct Param *listParam;	
+	struct Param *proxParam;
+	Type *dataType;
+	const char *paramName;
+};
 
-} Param;
+struct Defvar { 
+	
+	Type *dataType; 
+	Var **nameList;
+}; 
 
+struct Block { 
 
-typedef struct { 
-	struct Def *definitions;  
-	Stat *statements 
-} Block;
+	int openCurveBracket;
+	int closeCurveBracket;
 
+	DefVar **varList;
+	Stat **statList;
+};
 
-typedef struct IfElse {
+struct Def {
 	
 	union {
+		
+		DefVar *var;
+		struct { const char *funcName; int openPar; int closePar; Param *param; 
+		     	 union { int voidType; Type *dataType; } ret;
+			 	 int tagReturnType; // to void return 0; to other types return 1.
+				 Block *block;
+		} func;		
+	} u;
+};
+
+struct Stat {
 	
-		Call *callFunction;
+	union {
+		Call *callFunc;
 		Block *block;
-
-		struct { int ifType; int open; int close; Exp *exp; struct IfElse *command; IfElse *ifElse } ifControl;
-
-		struct { int whileType; int open; int close; Exp *exp; struct IfElse *command; } whileControl;
-
-		struct { Var *var; int assignType; Exp *e } Assign;
-
-		struct {  int returnType; Exp *e } retCommand;	
-	
+		struct { Var *var; int assignType; Exp *exp00; } assign;
+		struct { int returnType; Exp *exp00; } retCommand;
+		struct { int whileType; Exp *exp00; struct Stat *commandList; } whileLoop;
+		struct { int ifType; int openPar; int closePar; Exp *exp00; struct Stat *block; } ifCondition;
+		IfElse *ifElseCondition;
 	} u;
+};
+
+struct IfElse {
 		
-} IfElse;
+	struct IfElse *proxIfElse;
+	struct { int ifType; int openPar; int closePar; Exp *exp00; struct Stat *commandBlock; } ifCondition;
+	struct { int elseType; struct Stat *commandBlock; } elseCondition;
+};
 
 
-typedef struct Stat {
+
+// node no-terminal
+struct AST_Node 
+{
+	nodeEnum node;
+	nodeTypeEnum nodeType;
+	AST_Node *left;
+	AST_Node *right;
+	AST_Node *center; // only to ifElse condition
 	
-	union {
+};
+
+// terminal node
+struct AST_PrimaryExp_Node { 
 	
-		Call *callFunction;
-		Block *block;
-	
-		struct { int ifType; int open; int close; Exp *exp; struct Stat *command; IfElse *ifElse } ifControl;
-	
-		struct { int whileType; int open; int close; Exp *exp; struct Stat *command; } whileControl;
-	
-		struct { Var *var; int assignType; Exp *e } Assign;
-	
-		struct {  int returnType; Exp *e } retCommand;	
-	
-	} u;
-	
-	
-} Stat;
-
-
-
-typedef struct Def {
-	
-
-	union {
-
-		struct { Type *type; const char **listID; int semicolon } var;
-	
-		struct { const char *id; int open; int close; Param *param; 
-		     	union{ int wordVoid; Type *type} ret;
-			 	int tag; // 0..void; 1..type
-		 } func;
-	
-		 Block *block;
-		
-	} u;
-
-
-} Def;
-
-
-
-struct AST_NodeType {
-
-	// Flags
-	nodeEnum typeNode;
-	structEnum typeStruct;
-
-	AST_NodeType *right;
-	AST_NodeType *left;
-
-	Typedef union nodeStruct {
-
-		Def  *def;
-		Stat *stat;
-		Type *type;
-		Var  *var;
-		Exp  *exp;
-		
-	} nodeStruct;
-
+	nodeEnum node;
+	nodeTypeEnum nodeType;
+	Exp* primaryExp;	
 };
 
 
