@@ -6,6 +6,9 @@
 
 typedef enum nodeEnum nodeEnum;
 typedef enum nodeTypeEnum nodeTypeEnum;
+
+typedef struct AST_Node AST_Node;
+
 typedef struct Call Call;
 typedef struct Type Type;
 typedef struct Var Var;
@@ -16,13 +19,21 @@ typedef struct Block Block;
 typedef struct Def Def;
 typedef struct Stat Stat;
 typedef struct IfElse IfElse;
-typedef struct AST_Node AST_Node;
-typedef struct AST_PrimaryExp_Node AST_PrimaryExp_Node;
 
 
 AST_Node* new_ast_node ( int node, int node_type, AST_Node* left, AST_Node* right, AST_Node* center );
-AST_PrimaryExp_Node* new_ast_primary_node ( int node, int node_type, Exp *primary );
 
+AST_Node* new_ast_expInteger_node ( int node, int node_type, int value );
+AST_Node* new_ast_expFloat_node ( int node, int node_type, float value );
+AST_Node* new_ast_expLiteral_node ( int node, int node_type, const char *value );
+AST_Node* new_ast_expFuncCall_node ( int node, int node_type, Call *funcCall );
+AST_Node* new_ast_expVariable_node( int node, int node_type, AST_Node *variableNode );
+
+AST_Node* new_ast_variable_node( int node, int node_type, const char *id, AST_Node *exp1, AST_Node *exp2 );
+
+Call* new_funcCall(const char* id, AST_Node *expListNode);
+
+AST_Node* connect_exp_list(AST_Node *father, AST_Node *son);
 
 
 enum nodeEnum {
@@ -36,34 +47,69 @@ enum nodeEnum {
 
 enum nodeTypeEnum {
 	
-	TChar,
-	TInt,
-	TFloat,
-	Tarray,
+	TYPE_CHAR,
+	TYPE_INT,
+	TYPE_FLOAT,
+	TYPE_ARRAY,
 	
-	VarID,
-	VarINDEXED,
+	VAR_UNIQUE,
+	VAR_INDEXED,
 	
 	STAT_WHILE,
 	
 	EXPR_OR,
 	EXPR_AND,
-	EXPR_COMP,
-	EXPR_ADD_MIN,
-	EXPR_MUL_DIV,
-	EXPR_UNA,
+	EXPR_EQUAL,
+	EXPR_LEEQ,
+	EXPR_GEEQ,
+	EXPR_GREATER,
+	EXPR_LESS,
+	EXPR_NOEQ,
+	EXPR_ADD,
+	EXPR_MIN,
+	EXPR_MUL,
+	EXPR_DIV,
+	EXPR_NOT,
+	EXPR_NEG,
 	EXPR_VAR,
-	EXPR_PART,
 	EXPR_FUNC_CALL,
-	EXPR_NEW
+	EXPR_NEW,
+	EXPR_INT,
+	EXPR_HEXA,
+	EXPR_CHAR,
+	EXPR_FLOAT,
+	EXPR_LIT
 };
+
+// Tree node
+
+struct AST_Node 
+{
+	nodeEnum node;
+	nodeTypeEnum nodeType;
+
+	AST_Node *right;
+	AST_Node *left;
+	AST_Node *center; // only for ifElse condition
+
+	union {
+
+		Def  *def;
+		Stat *stat;
+		Type *type;
+		Var  *var;
+		Exp  *exp;
+		
+	} nodeStruct;
+};
+
+// Structs
 
 struct Call {
 	
 	const char *funcName;
-	int openPar;
-	int closePar;
-	Exp *expression;
+
+	AST_Node *expressionNode;
 	
 };
 
@@ -74,41 +120,36 @@ struct Type {
 
 struct Var {
 	
-	struct Var *proxElement; 
+	AST_Node *nextVarNode; 
 	
-	union {	
-		const char *varName;		
-		struct { struct Exp *exp01, *exp02; } indexed;					
-	} u;
+	const char *varName;
 };
 
 struct Exp {
 	
-	struct Exp *proxExp;
+	AST_Node *nextExpNode;
 	
 	union {
-		Var *var;	
-		int ki;	
+		AST_Node *varNode;
+		const char *lit;
+		int ki;
 		float kf;
 		Call *functionCall;
-		struct { struct Exp *exp01, *exp02; } bin;	
-		struct { int symbol; Exp *exp00; } una;
-		struct { int openPar; int closePar; Exp *exp00; } par;
-		struct { int newWord; Type* dataType; int openBracket; int closeBracket; Exp *exp00; } new;	
 	} u;
 };
 
 struct Param {
 	
-	struct Param *proxParam;
-	Type *dataType;
+	Param *proxParam;
+
+	AST_Node *dataTypeNode;
 	const char *paramName;
 };
 
 struct Defvar { 
 	
-	Type *dataType; 
-	Var **nameList;
+	AST_Node *dataTypeNode; 
+	AST_Node **nameListNode;
 }; 
 
 struct Block { 
@@ -117,7 +158,7 @@ struct Block {
 	int closeCurveBracket;
 
 	DefVar **varList;
-	Stat **statList;
+	AST_Node **statListNode;
 };
 
 struct Def {
@@ -126,8 +167,8 @@ struct Def {
 		
 		DefVar *var;
 		struct { const char *funcName; int openPar; int closePar; Param *param; 
-		     	 union { int voidType; Type *dataType; } ret;
-			 	 int tagReturnType; // to void return 0; to other types return 1.
+		     	 union { int voidType; AST_Node *dataTypeNode; } ret;
+			 	 int tagReturnType; // for void return 0; for other types return 1.
 				 Block *block;
 		} func;		
 	} u;
@@ -138,41 +179,19 @@ struct Stat {
 	union {
 		Call *callFunc;
 		Block *block;
-		struct { Var *var; int assignType; Exp *exp00; } assign;
-		struct { int returnType; Exp *exp00; } retCommand;
-		struct { int whileType; Exp *exp00; struct Stat *commandList; } whileLoop;
-		struct { int ifType; int openPar; int closePar; Exp *exp00; struct Stat *block; } ifCondition;
+		struct { AST_Node *varNode; AST_Node *exp00Node; } assign;
+		struct { int returnType; AST_Node *exp00Node; } retCommand;
+		struct { int whileType; AST_Node *exp00Node; AST_Node *commandListNode; } whileLoop;
+		struct { int ifType; int openPar; int closePar; AST_Node *exp00Node; Block *block; } ifCondition;
 		IfElse *ifElseCondition;
 	} u;
 };
 
 struct IfElse {
 		
-	struct IfElse *proxIfElse;
-	struct { int ifType; int openPar; int closePar; Exp *exp00; struct Stat *commandBlock; } ifCondition;
-	struct { int elseType; struct Stat *commandBlock; } elseCondition;
+	IfElse *proxIfElseNode;
+	struct { int ifType; int openPar; int closePar; AST_Node *exp00Node; Block *commandBlock; } ifCondition;
+	struct { int elseType; Block *commandBlock; } elseCondition;
 };
-
-
-
-// node no-terminal
-struct AST_Node 
-{
-	nodeEnum node;
-	nodeTypeEnum nodeType;
-	AST_Node *left;
-	AST_Node *right;
-	AST_Node *center; // only to ifElse condition
-	
-};
-
-// terminal node
-struct AST_PrimaryExp_Node { 
-	
-	nodeEnum node;
-	nodeTypeEnum nodeType;
-	Exp* primaryExp;	
-};
-
 
 #endif

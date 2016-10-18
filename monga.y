@@ -6,8 +6,9 @@
 	extern void yyerror(char *);
 	extern int yyparse(void);
 	int yylex(void);
-	int currentLine;
 
+	int currentLine;
+	AST_Node *AST_Root;
 %}
 
 %union {
@@ -21,8 +22,6 @@
     	const char* name;
     	int currentLine;
     } identifier;*/
-
-    AST_NodeType *node;
 }
 
 %token <f>	TK_FLOAT
@@ -53,11 +52,11 @@
 
 %%
 
-program: definitions ;	{ $$ = $1; }
+program: definitions ;	{ $$ = $1; AST_Root = $$; } // This might not be the right way to instantiate our root...
 
 
 definitions: definition definitions	{  }
-			|	{  } ;
+			|	{ $$ = NULL; } ;
 
 
 definition: varDefinition	{  }
@@ -71,14 +70,14 @@ nameList: TK_ID nameSequence	{  } ;
 
 
 nameSequence: ',' TK_ID nameSequence	{  }
-				|	{  } ;
+				|	{ $$ = NULL; } ;
 
 
-type : baseType	{  }
+type: baseType	{  }
 		| type '[' ']'	{  } ;
 
 
-baseType : TK_WORD_INT	{  }
+baseType: TK_WORD_INT	{  }
 			| TK_WORD_CHAR	{  }
 			| TK_WORD_FLOAT	{  } ;
 
@@ -88,11 +87,11 @@ funcDefinition: TK_WORD_VOID TK_ID '(' parameters ')' block	{  }
 
 
 parameters: parameter parametersSequence	{  }
-			|	{  } ;
+			|	{ $$ = NULL; } ;
 
 
 parametersSequence: ',' parameter parametersSequence	{  }
-					|	{  } ;
+					|	{ $$ = NULL; } ;
 
 
 parameter:	type TK_ID 	{  } ;
@@ -102,11 +101,11 @@ block:	'{' varDefSequence commandSequence '}'	{  } ;
 
 
 varDefSequence: varDefinition varDefSequence	{  }
-				|	{  } ;
+				|	{ $$ = NULL; } ;
 
 
 commandSequence: command commandSequence	{  }
-				|	{  } ;
+				|	{ $$ = NULL; } ;
 
 
 command: TK_WORD_IF '(' expression ')' command 	{  }
@@ -126,75 +125,75 @@ ifElseCommand: TK_WORD_IF '(' expression ')' ifElseCommand TK_WORD_ELSE ifElseCo
 			   | block	{  } ;  
 
 
-expressionOptional: expression 	{  }
-					|	{  } ;
+expressionOptional: expression 	{ $$ = $1; }
+					|	{ $$ = NULL; } ;
 
 
-variable: TK_ID 	{  }
-			| expressionPrim '[' expression ']'	{  } ;
+variable:	TK_ID 	{ $$ = new_ast_variable_node(VAR, VAR_UNIQUE, $1, NULL, NULL); }
+			| expressionPrim '[' expression ']'	{ $$ = new_ast_variable_node(VAR, VAR_INDEXED, NULL, $1, $3); } ;
 
 
-expression : expressionOr	{ $$ = $1; } ; // certo?
+expression: expressionOr	{ $$ = $1; } ;
 
 
-expressionOr :	expressionOr TK_OR expressionAnd	{  -+- }
-				| expressionAnd	{  } ;
+expressionOr:	expressionOr TK_OR expressionAnd	{ $$ = new_ast_node(EXPR, EXPR_OR, $1, $3, NULL); }
+				| expressionAnd	{ $$ = $1; } ;
 
 
-expressionAnd :	expressionAnd TK_AND expressionComp	{  }
-				| expressionComp	{  } ;
+expressionAnd:	expressionAnd TK_AND expressionComp	{ $$ = new_ast_node(EXPR, EXPR_AND, $1, $3, NULL); }
+				| expressionComp	{ $$ = $1; } ;
 
 
-expressionComp :	expressionComp TK_EQUAL expressionAddMin	{  }
-					| expressionComp TK_LESS_OR_EQ expressionAddMin	{  }
-					| expressionComp TK_GREATER_OR_EQ expressionAddMin	{  }
-					| expressionComp '<' expressionAddMin	{  }
-					| expressionComp '>' expressionAddMin	{  }
-					| expressionComp TK_NOT_EQ expressionAddMin	{  }
-					| expressionAddMin	{  } ;
+expressionComp:	expressionComp TK_EQUAL expressionAddMin	{ $$ = new_ast_node(EXPR, EXPR_EQUAL, $1, $3, NULL); }
+					| expressionComp TK_LESS_OR_EQ expressionAddMin	{ $$ = new_ast_node(EXPR, EXPR_LEEQ, $1, $3, NULL); }
+					| expressionComp TK_GREATER_OR_EQ expressionAddMin	{ $$ = new_ast_node(EXPR, EXPR_GREQ, $1, $3, NULL); }
+					| expressionComp '<' expressionAddMin	{ $$ = new_ast_node(EXPR, EXPR_LESS, $1, $3, NULL); }
+					| expressionComp '>' expressionAddMin	{ $$ = new_ast_node(EXPR, EXPR_GREATER, $1, $3, NULL); }
+					| expressionComp TK_NOT_EQ expressionAddMin	{ $$ = new_ast_node(EXPR, EXPR_NOEQ, $1, $3, NULL); }
+					| expressionAddMin	{ $$ = $1; } ;
 
 
-expressionAddMin :	expressionAddMin '+' expressionMulDiv	{  }
-					| expressionAddMin '-' expressionMulDiv	{  }
-					| expressionMulDiv	{  } ;
+expressionAddMin:	expressionAddMin '+' expressionMulDiv	{ $$ = new_ast_node(EXPR, EXPR_ADD, $1, $3, NULL); }
+					| expressionAddMin '-' expressionMulDiv	{ $$ = new_ast_node(EXPR, EXPR_MIN, $1, $3, NULL); }
+					| expressionMulDiv	{ $$ = $1; } ;
 
 
-expressionMulDiv :	expressionMulDiv '*' expressionUna	{  }
-					| expressionMulDiv '/' expressionUna	{  }
-					| expressionUna	{  } ;
+expressionMulDiv:	expressionMulDiv '*' expressionUna	{ $$ = new_ast_node(EXPR, EXPR_MUL, $1, $3, NULL); }
+					| expressionMulDiv '/' expressionUna	{ $$ = new_ast_node(EXPR, EXPR_DIV, $1, $3, NULL); }
+					| expressionUna	{ $$ = $1; } ;
 
 
-expressionUna :	'!' expressionPrim	{  }
-				| '-' expressionPrim	{  }
-				| expressionPrim	{  } ;
+expressionUna:	'!' expressionPrim	{ $$ = new_ast_node(EXPR, EXPR_NOT, $2, NULL, NULL); }
+				| '-' expressionPrim	{ $$ = new_ast_node(EXPR, EXPR_NEG, $2, NULL, NULL); }
+				| expressionPrim	{ $$ = $1; } ;
 
 
-expressionPrim:	numeral	{  }
-				| literal	{  }
-				| variable	{  }
-				| '(' expression ')'	{  }
-				| funcCalling	{  }
-				| TK_WORD_NEW type '[' expression ']'	{  } ;
+expressionPrim:	numeral	{ $$ = $1; }
+				| literal	{ $$ = $1; }
+				| variable	{ $$ = new_ast_expVariable_node(EXPR, EXPR_VAR, $1); }
+				| '(' expression ')'	{ $$ = $2; }
+				| funcCalling	{ $$ = new_ast_expFuncCall_node(EXPR, EXPR_FUNC_CALL, $1); }
+				| TK_WORD_NEW type '[' expression ']'	{ $$ = new_ast_node(EXPR, EXPR_NEW, $2, $4, NULL); } ;
 
 
-funcCalling: TK_ID '(' expList ')'	{  } ;
+funcCalling: TK_ID '(' expList ')'	{ $$ = new_funcCall($1, $3); } ;
 
 
-expList: expression expressionSequence	{  }
-		|	{  } ;
+expList: expression expressionSequence	{ $$ = connect_exp_list($1, $2); }
+		|	{ $$ = NULL; } ;
 
 
-expressionSequence: ',' expression expressionSequence	{  }
-					|	{  } ;
+expressionSequence: ',' expression expressionSequence	{ $$ = connect_exp_list($2, $3); }
+					|	{ $$ = NULL; } ;
 
 
-numeral: TK_INTEGER	{  }
-			| TK_HEXA	{  }
-			| TK_FLOAT 	{  } 
-			| TK_CHAR 	{  } ;
+numeral: TK_INTEGER	{ $$ = new_ast_expInteger_node (EXPR, EXPR_INT, $1); }
+			| TK_HEXA	{ $$ = new_ast_expInteger_node (EXPR, EXPR_HEXA, $1); }
+			| TK_FLOAT 	{ $$ = new_ast_expFloat_node (EXPR, EXPR_FLOAT, $1); } 
+			| TK_CHAR 	{ $$ = new_ast_expInteger_node (EXPR, EXPR_CHAR, $1); } ;
 
 
-literal: TK_LIT_STRING	{  } ;
+literal: TK_LIT_STRING	{ $$ = new_ast_expLiteral_node (EXPR, EXPR_LIT, $1); } ;
 
 %%
 
