@@ -24,6 +24,9 @@
     	const char* name;
     	int currentLine;
     } identifier;*/
+
+    AST_Node *node;
+    Call *call;
 }
 
 
@@ -49,14 +52,20 @@
 %token <i>	TK_INTEGER
 %token <i>	TK_HEXA
 
+<<<<<<< HEAD
 
 %type <node> definition definitions varDefinition funcDefinition type baseType nameList nameSequence parameters parameter parametersSequence block varDefSequence commandSequence expression command ifElseCommand variable expressionOptional funcCalling expressionPrim expressionOr expressionAnd expressionComp expressionAddMin expressionMulDiv expressionUna numeral literal expList expressionSequence
+=======
+%type <node> program definition definitions varDefinition funcDefinition type baseType nameList nameSequence parameters parameter parametersSequence block varDefSequence commandSequence expression command ifElseCommand variable expressionOptional expressionPrim expressionOr expressionAnd expressionComp expressionAddMin expressionMulDiv expressionUna numeral literal expList expressionSequence
+%type <call> funcCalling
+>>>>>>> 96950048985e484cb0fde77ef38ff8c2793473fe
 
 %start program 
 
 
 %%
 
+<<<<<<< HEAD
 program: definitions { $$ = new_ast_node(ROOT, ROOT, $1, null, null); AST_Root = $$; };
 
 
@@ -106,6 +115,9 @@ baseType: TK_WORD_INT	{ $$ = $1; }
 		| TK_WORD_FLOAT	{ $$ = $1; } ;
 
 
+=======
+program: definitions { $$ = $1; AST_Root = $$; } ; // This might not be the right way to instantiate our root...
+>>>>>>> 96950048985e484cb0fde77ef38ff8c2793473fe
 
 
 funcDefinition: TK_WORD_VOID TK_ID '(' parameters ')' block	{ $$ = new_ast_node(DEF, DEF_FUNC, $3, $5, null); }
