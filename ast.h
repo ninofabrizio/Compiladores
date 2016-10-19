@@ -21,15 +21,15 @@ typedef struct Stat Stat;
 typedef struct IfElse IfElse;
 
 
-AST_Node* new_ast_node ( int node, int node_type, AST_Node* left, AST_Node* right, AST_Node* center );
+AST_Node* new_ast_node ( int node, int node_type, AST_Node* left, AST_Node* right, AST_Node* center, int line );
 
-AST_Node* new_ast_expInteger_node ( int node, int node_type, int value );
-AST_Node* new_ast_expFloat_node ( int node, int node_type, float value );
-AST_Node* new_ast_expLiteral_node ( int node, int node_type, const char *value );
-AST_Node* new_ast_expFuncCall_node ( int node, int node_type, Call *funcCall );
+AST_Node* new_ast_expInteger_node ( int node, int node_type, int value, int line );
+AST_Node* new_ast_expFloat_node ( int node, int node_type, float value, int line );
+AST_Node* new_ast_expLiteral_node ( int node, int node_type, const char *value, int line );
+AST_Node* new_ast_expFuncCall_node ( int node, int node_type, Call *funcCall, int line );
 AST_Node* new_ast_expVariable_node( int node, int node_type, AST_Node *variableNode );
 
-AST_Node* new_ast_variable_node( int node, int node_type, const char *id, AST_Node *exp1, AST_Node *exp2 );
+AST_Node* new_ast_variable_node( int node, int node_type, const char *id, AST_Node *exp1, AST_Node *exp2, int line );
 
 Call* new_funcCall(const char* id, AST_Node *expListNode);
 
@@ -52,7 +52,6 @@ enum nodeTypeEnum {
 	BLOCK,
 	PARAM,
 	
-	
 	TYPE_CHAR,
 	TYPE_INT,
 	TYPE_FLOAT,
@@ -70,16 +69,11 @@ enum nodeTypeEnum {
 	STAT_ASSIGN,	
 	STAT_RETURN,
 		
-	EXP_EQUAL,
-	EXP_NOT,
-	EXP_LESS_OR_EQ,
-	EXP_GREATER_OR_EQ,
-		
 	EXPR_OR,
 	EXPR_AND,
 	EXPR_EQUAL,
 	EXPR_LEEQ,
-	EXPR_GEEQ,
+	EXPR_GREQ,
 	EXPR_GREATER,
 	EXPR_LESS,
 	EXPR_NOEQ,
@@ -105,6 +99,7 @@ struct AST_Node
 {
 	nodeEnum node;
 	nodeTypeEnum nodeType;
+	int line;
 
 	AST_Node *right;
 	AST_Node *left;

@@ -1,5 +1,6 @@
 %{
 
+#include "ast.h"
 #include "monga.tab.h"
 #include "monga.h"
 
@@ -37,15 +38,15 @@ Character		    ([^'\n]|\\'|\\n|\\t|\\\\|\\\"|\\0)
 \n 							{ currentLine++; }
 
 
-"char"					 			{ yylval.s = yytext; return TK_WORD_CHAR; }
-"float"								{ yylval.s = yytext; return TK_WORD_FLOAT; }
-"int"								{ yylval.s = yytext; return TK_WORD_INT; }
-"if" 								{ yylval.s = yytext; return TK_WORD_IF; }
-"else" 								{ yylval.s = yytext; return TK_WORD_ELSE; }
-"while"								{ yylval.s = yytext; return TK_WORD_WHILE; }
-"new"								{ yylval.s = yytext; return TK_WORD_NEW; }
-"return"							{ yylval.s = yytext; return TK_WORD_RETURN; }
-"void"								{ yylval.s = yytext; return TK_WORD_VOID; }
+"char"					 			{ yylval.i = currentLine; yylval.s = yytext; return TK_WORD_CHAR; }
+"float"								{ yylval.i = currentLine; yylval.s = yytext; return TK_WORD_FLOAT; }
+"int"								{ yylval.i = currentLine; yylval.s = yytext; return TK_WORD_INT; }
+"if" 								{ yylval.i = currentLine; yylval.s = yytext; return TK_WORD_IF; }
+"else" 								{ yylval.i = currentLine; yylval.s = yytext; return TK_WORD_ELSE; }
+"while"								{ yylval.i = currentLine; yylval.s = yytext; return TK_WORD_WHILE; }
+"new"								{ yylval.i = currentLine; yylval.s = yytext; return TK_WORD_NEW; }
+"return"							{ yylval.i = currentLine; yylval.s = yytext; return TK_WORD_RETURN; }
+"void"								{ yylval.i = currentLine; yylval.s = yytext; return TK_WORD_VOID; }
 
 
 ({Letter}|_)({Letter}|{Digit}|_)*	        { yylval.s = yytext; return TK_ID; }
@@ -83,27 +84,27 @@ Character		    ([^'\n]|\\'|\\n|\\t|\\\\|\\\"|\\0)
 <Comment><<EOF>>					{ commentError(); return yytext[0]; }
 
 
-"=="	 							{ yylval.s = yytext; return TK_EQUAL; }
-"!="     							{ yylval.s = yytext; return TK_NOT_EQ; }
-"="      							{ return yytext[0]; }
-"<="     							{ yylval.s = yytext; return TK_LESS_OR_EQ; }
-"<"      							{ return yytext[0]; }
-">="     							{ yylval.s = yytext; return TK_GREATER_OR_EQ; }
-">"      							{ return yytext[0]; }
-"+"      							{ return yytext[0]; }
-"-"      							{ return yytext[0]; }
-"*"      							{ return yytext[0]; }
-"/"      							{ return yytext[0]; }
+"=="	 							{ yylval.i = currentLine; yylval.s = yytext; return TK_EQUAL; }
+"!="     							{ yylval.i = currentLine; yylval.s = yytext; return TK_NOT_EQ; }
+"="      							{ yylval.i = currentLine; return yytext[0]; }
+"<="     							{ yylval.i = currentLine; yylval.s = yytext; return TK_LESS_OR_EQ; }
+"<"      							{ yylval.i = currentLine; return yytext[0]; }
+">="     							{ yylval.i = currentLine; yylval.s = yytext; return TK_GREATER_OR_EQ; }
+">"      							{ yylval.i = currentLine; return yytext[0]; }
+"+"      							{ yylval.i = currentLine; return yytext[0]; }
+"-"      							{ yylval.i = currentLine; return yytext[0]; }
+"*"      							{ yylval.i = currentLine; return yytext[0]; }
+"/"      							{ yylval.i = currentLine; return yytext[0]; }
 "("      							{ return yytext[0]; }
 ")"      							{ return yytext[0]; }
 "["		 							{ return yytext[0]; }
 "]"		 							{ return yytext[0]; }
 "{"		 							{ return yytext[0]; }
 "}"		 							{ return yytext[0]; }
-"||"	 							{ yylval.s = strDup(yytext); return TK_OR;  }
-"&&"	 							{ yylval.s = strDup(yytext); return TK_AND; }
-"!"									{ return yytext[0]; }
-","		 							{ return yytext[0]; }
+"||"	 							{ yylval.i = currentLine; yylval.s = strDup(yytext); return TK_OR;  }
+"&&"	 							{ yylval.i = currentLine; yylval.s = strDup(yytext); return TK_AND; }
+"!"									{ yylval.i = currentLine; return yytext[0]; }
+","		 							{ yylval.i = currentLine; return yytext[0]; }
 ";"      							{ return yytext[0]; }
 
 
