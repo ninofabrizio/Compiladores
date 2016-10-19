@@ -22,6 +22,9 @@
     	const char* name;
     	int currentLine;
     } identifier;*/
+
+    AST_Node *node;
+    Call *call;
 }
 
 %token <f>	TK_FLOAT
@@ -46,13 +49,14 @@
 %token <i>	TK_INTEGER
 %token <i>	TK_HEXA
 
-%type <node> definition definitions varDefinition funcDefinition type baseType nameList nameSequence parameters parameter parametersSequence block varDefSequence commandSequence expression command ifElseCommand variable expressionOptional funcCalling expressionPrim expressionOr expressionAnd expressionComp expressionAddMin expressionMulDiv expressionUna numeral literal expList expressionSequence
+%type <node> program definition definitions varDefinition funcDefinition type baseType nameList nameSequence parameters parameter parametersSequence block varDefSequence commandSequence expression command ifElseCommand variable expressionOptional expressionPrim expressionOr expressionAnd expressionComp expressionAddMin expressionMulDiv expressionUna numeral literal expList expressionSequence
+%type <call> funcCalling
 
 %start program // nós 'recursivos': definitions nameSequence parametersSequence varDefSequence commandSequence command ifElseCommand expressionSequence
 
 %%
 
-program: definitions ;	{ $$ = $1; AST_Root = $$; } // This might not be the right way to instantiate our root...
+program: definitions { $$ = $1; AST_Root = $$; } ; // This might not be the right way to instantiate our root...
 
 
 definitions: definition definitions	{  }
