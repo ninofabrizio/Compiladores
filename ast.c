@@ -1,25 +1,16 @@
 #include "ast.h"
 
-#define new(T) ((T*)malloc(sizeof(T)))
+static void* myMalloc(size_t size);
 
-#define myMalloc(P, T) \
-			P = new(T); \
-			if(P == NULL) { \
-				printf("MEMORY SHORTAGE ERROR\n"); \
-				exit(0); \
-			}
+#define new(T) ((T*)myMalloc(sizeof(T)))
 
 
 // GENERIC NODE GENERATOR
-
-
 AST_Node*
 new_ast_node ( int node, int node_type, AST_Node* left, AST_Node* right, AST_Node* center ) {
  
-	//AST_Node* ast_node = new(AST_Node);
-	AST_Node* ast_node;
-	myMalloc(ast_node, AST_Node);
-
+	AST_Node* ast_node = new(AST_Node);
+	
 	ast_node -> node = node;
 	ast_node ->	nodeType = node_type;
 
@@ -31,17 +22,15 @@ new_ast_node ( int node, int node_type, AST_Node* left, AST_Node* right, AST_Nod
 }
 
 
-// SPECIFIC NODE GENERATORS
 
+// SPECIFIC NODE GENERATORS
 
 AST_Node*
 new_ast_expInteger_node ( int node, int node_type, int value ) {
 
 	AST_Node *treeNode;
-	//Exp *exp = new(Exp);
-	Exp *exp;
-	myMalloc(exp, Exp);
-
+	Exp *exp = new(Exp);
+	
 	exp -> nextExpNode = NULL;
 	exp -> u.ki = value;
 
@@ -55,10 +44,8 @@ AST_Node*
 new_ast_expFloat_node ( int node, int node_type, float value ) {
 
 	AST_Node *treeNode;
-	//Exp *exp = new(Exp);
-	Exp *exp;
-	myMalloc(exp, Exp);
-
+	Exp *exp = new(Exp);
+	
 	exp -> nextExpNode = NULL;
 	exp -> u.kf = value;
 
@@ -72,9 +59,7 @@ AST_Node*
 new_ast_expLiteral_node ( int node, int node_type, const char *value ) {
 
 	AST_Node *treeNode;
-	//Exp *exp = new(Exp);
-	Exp *exp;
-	myMalloc(exp, Exp);
+	Exp *exp = new(Exp);
 
 	exp -> nextExpNode = NULL;
 	exp -> u.lit = value;
@@ -89,10 +74,8 @@ AST_Node*
 new_ast_expFuncCall_node ( int node, int node_type, Call *funcCall ) {
 
 	AST_Node *treeNode;
-	//Exp *exp = new(Exp);
-	Exp *exp;
-	myMalloc(exp, Exp);
-
+	Exp *exp = new(Exp);
+	
 	exp -> nextExpNode = NULL;
 	exp -> u.functionCall = funcCall;
 
@@ -106,10 +89,8 @@ AST_Node*
 new_ast_expVariable_node( int node, int node_type, AST_Node *variableNode ) {
 
 	AST_Node *treeNode;
-	//Exp *exp = new(Exp);
-	Exp *exp;
-	myMalloc(exp, Exp);
-
+	Exp *exp = new(Exp);
+	
 	exp -> nextExpNode = NULL;
 	exp -> u.varNode = variableNode;
 
@@ -120,38 +101,37 @@ new_ast_expVariable_node( int node, int node_type, AST_Node *variableNode ) {
 }
 
 AST_Node*
-new_ast_variable_node( int node, int node_type, const char *id, AST_Node *exp1, AST_Node *exp2 ) {
+new_ast_variable_node( int node, int node_type, const char *id, AST_Node *exp01, AST_Node *exp02 ) {
 
-	AST_Node *treeNode;
-	//Var *var = new(Var);
-	Var *var;
-	myMalloc(var, Var);
-
+	AST_Node *treeNode = NULL;
+	Var *var = new(Var);
+	
 	var -> nextVarNode = NULL;
 
-	if(exp1 == NULL && exp2 == NULL) {
+	treeNode = new_ast_node(node, node_type, exp01, exp02, NULL);
+	
+	if( id != NULL)
 		var -> varName = id;
-		treeNode = new_ast_node(node, node_type, NULL, NULL, NULL);
-	}
-	else if(id == NULL)
-		treeNode = new_ast_node(node, node_type, exp1, exp2, NULL);
+	
+
+// if(exp1 == NULL && exp2 == NULL) {
+// 		var -> varName = id;
+// 		treeNode = new_ast_node(node, node_type, NULL, NULL, NULL);
+// 	}
+// 	else if(id == NULL)
+// 		treeNode = new_ast_node(node, node_type, exp1, exp2, NULL);
+	
 	
 	treeNode -> nodeStruct.var = var;
 
 	return treeNode;
 }
 
-
-// NON-NODE GENERATORS
-
-
 Call*
 new_funcCall(const char* id, AST_Node *expListNode) {
 
-	//Call *funcCall = new(Call);
-	Call * funcCall;
-	myMalloc(funcCall, Call);
-
+	Call *funcCall = new(Call);
+	
 	funcCall -> funcName = id;
 	funcCall -> expressionNode = expListNode;
 
@@ -161,7 +141,6 @@ new_funcCall(const char* id, AST_Node *expListNode) {
 
 // OTHER FUNCTIONS
 
-
 AST_Node*
 connect_exp_list(AST_Node *father, AST_Node *son) {
 
@@ -169,14 +148,25 @@ connect_exp_list(AST_Node *father, AST_Node *son) {
 	return father;
 }
 
-// AST_Node*
-// new_ast_while_node ( AST_Node *condition, AST_Node *while_branch ) {
-// 	return new_ast_node ( STAT, STAT_WHILE, condition, while_branch, NULL );
-// }
+static void* myMalloc(size_t size) {
+	
+	void* obj = (void *)malloc(size);
+	
+	if(obj == NULL) { 	
+		printf("MEMORY SHORTAGE ERROR\n"); 
+		exit(0); 	
+	}	
+	return obj;
+}
+
+
+
+// PRINT FUNCTIONS
+
 
 
 int main (void) {
 	
-	return 0;
 	
 }
+

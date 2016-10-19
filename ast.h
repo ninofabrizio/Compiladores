@@ -47,6 +47,12 @@ enum nodeEnum {
 
 enum nodeTypeEnum {
 	
+	ROOT,
+	
+	BLOCK,
+	PARAM,
+	
+	
 	TYPE_CHAR,
 	TYPE_INT,
 	TYPE_FLOAT,
@@ -55,8 +61,20 @@ enum nodeTypeEnum {
 	VAR_UNIQUE,
 	VAR_INDEXED,
 	
-	STAT_WHILE,
+	DEF_VAR,
+	DEF_FUNC,
 	
+	STAT_WHILE,
+	STAT_IF,
+	STAT_IFELSE,
+	STAT_ASSIGN,	
+	STAT_RETURN,
+		
+	EXP_EQUAL,
+	EXP_NOT,
+	EXP_LESS_OR_EQ,
+	EXP_GREATER_OR_EQ,
+		
 	EXPR_OR,
 	EXPR_AND,
 	EXPR_EQUAL,
