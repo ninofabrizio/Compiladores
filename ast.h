@@ -14,7 +14,7 @@ typedef struct Type Type;
 typedef struct Var Var;
 typedef struct Exp Exp;
 typedef struct Param Param;
-typedef struct Defvar DefVar;
+typedef struct DefVar DefVar;
 typedef struct Block Block;
 typedef struct Def Def;
 typedef struct Stat Stat;
@@ -29,11 +29,17 @@ AST_Node* new_ast_expLiteral_node ( int node, int node_type, const char *value, 
 AST_Node* new_ast_expFuncCall_node ( int node, int node_type, Call *funcCall, int line );
 AST_Node* new_ast_expVariable_node( int node, int node_type, AST_Node *variableNode );
 
-AST_Node* new_ast_variable_node( int node, int node_type, const char *id, AST_Node *exp1, AST_Node *exp2, int line );
+AST_Node* new_ast_variable_node( int node, int node_type, const char *id, AST_Node *exp1, AST_Node *exp2, AST_Node *nextVarNode, int line );
+
+AST_Node* new_ast_type_node( int node, int node_type, const char *baseType, int line );
+
+AST_Node* new_ast_defVariable_node( int node, int node_type, AST_Node* typeNode, AST_Node* varListNode );
 
 Call* new_funcCall(const char* id, AST_Node *expListNode);
 
 AST_Node* connect_exp_list(AST_Node *father, AST_Node *son);
+AST_Node* connect_definitions( AST_Node *currentDef, AST_Node *nextDef );
+AST_Node* isArrayType( AST_Node *typeNode );
 
 
 AST_Node* new_func_def( const char* returnType, const char *funcName, Param *param, Block *block, AST_Node *node, int line );
@@ -56,15 +62,9 @@ enum nodeEnum {
 
 enum nodeTypeEnum {
 	
-	ROOT,
-	
-	BLOCK,
-	PARAM,
-	
 	TYPE_CHAR,
 	TYPE_INT,
 	TYPE_FLOAT,
-	TYPE_ARRAY,
 	
 	VAR_UNIQUE,
 	VAR_INDEXED,
@@ -138,7 +138,9 @@ struct Call {
 
 struct Type {
 	
-	int tokenType;
+	const char *baseType;
+
+	int arraySequence; // counter == 0 if not array | >= 1 if array (we can have array of array of array...)
 };
 
 struct Var {
@@ -169,12 +171,6 @@ struct Param {
 	const char *paramName;
 };
 
-struct Defvar { 
-	
-	AST_Node *dataTypeNode; 
-	AST_Node **nameListNode;
-}; 
-
 struct Block { 
 
 	int openCurveBracket;
@@ -184,11 +180,16 @@ struct Block {
 	AST_Node *statListNode;
 };
 
+struct DefVar { 
+
+	AST_Node *dataTypeNode; 
+	AST_Node *varListNode; 
+};
+
 struct Def {
 	
 	union {
-		
-		DefVar *var;
+		DefVar *defVar;
 		struct { const char *funcName; int openPar; int closePar; Param *param; 
 		     	 union { const char *voidType; AST_Node *dataTypeNode; } ret;
 			 	 int tagReturnType; // for void return 0; for other types return 1.
