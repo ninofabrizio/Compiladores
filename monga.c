@@ -541,6 +541,7 @@ char *yytext;
 #line 1 "monga.l"
 #line 2 "monga.l"
 
+#include "ast.h"
 #include "monga.tab.h"
 #include "monga.h"
 
@@ -562,7 +563,7 @@ char * strDup (char *s);
 void commentError();
 
 	
-#line 566 "<stdout>"
+#line 567 "<stdout>"
 
 #define INITIAL 0
 #define Comment 1
@@ -745,10 +746,10 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
     
-#line 34 "monga.l"
+#line 35 "monga.l"
 
 
-#line 752 "<stdout>"
+#line 753 "<stdout>"
 
 	if ( !(yy_init) )
 		{
@@ -833,98 +834,98 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 36 "monga.l"
+#line 37 "monga.l"
 { ; }
 	YY_BREAK
 case 2:
 /* rule 2 can match eol */
 YY_RULE_SETUP
-#line 37 "monga.l"
+#line 38 "monga.l"
 { currentLine++; }
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 40 "monga.l"
-{ yylval.s = yytext; return TK_WORD_CHAR; }
+#line 41 "monga.l"
+{ yylval.i = currentLine; yylval.s = yytext; return TK_WORD_CHAR; }
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 41 "monga.l"
-{ yylval.s = yytext; return TK_WORD_FLOAT; }
+#line 42 "monga.l"
+{ yylval.i = currentLine; yylval.s = yytext; return TK_WORD_FLOAT; }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 42 "monga.l"
-{ yylval.s = yytext; return TK_WORD_INT; }
+#line 43 "monga.l"
+{ yylval.i = currentLine; yylval.s = yytext; return TK_WORD_INT; }
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 43 "monga.l"
-{ yylval.s = yytext; return TK_WORD_IF; }
+#line 44 "monga.l"
+{ yylval.i = currentLine; yylval.s = yytext; return TK_WORD_IF; }
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 44 "monga.l"
-{ yylval.s = yytext; return TK_WORD_ELSE; }
+#line 45 "monga.l"
+{ yylval.i = currentLine; yylval.s = yytext; return TK_WORD_ELSE; }
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 45 "monga.l"
-{ yylval.s = yytext; return TK_WORD_WHILE; }
+#line 46 "monga.l"
+{ yylval.i = currentLine; yylval.s = yytext; return TK_WORD_WHILE; }
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 46 "monga.l"
-{ yylval.s = yytext; return TK_WORD_NEW; }
+#line 47 "monga.l"
+{ yylval.i = currentLine; yylval.s = yytext; return TK_WORD_NEW; }
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 47 "monga.l"
-{ yylval.s = yytext; return TK_WORD_RETURN; }
+#line 48 "monga.l"
+{ yylval.i = currentLine; yylval.s = yytext; return TK_WORD_RETURN; }
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 48 "monga.l"
-{ yylval.s = yytext; return TK_WORD_VOID; }
+#line 49 "monga.l"
+{ yylval.i = currentLine; yylval.s = yytext; return TK_WORD_VOID; }
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 51 "monga.l"
+#line 52 "monga.l"
 { yylval.s = yytext; return TK_ID; }
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 53 "monga.l"
+#line 54 "monga.l"
 { yylval.f = strtof(yytext, NULL);     return TK_FLOAT; }
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 54 "monga.l"
+#line 55 "monga.l"
 { yylval.f = strtof(yytext, NULL);     return TK_FLOAT; }
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 55 "monga.l"
+#line 56 "monga.l"
 { yylval.i = strtol(yytext, NULL, 10); return TK_INTEGER; }
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 56 "monga.l"
+#line 57 "monga.l"
 { yylval.f = strtof(yytext, NULL);     return TK_FLOAT; }
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 57 "monga.l"
+#line 58 "monga.l"
 { yylval.i = strtol(yytext, NULL, 16); return TK_HEXA;  }
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 60 "monga.l"
+#line 61 "monga.l"
 { return yytext[0]; }
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 61 "monga.l"
+#line 62 "monga.l"
 { yylval.i = charTreat(yytext[1], yytext[2]);
                                       if(yylval.i == -1) {
                                         yylval.s = yytext;
@@ -934,12 +935,12 @@ YY_RULE_SETUP
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 69 "monga.l"
+#line 70 "monga.l"
 { return yytext[0]; }
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 70 "monga.l"
+#line 71 "monga.l"
 { yylval.s = strDup(yytext);
                                       if(yylval.s == NULL) {
                                         yylval.s = yytext;
@@ -949,155 +950,155 @@ YY_RULE_SETUP
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 78 "monga.l"
+#line 79 "monga.l"
 { openComment = currentLine; BEGIN (Comment); }
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 79 "monga.l"
+#line 80 "monga.l"
 { ; }
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 80 "monga.l"
+#line 81 "monga.l"
 { ; }
 	YY_BREAK
 case 25:
 /* rule 25 can match eol */
 YY_RULE_SETUP
-#line 81 "monga.l"
+#line 82 "monga.l"
 { currentLine++; }
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 82 "monga.l"
+#line 83 "monga.l"
 { BEGIN(INITIAL); }
 	YY_BREAK
 case YY_STATE_EOF(Comment):
-#line 83 "monga.l"
+#line 84 "monga.l"
 { commentError(); return yytext[0]; }
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 86 "monga.l"
-{ yylval.s = yytext; return TK_EQUAL; }
+#line 87 "monga.l"
+{ yylval.i = currentLine; yylval.s = yytext; return TK_EQUAL; }
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 87 "monga.l"
-{ yylval.s = yytext; return TK_NOT_EQ; }
+#line 88 "monga.l"
+{ yylval.i = currentLine; yylval.s = yytext; return TK_NOT_EQ; }
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 88 "monga.l"
-{ return yytext[0]; }
+#line 89 "monga.l"
+{ yylval.i = currentLine; return yytext[0]; }
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 89 "monga.l"
-{ yylval.s = yytext; return TK_LESS_OR_EQ; }
+#line 90 "monga.l"
+{ yylval.i = currentLine; yylval.s = yytext; return TK_LESS_OR_EQ; }
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 90 "monga.l"
-{ return yytext[0]; }
+#line 91 "monga.l"
+{ yylval.i = currentLine; return yytext[0]; }
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 91 "monga.l"
-{ yylval.s = yytext; return TK_GREATER_OR_EQ; }
+#line 92 "monga.l"
+{ yylval.i = currentLine; yylval.s = yytext; return TK_GREATER_OR_EQ; }
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 92 "monga.l"
-{ return yytext[0]; }
+#line 93 "monga.l"
+{ yylval.i = currentLine; return yytext[0]; }
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 93 "monga.l"
-{ return yytext[0]; }
+#line 94 "monga.l"
+{ yylval.i = currentLine; return yytext[0]; }
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 94 "monga.l"
-{ return yytext[0]; }
+#line 95 "monga.l"
+{ yylval.i = currentLine; return yytext[0]; }
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 95 "monga.l"
-{ return yytext[0]; }
+#line 96 "monga.l"
+{ yylval.i = currentLine; return yytext[0]; }
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 96 "monga.l"
-{ return yytext[0]; }
+#line 97 "monga.l"
+{ yylval.i = currentLine; return yytext[0]; }
 	YY_BREAK
 case 38:
-YY_RULE_SETUP
-#line 97 "monga.l"
-{ return yytext[0]; }
-	YY_BREAK
-case 39:
 YY_RULE_SETUP
 #line 98 "monga.l"
 { return yytext[0]; }
 	YY_BREAK
-case 40:
+case 39:
 YY_RULE_SETUP
 #line 99 "monga.l"
 { return yytext[0]; }
 	YY_BREAK
-case 41:
+case 40:
 YY_RULE_SETUP
 #line 100 "monga.l"
 { return yytext[0]; }
 	YY_BREAK
-case 42:
+case 41:
 YY_RULE_SETUP
 #line 101 "monga.l"
 { return yytext[0]; }
 	YY_BREAK
-case 43:
+case 42:
 YY_RULE_SETUP
 #line 102 "monga.l"
 { return yytext[0]; }
 	YY_BREAK
-case 44:
+case 43:
 YY_RULE_SETUP
 #line 103 "monga.l"
-{ yylval.s = strDup(yytext); return TK_OR;  }
+{ return yytext[0]; }
+	YY_BREAK
+case 44:
+YY_RULE_SETUP
+#line 104 "monga.l"
+{ yylval.i = currentLine; yylval.s = strDup(yytext); return TK_OR;  }
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
-#line 104 "monga.l"
-{ yylval.s = strDup(yytext); return TK_AND; }
+#line 105 "monga.l"
+{ yylval.i = currentLine; yylval.s = strDup(yytext); return TK_AND; }
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
-#line 105 "monga.l"
-{ return yytext[0]; }
+#line 106 "monga.l"
+{ yylval.i = currentLine; return yytext[0]; }
 	YY_BREAK
 case 47:
 YY_RULE_SETUP
-#line 106 "monga.l"
-{ return yytext[0]; }
+#line 107 "monga.l"
+{ yylval.i = currentLine; return yytext[0]; }
 	YY_BREAK
 case 48:
 YY_RULE_SETUP
-#line 107 "monga.l"
+#line 108 "monga.l"
 { return yytext[0]; }
 	YY_BREAK
 case 49:
 YY_RULE_SETUP
-#line 110 "monga.l"
+#line 111 "monga.l"
 { yylval.s = yytext; return yytext[0]; }
 	YY_BREAK
 case 50:
 YY_RULE_SETUP
-#line 113 "monga.l"
+#line 114 "monga.l"
 ECHO;
 	YY_BREAK
-#line 1101 "<stdout>"
+#line 1102 "<stdout>"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -2094,7 +2095,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 113 "monga.l"
+#line 114 "monga.l"
 
 
 

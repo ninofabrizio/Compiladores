@@ -20,10 +20,8 @@
 
     AST_Node *node;
     Call *call;
-	
 	Param *param;
-	Block *block;
-
+	
 }
 
 %token <f>	TK_FLOAT
@@ -48,57 +46,44 @@
 %token <i>	TK_INTEGER
 %token <i>	TK_HEXA
 
-%type <node> program definition definitions varDefinition funcDefinition type baseType nameList nameSequence varDefSequence commandSequence expression command ifElseCommand variable expressionOptional expressionPrim expressionOr expressionAnd expressionComp expressionAddMin expressionMulDiv expressionUna numeral literal expList expressionSequence
+%type <node> program definition definitions varDefinition funcDefinition type baseType nameList nameSequence varDefSequence commandSequence expression command ifElseCommand variable expressionOptional expressionPrim expressionOr expressionAnd expressionComp expressionAddMin expressionMulDiv expressionUna numeral literal expList block expressionSequence
 %type <call> funcCalling
 %type <param> parameters parameter parametersSequence
-%type <block> block
+
 
 
 %start program
 
 %%
 
-<<<<<<< HEAD
+
 program: definitions { $$ = $1; AST_Root = $$; } ; 
 
-
 definitions: definition definitions	{ $$ = new_ast_node(DEF, DEF, $1, $2, NULL, currentLine); } 
-=======
-program: definitions { AST_Root = $1; } ; // Acho desnecessário criar um nó pra raíz, na teoria ele já existe (aí fica um nó de nó neste caso)
-
-
-definitions: definition definitions	{ $$ = connect_definitions($1, $2); } // 1: Definição de Definição? 2: Acho que o certo aqui é incluir uma lista na struct de Definição (vide lista de expressões no final das regras)
->>>>>>> a9d9e16d90c81d0a603326be15a38691e14bf467
-			|	{ $$ = NULL; } ;
-
+			| { $$ = NULL; } 
+;
 
 definition: varDefinition	{ $$ = $1; }
 			| funcDefinition	{ $$ = $1; } ;
 
 
-varDefinition: type nameList ';'	{ $$ = new_ast_defVariable_node(DEF, DEF_VAR, $1, $2); } ; // Acho que o certo aqui é usar uma estrutura em $2. A struct Var é candidata, já que ela possui o ponteiro para sequência de variáveis ou rever a struct de DefVar. Não esquecer do açúcar sintático dito na aula (int a, b, c; == int a; int b; int c;).
+varDefinition: type nameList ';'	{ $$ = new_ast_defVariable_node(DEF, DEF_VAR, $1, $2); } ; 
 
 
 nameList: TK_ID nameSequence	{ $$ = new_ast_variable_node(VAR, VAR_UNIQUE, $1, NULL, NULL, $2, currentLine); } ;
 
 
-nameSequence: ',' TK_ID nameSequence	{ $$ = new_ast_variable_node(VAR, VAR_UNIQUE, $2, NULL, NULL, $3, currentLine); } // Lista de variáveis aqui
+nameSequence: ',' TK_ID nameSequence	{ $$ = new_ast_variable_node(VAR, VAR_UNIQUE, $2, NULL, NULL, $3, currentLine); } 
 				|	{ $$ = NULL; } ;
 
 
-type: baseType	{ $$ = $1; } // Nenhuma estrutura gerada aqui?
+type: baseType	{ $$ = $1; } 
 		| type '[' ']'	{ $$ = isArrayType($1); } ;
 
 
-baseType: TK_WORD_INT	{ $$ = new_ast_type_node(TYPE, TYPE_INT, "int", currentLine); } // Nenhuma estrutura gerada aqui? Lembrando que com o que mudei em monga.l, esses tokens possuem o currentLine
+baseType: TK_WORD_INT	{ $$ = new_ast_type_node(TYPE, TYPE_INT, "int", currentLine); } 
 			| TK_WORD_CHAR	{ $$ = new_ast_type_node(TYPE, TYPE_CHAR, "char", currentLine); }
 			| TK_WORD_FLOAT	{ $$ = new_ast_type_node(TYPE, TYPE_FLOAT, "float", currentLine); } ;
-
-
-
-
-
-
 
 
 
@@ -108,17 +93,18 @@ funcDefinition: TK_WORD_VOID TK_ID '(' parameters ')' block	{ $$ = new_func_def(
 ;
 
 
-parameters: parameter parametersSequence { $$ = Param* connect_param_list( $1, $2 ); } 
+parameters: parameter parametersSequence { $$ = connect_param_list( $1, $2 ); } 
 			|	{ $$ = NULL; } 
 ;
 
 
-parametersSequence: ',' parameter parametersSequence { $$ = Param* connect_param_list( $1, $2 ); } 
+parametersSequence: ',' parameter parametersSequence { $$ = connect_param_list( $2, $3 ); } 
 					|	{ $$ = NULL; } 
 ;
 
 parameter:	type TK_ID 	{ $$ = new_param( $1, $2, NULL); } 
 ; 
+
 
 block:	'{' varDefSequence commandSequence '}'	{ $$ = connect_node($2, $3); } 
 ; 
@@ -127,13 +113,13 @@ varDefSequence: varDefinition varDefSequence	{ $$ = connect_node($1, $2); }
 				|	{ $$ = NULL; } 
 ;
 
-commandSequence: command commandSequence	{ $$ = connect_node($2, $3); }
+commandSequence: command commandSequence	{ $$ = connect_node($1, $2); }
 				|	{ $$ = NULL; } 
 ;
 
 
 
-command: TK_WORD_IF '(' expression ')' command 	{ $$ = new_ast_node(STAT, STAT_IF, $3, $5, NULL, $1); }
+command: TK_WORD_IF '(' expression ')' command 	{ $$ = new_ast_node(STAT, STAT_IF, $3, $5, NULL, currentLine); }
 		 
 		 | TK_WORD_IF '(' expression ')' ifElseCommand TK_WORD_ELSE command 	{ $$ = new_ast_node(STAT, STAT_IFELSE, $3, $5, $7, $6); }
 		 

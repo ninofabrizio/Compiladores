@@ -173,9 +173,6 @@ new_funcCall( const char* id, AST_Node *expListNode ) {
 	return funcCall;
 }
 
-
-// OTHER FUNCTIONS
-
 AST_Node*
 connect_exp_list( AST_Node *father, AST_Node *son ) {
 
@@ -183,12 +180,6 @@ connect_exp_list( AST_Node *father, AST_Node *son ) {
 	return father;
 }
 
-AST_Node*
-connect_definitions( AST_Node *currentDef, AST_Node *nextDef ) {
-
-	currentDef -> right = nextDef;
-	return currentDef;
-}
 
 AST_Node*
 isArrayType( AST_Node *typeNode ) {
@@ -210,19 +201,29 @@ static void* myMalloc( size_t size ) {
 }
 
 
-
-
-
 AST_Node*
-new_func_def( const char* returnType, const char *funcName, Param *param, Block *block, AST_Node *node, int line ) {
+new_func_def( const char* returnType, const char *funcName, Param *param, AST_Node *block, AST_Node *node, int line ) {
 	
-	AST_Node *funcNode = new_ast_node(DEF, DEF_FUNC, node, NULL, NULL, line);
+	AST_Node *funcNode = new_ast_node(DEF, DEF_FUNC, NULL, NULL, NULL, line);
+	Def *def = new(Def);
 	
-	(funcNode -> nodeStruct.def) -> u.func.block = block;
-	(funcNode -> nodeStruct.def) -> u.func.param = param;
-	(funcNode -> nodeStruct.def)-> u.func.funcName = funcName;
-	(funcNode -> nodeStruct.def)-> u.func.tagReturnType = 0;
-	(funcNode -> nodeStruct.def)-> u.func.ret.voidType = returnType;
+	def -> u.func.block = block;
+	def -> u.func.param = param;
+	def -> u.func.funcName = funcName;
+	
+	if ( node == NULL ) {
+		
+		def -> u.func.tagReturnType = 0;
+		def -> u.func.ret.voidType = returnType;	
+	}
+	else {
+		
+		def -> u.func.tagReturnType = 1;
+		def -> u.func.ret.dataTypeNode = node;
+			
+	}
+	
+	funcNode -> nodeStruct.def = def;
 	
 	return funcNode;
 }
@@ -231,10 +232,15 @@ Param*
 new_param( AST_Node *type, const char *paramName, Param *nextParam) {
 	
 	Param *paramNode = new(Param);
+	DefVar* defVar = new(DefVar);
+	Var* var = new(Var);
 	
-	paramNode -> paramName = paramName; 
-	paramNode -> dataTypeNode = type; 
+	var -> varName =  paramName;
+	defVar -> dataTypeNode = type;
+	defVar -> varListNode = var;
+	
 	paramNode -> proxParam = nextParam;
+	paramNode -> var = defVar;
 	
 	return paramNode;
 		
@@ -252,6 +258,9 @@ connect_param_list( Param *father, Param *son ) {
 AST_Node*
 connect_node(AST_Node *varDef, AST_Node *commandSeq) {
 	
+	if ( varDef == NULL)
+		return commandSeq;
+	
 	varDef -> right = commandSeq;
 	return varDef;	
 }
@@ -262,7 +271,10 @@ new_command_func_calling( Call *func, int line ) {
 	
 	AST_Node *funcNode = new_ast_node(STAT, STAT_FUNC_CALL, NULL, NULL, NULL, line);
 	
-	(funcNode -> nodeStruct.stat) -> u.callFunc = func; 
+	Stat *call = new(Stat);
+	(call -> u).callFunc = func;
+	
+	(funcNode -> nodeStruct).stat = call;
 	
 	return funcNode;	
 }
@@ -270,12 +282,156 @@ new_command_func_calling( Call *func, int line ) {
 
 
 
-// PRINT AND MEMORY RELEASE FUNCTIONS
+void print_type(AST_Node *a) {
+	
+	int i;
+	
+	if( a != NULL) {
+		
+		printf("%s\n", a -> nodeStruct.type -> baseType);	
+				
+		for(i = 0; i < a -> nodeStruct.type -> arraySequence ; i++) 
+			printf("[]\n");
+				
+	}
+		
+}
 
 
 
-int main (void) {
+void print_var(AST_Node *a) {
+	
+	if( a != NULL) {
+		
+		if ( a -> nodeType == VAR_UNIQUE )
+			printf("%s\n",  a -> nodeStruct.var -> varName );
+		
+		else {		
+			print_exp(a->left);
+			print_exp(a->right);		
+		}
+					
+		print_var(a -> nodeStruct.var -> nextVarNode);
+				
+	}
+		
+}
+
+
+
+void print_params(Param *p) {
+	
+	if( p != NULL) {
+		
+		print_type(p -> var -> dataTypeNode);
+		print_var(p -> var -> varListNode);
+		print_params(p -> proxParam);			
+	}
+}
+
+
+
+void print_block(AST_Node *a) {
+	
+	if( a != NULL) {
+		
+		if ( a -> nodeType == DEF_VAR ) {
+			
+			print_def(a);
+			print_stat(a->right);
+		
+		} else	
+			print_stat(a);		
+	}		
+}
+
+
+
+
+void print_exp (AST_Node *a) {
+	
+	if( a != NULL){}
+	
+	
 	
 	
 }
+
+
+void print_stat (AST_Node *a) {
+	
+	
+	
+	
+	
+	
+}
+
+
+
+
+
+
+
+void
+print_def(AST_Node *a) {
+	
+	
+	if( a != NULL ) {
+	
+	
+		if(a -> nodeType == DEF_VAR) {
+		
+			printf("DEF_VAR\n");
+			print_type( a -> nodeStruct.def -> u.defVar -> dataTypeNode );
+			print_var(  a -> nodeStruct.def -> u.defVar -> varListNode );		
+	
+		} else {
+		
+			printf("DEF_FUNC\n");
+		
+			printf("%s\n", a -> nodeStruct.def -> u.func.funcName );	
+		
+			if(a -> nodeStruct.def -> u.func.tagReturnType)
+				print_type( a -> nodeStruct.def -> u.func -> dataTypeNode);
+			else printf("void\n");
+		
+			print_params( a -> nodeStruct.def -> u.func.param );
+			print_block( a -> nodeStruct.def -> u.func.block );
+					
+		}
+		
+	}
+
+}
+
+
+
+
+
+
+void
+print_tree(AST_Node *a) {
+ 
+ 	if( a!= NULL )
+ 	   switch( a -> node ) {
+			case DEF:  print_def(a); break;
+			case VAR:  print_var(a); break;
+			case EXPR: print_expr(a); break;
+			case STAT: print_stat(a); break;	   
+			case TYPE: print_type(a); break;
+	  
+	   	 default: printf("internal error: bad node %c\n", a->nodeType);
+		}  
+}
+
+
+
+
+
+
+
+
+
+
 
