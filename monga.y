@@ -20,6 +20,10 @@
 
     AST_Node *node;
     Call *call;
+	
+	Param *param;
+	Block *block;
+
 }
 
 %token <f>	TK_FLOAT
@@ -44,17 +48,20 @@
 %token <i>	TK_INTEGER
 %token <i>	TK_HEXA
 
-%type <node> program definition definitions varDefinition funcDefinition type baseType nameList nameSequence parameters parameter parametersSequence block varDefSequence commandSequence expression command ifElseCommand variable expressionOptional expressionPrim expressionOr expressionAnd expressionComp expressionAddMin expressionMulDiv expressionUna numeral literal expList expressionSequence
+%type <node> program definition definitions varDefinition funcDefinition type baseType nameList nameSequence varDefSequence commandSequence expression command ifElseCommand variable expressionOptional expressionPrim expressionOr expressionAnd expressionComp expressionAddMin expressionMulDiv expressionUna numeral literal expList expressionSequence
 %type <call> funcCalling
+%type <param> parameters parameter parametersSequence
+%type <block> block
+
 
 %start program
 
 %%
 
-program: definitions { $$ = new_ast_node(ROOT, ROOT, $1, NULL, NULL, currentLine); AST_Root = $$; } ; // Acho desnecessário criar um nó pra raíz, na teoria ele já existe (aí fica um nó de nó neste caso)
+program: definitions { $$ = $1; AST_Root = $$; } ; 
 
 
-definitions: definition definitions	{ $$ = new_ast_node(DEF, DEF, $1, $2, NULL, currentLine); } // 1: Definição de Definição? 2: Acho que o certo aqui é incluir uma lista na struct de Definição (vide lista de expressões no final das regras)
+definitions: definition definitions	{ $$ = new_ast_node(DEF, DEF, $1, $2, NULL, currentLine); } 
 			|	{ $$ = NULL; } ;
 
 
@@ -81,47 +88,73 @@ baseType: TK_WORD_INT	{ $$ = $1; } // Nenhuma estrutura gerada aqui? Lembrando q
 			| TK_WORD_FLOAT	{ $$ = $1; } ;
 
 
-funcDefinition: TK_WORD_VOID TK_ID '(' parameters ')' block	{ $$ = new_ast_node(DEF, DEF_FUNC, $4, $6, NULL, currentLine); }
-				| type  TK_ID '(' parameters ')' block	{ $$ = new_ast_node(DEF, DEF_FUNC, $1, $4, $6, currentLine); } ;
 
 
-parameters: parameter parametersSequence	{ $$ = new_ast_node(PARAM, PARAM, $1, $2, NULL, currentLine); } // 1: Parâmetro não é nó de árvore (olhar nodeEnum). 2: Acho que aqui também entraria uma lista dentro de uma estrutura. Reparar que a struct Param possui ponteiro para isso.
-			|	{ $$ = NULL; } ;
 
 
-parametersSequence: ',' parameter parametersSequence	{ $$ = new_ast_node(PARAM, PARAM, $2, $3, NULL, currentLine); } // Vide o comentário acima
-					|	{ $$ = NULL; } ;
 
 
-parameter:	type TK_ID 	{ $$ = $1; } ; // Nenhuma estrutura gerada aqui?
+
+funcDefinition: TK_WORD_VOID TK_ID '(' parameters ')' block	{ $$ = new_func_def( "void", $2, $4, $6, NULL, currentLine ); }
+
+				| type  TK_ID '(' parameters ')' block { $$ = new_func_def( NULL, $2, $4, $6, $1, currentLine ); } 
+;
 
 
-block:	'{' varDefSequence commandSequence '}'	{ $$ = new_ast_node(BLOCK, BLOCK, $2, $3, NULL, currentLine); } ; // 1: Bloco não é nó de árvore (olhar nodeEnum). 2: Acho que aqui entra o caso de uma lista.
+parameters: parameter parametersSequence { $$ = Param* connect_param_list( $1, $2 ); } 
+			|	{ $$ = NULL; } 
+;
 
 
-varDefSequence: varDefinition varDefSequence	{ $$ = new_ast_node(VAR, VAR_DEF, $1, $2, NULL, currentLine);  } // Acho que aqui entra lista
-				|	{ $$ = NULL; } ;
+parametersSequence: ',' parameter parametersSequence { $$ = Param* connect_param_list( $1, $2 ); } 
+					|	{ $$ = NULL; } 
+;
 
+parameter:	type TK_ID 	{ $$ = new_param( $1, $2, NULL); } 
+; 
 
-commandSequence: command commandSequence	{ $$ = new_ast_node(STAT, STAT, $1, $2, NULL, currentLine); } // Acho que aqui entra lista. Neste caso criariamos um ponteiro em struct Stat.
-				|	{ $$ = NULL; } ;
+block:	'{' varDefSequence commandSequence '}'	{ $$ = connect_node($2, $3); } 
+; 
+
+varDefSequence: varDefinition varDefSequence	{ $$ = connect_node($1, $2); }
+				|	{ $$ = NULL; } 
+;
+
+commandSequence: command commandSequence	{ $$ = connect_node($2, $3); }
+				|	{ $$ = NULL; } 
+;
+
 
 
 command: TK_WORD_IF '(' expression ')' command 	{ $$ = new_ast_node(STAT, STAT_IF, $3, $5, NULL, $1); }
+		 
 		 | TK_WORD_IF '(' expression ')' ifElseCommand TK_WORD_ELSE command 	{ $$ = new_ast_node(STAT, STAT_IFELSE, $3, $5, $7, $6); }
+		 
 		 | TK_WORD_WHILE '(' expression ')' command 	{ $$ = new_ast_node(STAT, STAT_WHILE, $3, $5, NULL, $1); }
+		 
 		 | variable '=' expression ';'	{ $$ = new_ast_node(STAT, STAT_ASSIGN, $1, $3, NULL, currentLine); }
+		 
 		 | TK_WORD_RETURN expressionOptional ';'	{ $$ = new_ast_node(STAT, STAT_RETURN, $2, NULL, NULL, $1); }
-		 | funcCalling ';'	{ $$ = $1; } // Aqui tem que criar um nó para Call de STAT (lembrar que funcCalling retorna *Call)
-		 | block	{ $$ = $1; } ; // Aqui tem que criar um nó para Bloc de STAT (lembrar que Bloco não é nó de árvore)
+		 
+		 | funcCalling ';'	{ $$ = new_command_func_calling( $1, currentLine ); } 
+		 
+		 | block	{ $$ = $1; } 
+;
+
 
 
 ifElseCommand: TK_WORD_IF '(' expression ')' ifElseCommand TK_WORD_ELSE ifElseCommand	{ $$ = new_ast_node(STAT, STAT_IFELSE, $3, $5, $7, $6); }
+			   
 			   | TK_WORD_WHILE '(' expression ')' ifElseCommand	{ $$ = new_ast_node(STAT, STAT_WHILE, $3, $5, NULL, $1); }
+			   
 			   | variable '=' expression ';'	{ $$ = new_ast_node(STAT, STAT_ASSIGN, $1, $3, NULL, currentLine); }
+			   
 			   | TK_WORD_RETURN expressionOptional ';'	{ $$ = new_ast_node(STAT, STAT_RETURN, $2, NULL, NULL, $1); }
-			   | funcCalling ';'	{ $$ = $1; } // Aqui tem que criar um nó para Call de STAT (lembrar que funcCalling retorna *Call)
-			   | block	{ $$ = $1; } ;  // Aqui tem que criar um nó para Bloc de STAT (lembrar que Bloco não é nó de árvore)
+			   
+			   | funcCalling ';'	{ $$ = new_command_func_calling( $1, currentLine ); } 
+			   
+			   | block	{ $$ = $1; } 
+;
 
 
 expressionOptional: expression 	{ $$ = $1; }

@@ -36,6 +36,15 @@ Call* new_funcCall(const char* id, AST_Node *expListNode);
 AST_Node* connect_exp_list(AST_Node *father, AST_Node *son);
 
 
+AST_Node* new_func_def( const char* returnType, const char *funcName, Param *param, Block *block, AST_Node *node, int line );
+Param* new_param( AST_Node *type, const char *paramName, Param *nextParam);
+Param* connect_param_list( Param *father, Param *son );
+AST_Node* connect_node( AST_Node *varDef, AST_Node *commandSeq);
+AST_Node* new_command_func_calling( Call *func, int line );
+
+
+
+
 enum nodeEnum {
 
 	EXPR,
@@ -68,6 +77,7 @@ enum nodeTypeEnum {
 	STAT_IFELSE,
 	STAT_ASSIGN,	
 	STAT_RETURN,
+	STAT_FUNC_CALL,
 		
 	EXPR_OR,
 	EXPR_AND,
@@ -170,8 +180,8 @@ struct Block {
 	int openCurveBracket;
 	int closeCurveBracket;
 
-	DefVar **varList;
-	AST_Node **statListNode;
+	DefVar *varList;
+	AST_Node *statListNode;
 };
 
 struct Def {
@@ -180,7 +190,7 @@ struct Def {
 		
 		DefVar *var;
 		struct { const char *funcName; int openPar; int closePar; Param *param; 
-		     	 union { int voidType; AST_Node *dataTypeNode; } ret;
+		     	 union { const char *voidType; AST_Node *dataTypeNode; } ret;
 			 	 int tagReturnType; // for void return 0; for other types return 1.
 				 Block *block;
 		} func;		

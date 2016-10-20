@@ -136,7 +136,7 @@ new_funcCall(const char* id, AST_Node *expListNode) {
 AST_Node*
 connect_exp_list(AST_Node *father, AST_Node *son) {
 
-	father -> nodeStruct.exp -> nextExpNode = son;
+	father -> nodeStruct.exp -> nextExpNode = son; 
 	return father;
 }
 
@@ -150,6 +150,65 @@ static void* myMalloc(size_t size) {
 	}	
 	return obj;
 }
+
+
+
+
+
+AST_Node*
+new_func_def( const char* returnType, const char *funcName, Param *param, Block *block, AST_Node *node, int line ) {
+	
+	AST_Node *funcNode = new_ast_node(DEF, DEF_FUNC, node, NULL, NULL, line);
+	
+	(funcNode -> nodeStruct.def) -> u.func.block = block;
+	(funcNode -> nodeStruct.def) -> u.func.param = param;
+	(funcNode -> nodeStruct.def)-> u.func.funcName = funcName;
+	(funcNode -> nodeStruct.def)-> u.func.tagReturnType = 0;
+	(funcNode -> nodeStruct.def)-> u.func.ret.voidType = returnType;
+	
+	return funcNode;
+}
+
+Param*
+new_param( AST_Node *type, const char *paramName, Param *nextParam) {
+	
+	Param *paramNode = new(Param);
+	
+	paramNode -> paramName = paramName; 
+	paramNode -> dataTypeNode = type; 
+	paramNode -> proxParam = nextParam;
+	
+	return paramNode;
+		
+}
+
+
+Param*
+connect_param_list( Param *father, Param *son ) {
+	
+	father -> proxParam = son;	
+	return father;
+		
+}
+
+AST_Node*
+connect_node(AST_Node *varDef, AST_Node *commandSeq) {
+	
+	varDef -> right = commandSeq;
+	return varDef;	
+}
+
+
+AST_Node*
+new_command_func_calling( Call *func, int line ) {
+	
+	AST_Node *funcNode = new_ast_node(STAT, STAT_FUNC_CALL, NULL, NULL, NULL, line);
+	
+	(funcNode -> nodeStruct.stat) -> u.callFunc = func; 
+	
+	return funcNode;	
+}
+
 
 
 
