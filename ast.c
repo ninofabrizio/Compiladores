@@ -102,12 +102,12 @@ new_ast_expVariable_node( int node, int node_type, AST_Node *variableNode ) {
 }
 
 AST_Node*
-new_ast_variable_node( int node, int node_type, const char *id, AST_Node *exp01, AST_Node *exp02, int line ) {
+new_ast_variable_node( int node, int node_type, const char *id, AST_Node *exp01, AST_Node *exp02, AST_Node *nextVarNode, int line ) {
 
 	AST_Node *treeNode;
 	Var *var = new(Var);
 	
-	var -> nextVarNode = NULL;
+	var -> nextVarNode = nextVarNode;
 
 	treeNode = new_ast_node(node, node_type, exp01, exp02, NULL, line);
 	
@@ -119,8 +119,51 @@ new_ast_variable_node( int node, int node_type, const char *id, AST_Node *exp01,
 	return treeNode;
 }
 
+AST_Node*
+new_ast_type_node( int node, int node_type, const char *baseType, int line ) {
+
+	AST_Node *treeNode;
+	Type *type = new(Type);
+
+	type -> baseType = baseType;
+	type -> arraySequence = 0;
+
+	treeNode = new_ast_node(node, node_type, NULL, NULL, NULL, line);
+	
+	treeNode -> nodeStruct.type = type;
+
+	return treeNode;
+}
+
+AST_Node*
+new_ast_defVariable_node( int node, int node_type, AST_Node* typeNode, AST_Node* varListNode ) {
+
+	AST_Node *treeNode;
+	AST_Node *temp;
+	Def *def = new(Def);
+	DefVar *defVar = new(DefVar);
+	
+	if(typeNode -> nodeStruct.type -> arraySequence > 0) { // Is an array
+		
+		for(temp = varListNode; temp != NULL; temp = temp -> nodeStruct.var -> nextVarNode)
+			temp -> nodeType = VAR_INDEXED;
+	}
+
+	defVar -> dataTypeNode = typeNode;
+	defVar -> varListNode = varListNode;
+	def -> u.defVar = defVar;
+
+	treeNode = new_ast_node(node, node_type, NULL, NULL, NULL, typeNode -> line);
+	treeNode -> nodeStruct.def = def;
+
+	return treeNode;
+}
+
+
+// STRUCT GENERATORS
+
 Call*
-new_funcCall(const char* id, AST_Node *expListNode) {
+new_funcCall( const char* id, AST_Node *expListNode ) {
 
 	Call *funcCall = new(Call);
 	
@@ -134,13 +177,28 @@ new_funcCall(const char* id, AST_Node *expListNode) {
 // OTHER FUNCTIONS
 
 AST_Node*
-connect_exp_list(AST_Node *father, AST_Node *son) {
+connect_exp_list( AST_Node *father, AST_Node *son ) {
 
 	father -> nodeStruct.exp -> nextExpNode = son;
 	return father;
 }
 
-static void* myMalloc(size_t size) {
+AST_Node*
+connect_definitions( AST_Node *currentDef, AST_Node *nextDef ) {
+
+	currentDef -> right = nextDef;
+	return currentDef;
+}
+
+AST_Node*
+isArrayType( AST_Node *typeNode ) {
+
+	typeNode -> nodeStruct.type -> arraySequence++;
+
+	return typeNode;
+}
+
+static void* myMalloc( size_t size ) {
 	
 	void* obj = (void *)malloc(size);
 	

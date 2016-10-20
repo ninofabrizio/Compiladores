@@ -51,10 +51,10 @@
 
 %%
 
-program: definitions { $$ = new_ast_node(ROOT, ROOT, $1, NULL, NULL, currentLine); AST_Root = $$; } ; // Acho desnecessário criar um nó pra raíz, na teoria ele já existe (aí fica um nó de nó neste caso)
+program: definitions { AST_Root = $1; } ; // Acho desnecessário criar um nó pra raíz, na teoria ele já existe (aí fica um nó de nó neste caso)
 
 
-definitions: definition definitions	{ $$ = new_ast_node(DEF, DEF, $1, $2, NULL, currentLine); } // 1: Definição de Definição? 2: Acho que o certo aqui é incluir uma lista na struct de Definição (vide lista de expressões no final das regras)
+definitions: definition definitions	{ $$ = connect_definitions($1, $2); } // 1: Definição de Definição? 2: Acho que o certo aqui é incluir uma lista na struct de Definição (vide lista de expressões no final das regras)
 			|	{ $$ = NULL; } ;
 
 
@@ -62,23 +62,23 @@ definition: varDefinition	{ $$ = $1; }
 			| funcDefinition	{ $$ = $1; } ;
 
 
-varDefinition: type nameList ';'	{ $$ = new_ast_node(DEF, DEF_VAR, $1, $2, NULL, currentLine); } ; // Acho que o certo aqui é usar uma estrutura em $2. A struct Var é candidata, já que ela possui o ponteiro para sequência de variáveis ou rever a struct de DefVar. Não esquecer do açúcar sintático dito na aula (int a, b, c; == int a; int b; int c;).
+varDefinition: type nameList ';'	{ $$ = new_ast_defVariable_node(DEF, DEF_VAR, $1, $2); } ; // Acho que o certo aqui é usar uma estrutura em $2. A struct Var é candidata, já que ela possui o ponteiro para sequência de variáveis ou rever a struct de DefVar. Não esquecer do açúcar sintático dito na aula (int a, b, c; == int a; int b; int c;).
 
 
-nameList: TK_ID nameSequence	{ $$ = $1; } ;
+nameList: TK_ID nameSequence	{ $$ = new_ast_variable_node(VAR, VAR_UNIQUE, $1, NULL, NULL, $2, currentLine); } ;
 
 
-nameSequence: ',' TK_ID nameSequence	{ $$ = $2; } // Lista de variáveis aqui
+nameSequence: ',' TK_ID nameSequence	{ $$ = new_ast_variable_node(VAR, VAR_UNIQUE, $2, NULL, NULL, $3, currentLine); } // Lista de variáveis aqui
 				|	{ $$ = NULL; } ;
 
 
 type: baseType	{ $$ = $1; } // Nenhuma estrutura gerada aqui?
-		| type '[' ']'	{ $$ = $1; } ;
+		| type '[' ']'	{ $$ = isArrayType($1); } ;
 
 
-baseType: TK_WORD_INT	{ $$ = $1; } // Nenhuma estrutura gerada aqui? Lembrando que com o que mudei em monga.l, esses tokens possuem o currentLine
-			| TK_WORD_CHAR	{ $$ = $1; }
-			| TK_WORD_FLOAT	{ $$ = $1; } ;
+baseType: TK_WORD_INT	{ $$ = new_ast_type_node(TYPE, TYPE_INT, "int", currentLine); } // Nenhuma estrutura gerada aqui? Lembrando que com o que mudei em monga.l, esses tokens possuem o currentLine
+			| TK_WORD_CHAR	{ $$ = new_ast_type_node(TYPE, TYPE_CHAR, "char", currentLine); }
+			| TK_WORD_FLOAT	{ $$ = new_ast_type_node(TYPE, TYPE_FLOAT, "float", currentLine); } ;
 
 
 funcDefinition: TK_WORD_VOID TK_ID '(' parameters ')' block	{ $$ = new_ast_node(DEF, DEF_FUNC, $4, $6, NULL, currentLine); }
@@ -128,8 +128,8 @@ expressionOptional: expression 	{ $$ = $1; }
 					|	{ $$ = NULL; } ;
 
 
-variable:	TK_ID 	{ $$ = new_ast_variable_node(VAR, VAR_UNIQUE, $1, NULL, NULL, currentLine); }
-			| expressionPrim '[' expression ']'	{ $$ = new_ast_variable_node(VAR, VAR_INDEXED, NULL, $1, $3, currentLine); } ;
+variable:	TK_ID 	{ $$ = new_ast_variable_node(VAR, VAR_UNIQUE, $1, NULL, NULL, NULL, currentLine); }
+			| expressionPrim '[' expression ']'	{ $$ = new_ast_variable_node(VAR, VAR_INDEXED, NULL, $1, $3, NULL, currentLine); } ;
 
 
 expression: expressionOr	{ $$ = $1; } ;
