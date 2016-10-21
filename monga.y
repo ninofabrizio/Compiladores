@@ -102,7 +102,7 @@ parametersSequence: ',' parameter parametersSequence { $$ = connect_param_list( 
 					|	{ $$ = NULL; } 
 ;
 
-parameter:	type TK_ID 	{ $$ = new_param( $1, $2, NULL); } 
+parameter:	type TK_ID 	{ $$ = new_param( $1, $2, NULL ); } 
 ; 
 
 

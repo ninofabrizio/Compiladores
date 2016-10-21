@@ -159,6 +159,46 @@ new_ast_defVariable_node( int node, int node_type, AST_Node* typeNode, AST_Node*
 	return treeNode;
 }
 
+AST_Node*
+new_func_def( const char* returnType, const char *funcName, Param *param, AST_Node *block, AST_Node *node, int line ) {
+	
+	AST_Node *funcNode = new_ast_node(DEF, DEF_FUNC, NULL, NULL, NULL, line);
+	Def *def = new(Def);
+	
+	def -> u.func.block = block;
+	def -> u.func.param = param;
+	def -> u.func.funcName = funcName;
+	
+	if ( node == NULL ) {
+		
+		def -> u.func.tagReturnType = 0;
+		def -> u.func.ret.voidType = returnType;	
+	}
+	else {
+		
+		def -> u.func.tagReturnType = 1;
+		def -> u.func.ret.dataTypeNode = node;
+			
+	}
+	
+	funcNode -> nodeStruct.def = def;
+	
+	return funcNode;
+}
+
+AST_Node*
+new_command_func_calling( Call *func, int line ) {
+	
+	AST_Node *funcNode = new_ast_node(STAT, STAT_FUNC_CALL, NULL, NULL, NULL, line);
+	
+	Stat *call = new(Stat);
+	(call -> u).callFunc = func;
+	
+	(funcNode -> nodeStruct).stat = call;
+	
+	return funcNode;	
+}
+
 
 // STRUCT GENERATORS
 
@@ -172,6 +212,30 @@ new_funcCall( const char* id, AST_Node *expListNode ) {
 
 	return funcCall;
 }
+
+Param*
+new_param( AST_Node *type, const char *paramName, Param *nextParam) {
+	
+	AST_Node *varNode;
+	Param *paramNode = new(Param);
+	DefVar* defVar = new(DefVar);
+	int varType = VAR_UNIQUE;
+	
+	if(type -> nodeStruct.type -> arraySequence > 0)
+		varType = VAR_INDEXED;
+
+	varNode = new_ast_variable_node(VAR, varType, paramName, NULL, NULL, NULL, type -> line);
+	defVar -> dataTypeNode = type;
+	defVar -> varListNode = varNode;
+	
+	paramNode -> proxParam = nextParam;
+	paramNode -> var = defVar;
+	
+	return paramNode;
+		
+}
+
+// OTHER FUNCTIONS
 
 AST_Node*
 connect_exp_list( AST_Node *father, AST_Node *son ) {
@@ -200,53 +264,6 @@ static void* myMalloc( size_t size ) {
 	return obj;
 }
 
-
-AST_Node*
-new_func_def( const char* returnType, const char *funcName, Param *param, AST_Node *block, AST_Node *node, int line ) {
-	
-	AST_Node *funcNode = new_ast_node(DEF, DEF_FUNC, NULL, NULL, NULL, line);
-	Def *def = new(Def);
-	
-	def -> u.func.block = block;
-	def -> u.func.param = param;
-	def -> u.func.funcName = funcName;
-	
-	if ( node == NULL ) {
-		
-		def -> u.func.tagReturnType = 0;
-		def -> u.func.ret.voidType = returnType;	
-	}
-	else {
-		
-		def -> u.func.tagReturnType = 1;
-		def -> u.func.ret.dataTypeNode = node;
-			
-	}
-	
-	funcNode -> nodeStruct.def = def;
-	
-	return funcNode;
-}
-
-Param*
-new_param( AST_Node *type, const char *paramName, Param *nextParam) {
-	
-	Param *paramNode = new(Param);
-	DefVar* defVar = new(DefVar);
-	Var* var = new(Var);
-	
-	var -> varName =  paramName;
-	defVar -> dataTypeNode = type;
-	defVar -> varListNode = var;
-	
-	paramNode -> proxParam = nextParam;
-	paramNode -> var = defVar;
-	
-	return paramNode;
-		
-}
-
-
 Param*
 connect_param_list( Param *father, Param *son ) {
 	
@@ -266,21 +283,8 @@ connect_node(AST_Node *varDef, AST_Node *commandSeq) {
 }
 
 
-AST_Node*
-new_command_func_calling( Call *func, int line ) {
-	
-	AST_Node *funcNode = new_ast_node(STAT, STAT_FUNC_CALL, NULL, NULL, NULL, line);
-	
-	Stat *call = new(Stat);
-	(call -> u).callFunc = func;
-	
-	(funcNode -> nodeStruct).stat = call;
-	
-	return funcNode;	
-}
 
-
-
+// PRINTING FUNCTIONS
 
 void print_type(AST_Node *a) {
 	
@@ -297,7 +301,14 @@ void print_type(AST_Node *a) {
 		
 }
 
-
+void print_exp (AST_Node *a) {
+	
+	if( a != NULL){}
+	
+	
+	
+	
+}
 
 void print_var(AST_Node *a) {
 	
@@ -331,31 +342,12 @@ void print_params(Param *p) {
 
 
 
-void print_block(AST_Node *a) {
-	
-	if( a != NULL) {
-		
-		if ( a -> nodeType == DEF_VAR ) {
-			
-			print_def(a);
-			print_stat(a->right);
-		
-		} else	
-			print_stat(a);		
-	}		
-}
 
 
 
 
-void print_exp (AST_Node *a) {
-	
-	if( a != NULL){}
-	
-	
-	
-	
-}
+
+
 
 
 void print_stat (AST_Node *a) {
@@ -369,7 +361,19 @@ void print_stat (AST_Node *a) {
 
 
 
-
+void print_block(AST_Node *a) {
+	
+	if( a != NULL) {
+		
+		if ( a -> nodeType == DEF_VAR ) {
+			
+			print_def(a);
+			print_stat(a->right);
+		
+		} else	
+			print_stat(a);		
+	}		
+}
 
 
 
@@ -393,7 +397,7 @@ print_def(AST_Node *a) {
 			printf("%s\n", a -> nodeStruct.def -> u.func.funcName );	
 		
 			if(a -> nodeStruct.def -> u.func.tagReturnType)
-				print_type( a -> nodeStruct.def -> u.func -> dataTypeNode);
+				print_type( a -> nodeStruct.def -> u.func.ret.dataTypeNode);
 			else printf("void\n");
 		
 			print_params( a -> nodeStruct.def -> u.func.param );
@@ -410,14 +414,13 @@ print_def(AST_Node *a) {
 
 
 
-void
-print_tree(AST_Node *a) {
+void print_tree(AST_Node *a) {
  
  	if( a!= NULL )
  	   switch( a -> node ) {
 			case DEF:  print_def(a); break;
 			case VAR:  print_var(a); break;
-			case EXPR: print_expr(a); break;
+			case EXPR: print_exp(a); break;
 			case STAT: print_stat(a); break;	   
 			case TYPE: print_type(a); break;
 	  

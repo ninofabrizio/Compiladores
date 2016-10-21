@@ -21,23 +21,26 @@ typedef struct IfElse IfElse;
 
 
 AST_Node* new_ast_node ( int node, int node_type, AST_Node* left, AST_Node* right, AST_Node* center, int line );
+
 AST_Node* new_ast_expInteger_node ( int node, int node_type, int value, int line );
 AST_Node* new_ast_expFloat_node ( int node, int node_type, float value, int line );
 AST_Node* new_ast_expLiteral_node ( int node, int node_type, const char *value, int line );
 AST_Node* new_ast_expFuncCall_node ( int node, int node_type, Call *funcCall, int line );
 AST_Node* new_ast_expVariable_node( int node, int node_type, AST_Node *variableNode );
+
 AST_Node* new_ast_variable_node( int node, int node_type, const char *id, AST_Node *exp1, AST_Node *exp2, AST_Node *nextVarNode, int line );
 AST_Node* new_ast_type_node( int node, int node_type, const char *baseType, int line );
 AST_Node* new_ast_defVariable_node( int node, int node_type, AST_Node* typeNode, AST_Node* varListNode );
-Call* new_funcCall(const char* id, AST_Node *expListNode);
-AST_Node* connect_exp_list(AST_Node *father, AST_Node *son);
-AST_Node* isArrayType( AST_Node *typeNode );
 AST_Node* new_func_def( const char* returnType, const char *funcName, Param *param, AST_Node *block, AST_Node *node, int line );
-Param* new_param( AST_Node *type, const char *paramName, Param *nextParam);
-Param* connect_param_list( Param *father, Param *son );
-AST_Node* connect_node( AST_Node *varDef, AST_Node *commandSeq);
 AST_Node* new_command_func_calling( Call *func, int line );
 
+Call* new_funcCall( const char* id, AST_Node *expListNode );
+Param* new_param( AST_Node *type, const char *paramName, Param *nextParam );
+
+AST_Node* connect_exp_list( AST_Node *father, AST_Node *son );
+Param* connect_param_list( Param *father, Param *son );
+AST_Node* isArrayType( AST_Node *typeNode );
+AST_Node* connect_node( AST_Node *varDef, AST_Node *commandSeq );
 
 
 enum nodeEnum {
