@@ -6,27 +6,12 @@
 int main()
 {
 	/* comentario....*/
-	
-	
-	
+		
 	int a, b, c;
 	a = 6.9;
-
-	if( a == 3*3) {
-		print("oi");
-	} else {
-	 	c = sgrt(b, 2);
 	
-		 if ( b < 4*c) {
-		 	float t;
-			t = 4;
-		 	
-		 }
+	print("a");
 	
-	}
-	
-	return a;
-
 }
 
 

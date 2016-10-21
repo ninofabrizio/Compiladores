@@ -1,6 +1,12 @@
 #include "ast.h"
 
 static void* myMalloc(size_t size);
+static void print_def(AST_Node *a);
+static void print_block(AST_Node *a);
+static void print_call (Call *a);
+static void print_stat (AST_Node *a);
+static void print_type(AST_Node *a);
+static void print_var(AST_Node *a);
 
 #define new(T) ((T*)myMalloc(sizeof(T)))
 
@@ -220,11 +226,12 @@ new_param( AST_Node *type, const char *paramName, Param *nextParam) {
 	Param *paramNode = new(Param);
 	DefVar* defVar = new(DefVar);
 	int varType = VAR_UNIQUE;
-	
+		
 	if(type -> nodeStruct.type -> arraySequence > 0)
 		varType = VAR_INDEXED;
 
 	varNode = new_ast_variable_node(VAR, varType, paramName, NULL, NULL, NULL, type -> line);
+	
 	defVar -> dataTypeNode = type;
 	defVar -> varListNode = varNode;
 	
@@ -284,9 +291,15 @@ connect_node(AST_Node *varDef, AST_Node *commandSeq) {
 
 
 
+
+
+
+
+
+
 // PRINTING FUNCTIONS
 
-void print_type(AST_Node *a) {
+static void print_type(AST_Node *a) {
 	
 	int i;
 	
@@ -301,16 +314,142 @@ void print_type(AST_Node *a) {
 		
 }
 
-void print_exp (AST_Node *a) {
+
+
+
+static void print_exp (AST_Node *a) {
 	
-	if( a != NULL){}
+	if( a != NULL) {
+		
+		if ( a -> nodeType == EXPR_VAR) {
+			
+			printf("EXPR_VAR\n");		
+			print_var( a -> nodeStruct.exp -> u.varNode);
+					
+		} else if (a -> nodeType == EXPR_FUNC_CALL ) {
+			
+			printf("EXPR_FUNC_CALL\n");
+			print_call(a -> nodeStruct.exp -> u.functionCall);
+			
+		}  else if (a -> nodeType == EXPR_NEW) {
+			
+			printf("EXPR_NEW\n");
+			print_type(a->left);
+			print_exp(a->right);
+			
+		}  else if (a -> nodeType == EXPR_INT) {
+			
+			printf("EXPR_INT\n");
+			printf("%d\n", a -> nodeStruct.exp -> u.ki );
+			
+		}  else if (a -> nodeType == EXPR_HEXA) {
+			
+			printf("EXPR_HEXA\n");
+			printf("%x\n", a -> nodeStruct.exp -> u.ki );
+		
+		}  else if (a -> nodeType == EXPR_CHAR ) {
+			
+			printf("EXPR_CHAR\n");
+			printf("%c\n", a -> nodeStruct.exp -> u.ki );
+			
+		}  else if (a -> nodeType == EXPR_FLOAT) {
+			
+			printf("EXPR_FLOAT\n");
+			printf("%g\n", a -> nodeStruct.exp -> u.kf );
+				
+		}  else if (a -> nodeType == EXPR_LIT ) {
+			
+			printf("EXPR_LIT\n");
+			printf("%s\n", a -> nodeStruct.exp -> u.lit );
 	
+		} else { 
+				
+			if ( a -> nodeType == EXPR_OR ) {
+			
+				printf("EXPR_OR\n");
+			
+			
+			} else if ( a -> nodeType == EXPR_AND) {
+			
+				printf("EXPR_AND\n");
+			
+			
+			} else if ( a -> nodeType == EXPR_EQUAL ) {
+			
+				printf("EXPR_EQUAL\n");
+			
+			
+			} else if ( a -> nodeType == EXPR_LEEQ ) {
+			
+				printf("EXPR_LEEQ\n");
+			
+			
+			} else if ( a -> nodeType == EXPR_GREQ) {
+			
+				printf("EXPR_GREQ\n");
+			
+			
+			} else if ( a -> nodeType == EXPR_GREATER) {
+			
+				printf("EXPR_GREATER\n");
+			
+			
+			} else if ( a -> nodeType == EXPR_LESS) {
+			
+				printf("EXPR_LESS\n");
+			
+			
+			} else if ( a -> nodeType == EXPR_NOEQ ) {
+			
+				printf("EXPR_NOEQ\n");
+			
+			
+			
+			} else if ( a -> nodeType == EXPR_ADD) {
+			
+				printf("EXPR_ADD\n");
+			
+			
+			} else if ( a -> nodeType == EXPR_MIN) {
+			
+				printf("EXPR_MIN\n");
+			
+			
+			} else if ( a -> nodeType == EXPR_MUL) {
+			
+				printf("EXPR_MUL\n");
+			
+			
+			} else if ( a -> nodeType == EXPR_DIV) {
+			
+				printf("EXPR_DIV\n");
+			
+			
+			} else if ( a -> nodeType == EXPR_NOT ) {
+			
+				printf("EXPR_NOT\n");
+			
+			
+			} else {
+			
+				printf("EXPR_NEG\n");	
+			
+			}
+		
+			print_exp(a->left);
+			print_exp(a->right);
+						
+		}					
 	
+		print_exp(a -> nodeStruct.exp->nextExpNode);
 	
-	
+	}
+		
 }
 
-void print_var(AST_Node *a) {
+
+
+static void print_var(AST_Node *a) {
 	
 	if( a != NULL) {
 		
@@ -330,7 +469,7 @@ void print_var(AST_Node *a) {
 
 
 
-void print_params(Param *p) {
+static void print_params(Param *p) {
 	
 	if( p != NULL) {
 		
@@ -342,26 +481,65 @@ void print_params(Param *p) {
 
 
 
-
-
-
-
-
-
-
-
-void print_stat (AST_Node *a) {
+static void print_stat (AST_Node *a) {
 	
 	
+	if( a != NULL) {
+		
+		if(  a -> nodeType == STAT_WHILE ) {
+			
+			printf("STAT_WHILE\n");
+			print_exp(a->left);
+			print_stat(a->right);
+			
+		} else if (a -> nodeType == STAT_IF) {
+		
+			printf("STAT_IF\n");
+			print_exp(a->left);
+			print_stat(a->right);
+		
+		} else if(  a -> nodeType == STAT_IFELSE) {
+			
+			printf("STAT_IFELSE\n");
+			print_exp(a->left);
+			print_stat(a->right);
+			print_stat(a->center);	
+		
+		} else if(a -> nodeType == STAT_ASSIGN) {
+			
+			printf("STAT_ASSIGN\n");
+			print_var(a->left);
+			print_exp(a->right);
+			
+		} else if(a -> nodeType == STAT_RETURN) {
+			
+			printf("STAT_RETURN\n");
+			print_exp(a->left);
+				
+		} else {
+		
+			printf("STAT_FUNC\n");
+			print_call(a -> nodeStruct.stat -> u.callFunc);	
+		}
+		
+	}	
+}
+
+
+static void print_call (Call *a) {
 	
-	
-	
+	if( a != NULL) {
+		
+		printf("FUNC_CALL\n");
+		printf("%s\n", a -> funcName );
+		print_exp(a -> expressionNode);
+		
+	}
 	
 }
 
 
-
-void print_block(AST_Node *a) {
+static void print_block(AST_Node *a) {
 	
 	if( a != NULL) {
 		
@@ -377,7 +555,7 @@ void print_block(AST_Node *a) {
 
 
 
-void
+static void
 print_def(AST_Node *a) {
 	
 	
@@ -410,10 +588,6 @@ print_def(AST_Node *a) {
 }
 
 
-
-
-
-
 void print_tree(AST_Node *a) {
  
  	if( a!= NULL )
@@ -427,13 +601,6 @@ void print_tree(AST_Node *a) {
 	   	 default: printf("internal error: bad node %c\n", a->nodeType);
 		}  
 }
-
-
-
-
-
-
-
 
 
 

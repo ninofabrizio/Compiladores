@@ -42,6 +42,8 @@ Param* connect_param_list( Param *father, Param *son );
 AST_Node* isArrayType( AST_Node *typeNode );
 AST_Node* connect_node( AST_Node *varDef, AST_Node *commandSeq );
 
+extern void print_tree(AST_Node *a);
+
 
 enum nodeEnum {
 
@@ -185,12 +187,12 @@ struct Stat {
 	
 	union {
 		Call *callFunc;
-		AST_Node *block;
-		struct { AST_Node *varNode; AST_Node *exp00Node; } assign;
-		struct { int returnType; AST_Node *exp00Node; } retCommand;
-		struct { int whileType; AST_Node *exp00Node; AST_Node *commandListNode; } whileLoop;
-		struct { int ifType; int openPar; int closePar; AST_Node *exp00Node; AST_Node *block; } ifCondition;
-		IfElse *ifElseCondition;
+		// AST_Node *block;
+		// struct { AST_Node *varNode; AST_Node *exp00Node; } assign;
+		// struct { int returnType; AST_Node *exp00Node; } retCommand;
+		// struct { int whileType; AST_Node *exp00Node; AST_Node *commandListNode; } whileLoop;
+		// struct { int ifType; int openPar; int closePar; AST_Node *exp00Node; AST_Node *block; } ifCondition;
+		// IfElse *ifElseCondition;
 	} u;
 };
 

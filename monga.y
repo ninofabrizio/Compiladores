@@ -8,7 +8,7 @@
 	int yylex(void);
 
 	int currentLine;
-	AST_Node *AST_Root;
+	extern AST_Node *AST_Root;
 
 %}
 
@@ -59,7 +59,7 @@
 
 program: definitions { $$ = $1; AST_Root = $$; } ; 
 
-definitions: definition definitions	{ $$ = new_ast_node(DEF, DEF, $1, $2, NULL, currentLine); } 
+definitions: definition definitions	{ $$ = connect_node( $1, $2 ); } 
 			| { $$ = NULL; } 
 ;
 
@@ -130,7 +130,7 @@ command: TK_WORD_IF '(' expression ')' command 	{ $$ = new_ast_node(STAT, STAT_I
 		 | TK_WORD_RETURN expressionOptional ';'	{ $$ = new_ast_node(STAT, STAT_RETURN, $2, NULL, NULL, $1); }
 		 
 		 | funcCalling ';'	{ $$ = new_command_func_calling( $1, currentLine ); } 
-		 
+		
 		 | block	{ $$ = $1; } 
 ;
 
