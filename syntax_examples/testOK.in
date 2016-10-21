@@ -1,27 +1,63 @@
-int main( int a, int b)
-{
-	/* comentario....*/
-		
-	int a; 
-	int b;
-	int c;
-	int d;
-	int e;
+
+/* Some stupid Monga program */
+
+float test(int a, float var, char [] id) {
+
+	return /* monga function teste \t */
+
+
+
+
+
+;
+}
+
+void main () {
 	
-	print("oi");
+ 	float EVER; 
+	int a, b; /* remember that in Monga, we have to declare
+			   AND THEN, we can assign values to the variables */
+	char [] vetor;
 	
-	if ( a == 5 ){
+	EVER = 1.f;
+	vetor = new int [5];
+	a = 4 ;
+	b = a / 2 ;
 	
-		a = 2 * 2;
+	f(new float [a+b*4]);
+	vetor[f(x)] = 0x3deff;
+	(new int[3])[2] = 5.44f;
+
+	if ( i == 0 )
+		print("ok");
+	if( i == 5 ) {
+		print("number 5")
+		;
+	if(i == exp)
+		print("aqui");
+	} else
+		print("no ok!");
 	
-	} else {
+	while(EVER) {
 	
-		print("aaaaa");
+		b = "\nstring aqui\\";	
+		if( !f(b + a) == -5.55f ) {
+			vetor [i] = i + 1;
+			func(a, b, c, f(5));
+		} else 
+			return;
 	
+		EVER = -1;		
 	}
 	
-	
-	return a;
-	
-		
+	printThis(b);
+
+	test(1, 2, "3");
+
+	return 0;
 }
+
+
+
+
+
