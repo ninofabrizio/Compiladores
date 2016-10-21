@@ -40,7 +40,15 @@ Param* new_param( AST_Node *type, const char *paramName, Param *nextParam );
 AST_Node* connect_exp_list( AST_Node *father, AST_Node *son );
 Param* connect_param_list( Param *father, Param *son );
 AST_Node* isArrayType( AST_Node *typeNode );
-AST_Node* connect_node( AST_Node *varDef, AST_Node *commandSeq );
+
+AST_Node*connect_node_left(AST_Node *varDef, AST_Node *commandSeq);
+AST_Node*connect_node_right(AST_Node *varDef, AST_Node *commandSeq);
+
+AST_Node* new_stat_if( int i, int j, AST_Node* n1, AST_Node* n2, AST_Node* n3, int line);
+AST_Node* new_stat_while( int i, int j, AST_Node* n1, AST_Node* n2, int line);
+AST_Node* new_stat_assign( int i, int j, AST_Node* n1, AST_Node* n2, int line);
+AST_Node* new_stat_ret( int i, int j, AST_Node* n1, int line);
+
 
 extern void print_tree(AST_Node *a);
 
@@ -187,12 +195,12 @@ struct Stat {
 	
 	union {
 		Call *callFunc;
-		// AST_Node *block;
-		// struct { AST_Node *varNode; AST_Node *exp00Node; } assign;
-		// struct { int returnType; AST_Node *exp00Node; } retCommand;
-		// struct { int whileType; AST_Node *exp00Node; AST_Node *commandListNode; } whileLoop;
-		// struct { int ifType; int openPar; int closePar; AST_Node *exp00Node; AST_Node *block; } ifCondition;
-		// IfElse *ifElseCondition;
+		AST_Node *block;
+		struct { AST_Node *varNode; AST_Node *exp00Node; } assign;
+		struct { int returnType; AST_Node *exp00Node; } retCommand;
+		struct { int whileType; AST_Node *exp00Node; AST_Node *commandListNode; } whileLoop;
+		struct { AST_Node *exp00Node; AST_Node *block; AST_Node *elseNo; } ifCondition;
+		IfElse *ifElseCondition;
 	} u;
 };
 

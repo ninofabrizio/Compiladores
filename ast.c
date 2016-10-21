@@ -242,6 +242,81 @@ new_param( AST_Node *type, const char *paramName, Param *nextParam) {
 		
 }
 
+
+
+
+AST_Node*
+new_stat_if( int i, int j, AST_Node* n1, AST_Node* n2, AST_Node* n3, int line) {
+	
+	AST_Node *node = new_ast_node(i, j, NULL, NULL, NULL, line);
+	
+	Stat *statIf = new(Stat);
+	statIf -> u.ifCondition.exp00Node = n1;
+	statIf -> u.ifCondition.block = n2;
+	statIf -> u.ifCondition.elseNo = n3;
+	
+	node -> nodeStruct.stat = statIf;
+	
+	return node;
+		
+}
+
+
+AST_Node*
+new_stat_while( int i, int j, AST_Node* n1, AST_Node* n2, int line) {
+	
+	AST_Node *node = new_ast_node(i, j, NULL, NULL, NULL, line);
+	
+	Stat *statW = new(Stat);
+	statW -> u.whileLoop.exp00Node = n1;
+	statW -> u.whileLoop.commandListNode = n2;
+	
+	node -> nodeStruct.stat = statW;
+	
+	return node;		
+}
+	
+AST_Node*
+new_stat_assign( int i, int j, AST_Node* n1, AST_Node* n2, int line) {
+	
+	AST_Node *node = new_ast_node(i, j, NULL, NULL, NULL, line);
+	
+	Stat *statA = new(Stat);
+	statA -> u.assign.exp00Node = n2;
+	statA -> u.assign.varNode = n1;
+		
+	node -> nodeStruct.stat = statA;
+	
+	return node;		
+		
+}
+	
+	
+AST_Node*
+new_stat_ret( int i, int j, AST_Node* n1, int line) {
+	
+	AST_Node *node = new_ast_node(i, j, NULL, NULL, NULL, line);
+	
+	Stat *statR = new(Stat);
+	statR -> u.retCommand.exp00Node = n1;
+		
+	node -> nodeStruct.stat = statR;
+	
+	return node;		
+		
+}
+
+
+
+
+
+
+
+
+
+
+
+
 // OTHER FUNCTIONS
 
 AST_Node*
@@ -280,7 +355,19 @@ connect_param_list( Param *father, Param *son ) {
 }
 
 AST_Node*
-connect_node(AST_Node *varDef, AST_Node *commandSeq) {
+connect_node_left(AST_Node *varDef, AST_Node *commandSeq) {
+	
+	if ( varDef == NULL)
+		return commandSeq;
+	
+	varDef -> left = commandSeq;
+	return varDef;	
+}
+
+
+
+AST_Node*
+connect_node_right(AST_Node *varDef, AST_Node *commandSeq) {
 	
 	if ( varDef == NULL)
 		return commandSeq;
@@ -288,11 +375,6 @@ connect_node(AST_Node *varDef, AST_Node *commandSeq) {
 	varDef -> right = commandSeq;
 	return varDef;	
 }
-
-
-
-
-
 
 
 
@@ -325,12 +407,14 @@ static void print_exp (AST_Node *a) {
 			
 			printf("EXPR_VAR\n");		
 			print_var( a -> nodeStruct.exp -> u.varNode);
-					
+			print_exp(a -> nodeStruct.exp->nextExpNode);		
+		
 		} else if (a -> nodeType == EXPR_FUNC_CALL ) {
 			
 			printf("EXPR_FUNC_CALL\n");
 			print_call(a -> nodeStruct.exp -> u.functionCall);
-			
+			print_exp(a -> nodeStruct.exp->nextExpNode);
+		
 		}  else if (a -> nodeType == EXPR_NEW) {
 			
 			printf("EXPR_NEW\n");
@@ -341,27 +425,32 @@ static void print_exp (AST_Node *a) {
 			
 			printf("EXPR_INT\n");
 			printf("%d\n", a -> nodeStruct.exp -> u.ki );
-			
+			print_exp(a -> nodeStruct.exp->nextExpNode);
+		
 		}  else if (a -> nodeType == EXPR_HEXA) {
 			
 			printf("EXPR_HEXA\n");
 			printf("%x\n", a -> nodeStruct.exp -> u.ki );
+			print_exp(a -> nodeStruct.exp->nextExpNode);
 		
 		}  else if (a -> nodeType == EXPR_CHAR ) {
 			
 			printf("EXPR_CHAR\n");
 			printf("%c\n", a -> nodeStruct.exp -> u.ki );
-			
+			print_exp(a -> nodeStruct.exp->nextExpNode);
+		
 		}  else if (a -> nodeType == EXPR_FLOAT) {
 			
 			printf("EXPR_FLOAT\n");
 			printf("%g\n", a -> nodeStruct.exp -> u.kf );
-				
+			print_exp(a -> nodeStruct.exp->nextExpNode);	
+		
 		}  else if (a -> nodeType == EXPR_LIT ) {
 			
 			printf("EXPR_LIT\n");
 			printf("%s\n", a -> nodeStruct.exp -> u.lit );
-	
+			print_exp(a -> nodeStruct.exp->nextExpNode);
+		
 		} else { 
 				
 			if ( a -> nodeType == EXPR_OR ) {
@@ -433,7 +522,7 @@ static void print_exp (AST_Node *a) {
 			} else {
 			
 				printf("EXPR_NEG\n");	
-			
+				
 			}
 		
 			print_exp(a->left);
@@ -441,8 +530,7 @@ static void print_exp (AST_Node *a) {
 						
 		}					
 	
-		print_exp(a -> nodeStruct.exp->nextExpNode);
-	
+		
 	}
 		
 }
@@ -452,17 +540,22 @@ static void print_exp (AST_Node *a) {
 static void print_var(AST_Node *a) {
 	
 	if( a != NULL) {
-		
-		if ( a -> nodeType == VAR_UNIQUE )
+				
+		if ( a -> nodeType == VAR_UNIQUE ) {
+			
+			printf("VAR_UNIQUE\n");
 			printf("%s\n",  a -> nodeStruct.var -> varName );
-		
+		}
 		else {		
+			
+			printf("VAR_INDEXED\n");
 			print_exp(a->left);
 			print_exp(a->right);		
 		}
 					
 		print_var(a -> nodeStruct.var -> nextVarNode);
-				
+		print_tree(a->left);
+		print_tree(a->right);		
 	}
 		
 }
@@ -481,6 +574,15 @@ static void print_params(Param *p) {
 
 
 
+
+
+		
+	
+
+
+
+
+
 static void print_stat (AST_Node *a) {
 	
 	
@@ -489,38 +591,47 @@ static void print_stat (AST_Node *a) {
 		if(  a -> nodeType == STAT_WHILE ) {
 			
 			printf("STAT_WHILE\n");
-			print_exp(a->left);
-			print_stat(a->right);
+			print_exp(a -> nodeStruct.stat -> u.whileLoop.exp00Node);
+			print_stat(a -> nodeStruct.stat -> u.whileLoop.commandListNode);
 			
 		} else if (a -> nodeType == STAT_IF) {
 		
 			printf("STAT_IF\n");
-			print_exp(a->left);
-			print_stat(a->right);
+			print_exp(a -> nodeStruct.stat -> u.ifCondition.exp00Node);
+			print_stat(a -> nodeStruct.stat -> u.ifCondition.block);
+			
 		
 		} else if(  a -> nodeType == STAT_IFELSE) {
 			
 			printf("STAT_IFELSE\n");
-			print_exp(a->left);
-			print_stat(a->right);
-			print_stat(a->center);	
+			
+			print_exp(a -> nodeStruct.stat -> u.ifCondition.exp00Node);
+			print_stat(a -> nodeStruct.stat -> u.ifCondition.block);
+			print_stat(a -> nodeStruct.stat -> u.ifCondition.elseNo);	
+		
+		
 		
 		} else if(a -> nodeType == STAT_ASSIGN) {
 			
 			printf("STAT_ASSIGN\n");
-			print_var(a->left);
-			print_exp(a->right);
+			
+			print_var(a -> nodeStruct.stat -> u.assign.varNode);
+			print_exp(a -> nodeStruct.stat -> u.assign.exp00Node);
+			
 			
 		} else if(a -> nodeType == STAT_RETURN) {
 			
 			printf("STAT_RETURN\n");
-			print_exp(a->left);
+			print_exp(a -> nodeStruct.stat -> u.retCommand.exp00Node);
 				
 		} else {
 		
 			printf("STAT_FUNC\n");
 			print_call(a -> nodeStruct.stat -> u.callFunc);	
 		}
+	
+		print_tree(a->right);
+		print_tree(a->left);
 		
 	}	
 }
@@ -583,6 +694,8 @@ print_def(AST_Node *a) {
 					
 		}
 		
+		print_tree(a->left);
+		print_tree(a->right);
 	}
 
 }

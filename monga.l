@@ -35,7 +35,7 @@ Character		    ([^'\n]|\\'|\\n|\\t|\\\\|\\\"|\\0)
 %%
 
 [ \t]+						{ ; }
-\n 							{ currentLine++; }
+\n 							{ currentLine++;}
 
 
 "char"					 			{ yylval.i = currentLine; yylval.s = yytext; return TK_WORD_CHAR; }

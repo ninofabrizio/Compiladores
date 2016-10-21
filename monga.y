@@ -46,6 +46,7 @@
 %token <i>	TK_INTEGER
 %token <i>	TK_HEXA
 
+
 %type <node> program definition definitions varDefinition funcDefinition type baseType nameList nameSequence varDefSequence commandSequence expression command ifElseCommand variable expressionOptional expressionPrim expressionOr expressionAnd expressionComp expressionAddMin expressionMulDiv expressionUna numeral literal expList block expressionSequence
 %type <call> funcCalling
 %type <param> parameters parameter parametersSequence
@@ -57,33 +58,49 @@
 %%
 
 
-program: definitions { $$ = $1; AST_Root = $$; } ; 
+program: definitions { $$ = $1; AST_Root = $$;} 
+; 
 
-definitions: definition definitions	{ $$ = connect_node( $1, $2 ); } 
+
+
+definitions: definition definitions	{ $$ = connect_node_left( $1, $2 ); } 
 			| { $$ = NULL; } 
 ;
 
+
+
 definition: varDefinition	{ $$ = $1; }
-			| funcDefinition	{ $$ = $1; } ;
+			| funcDefinition	{ $$ = $1; } 
+;
 
 
-varDefinition: type nameList ';'	{ $$ = new_ast_defVariable_node(DEF, DEF_VAR, $1, $2); } ; 
+
+varDefinition: type nameList ';'  { $$ = new_ast_defVariable_node(DEF, DEF_VAR, $1, $2); } 
+; 
 
 
-nameList: TK_ID nameSequence	{ $$ = new_ast_variable_node(VAR, VAR_UNIQUE, $1, NULL, NULL, $2, currentLine); } ;
+
+nameList: TK_ID nameSequence	{ $$ = new_ast_variable_node(VAR, VAR_UNIQUE, $1, NULL, NULL, $2, currentLine); } 
+;
+
 
 
 nameSequence: ',' TK_ID nameSequence	{ $$ = new_ast_variable_node(VAR, VAR_UNIQUE, $2, NULL, NULL, $3, currentLine); } 
-				|	{ $$ = NULL; } ;
+				|	{ $$ = NULL; } 
+;
+
 
 
 type: baseType	{ $$ = $1; } 
-		| type '[' ']'	{ $$ = isArrayType($1); } ;
+		| type '[' ']'	{ $$ = isArrayType($1); } 
+;
+
 
 
 baseType: TK_WORD_INT	{ $$ = new_ast_type_node(TYPE, TYPE_INT, "int", currentLine); } 
 			| TK_WORD_CHAR	{ $$ = new_ast_type_node(TYPE, TYPE_CHAR, "char", currentLine); }
-			| TK_WORD_FLOAT	{ $$ = new_ast_type_node(TYPE, TYPE_FLOAT, "float", currentLine); } ;
+			| TK_WORD_FLOAT	{ $$ = new_ast_type_node(TYPE, TYPE_FLOAT, "float", currentLine); } 
+;
 
 
 
@@ -106,45 +123,44 @@ parameter:	type TK_ID 	{ $$ = new_param( $1, $2, NULL ); }
 ; 
 
 
-block:	'{' varDefSequence commandSequence '}'	{ $$ = connect_node($2, $3); } 
+block:	'{' varDefSequence commandSequence '}'	{ $$ = connect_node_right($2, $3); } 
 ; 
 
-varDefSequence: varDefinition varDefSequence	{ $$ = connect_node($1, $2); }
+varDefSequence: varDefinition varDefSequence	{ $$ = connect_node_left($1, $2); }
 				|	{ $$ = NULL; } 
 ;
 
-commandSequence: command commandSequence	{ $$ = connect_node($1, $2); }
+commandSequence: command commandSequence	{ $$ = connect_node_left($1, $2); }
 				|	{ $$ = NULL; } 
 ;
 
 
-
-command: TK_WORD_IF '(' expression ')' command 	{ $$ = new_ast_node(STAT, STAT_IF, $3, $5, NULL, currentLine); }
+command: TK_WORD_IF '(' expression ')' command 	{ $$ = new_stat_if(STAT, STAT_IF, $3, $5, NULL, currentLine); }
 		 
-		 | TK_WORD_IF '(' expression ')' ifElseCommand TK_WORD_ELSE command 	{ $$ = new_ast_node(STAT, STAT_IFELSE, $3, $5, $7, $6); }
+		 | TK_WORD_IF '(' expression ')' ifElseCommand TK_WORD_ELSE command { $$ = new_stat_if(STAT, STAT_IFELSE, $3, $5, $7, currentLine); }
 		 
-		 | TK_WORD_WHILE '(' expression ')' command 	{ $$ = new_ast_node(STAT, STAT_WHILE, $3, $5, NULL, $1); }
+		 | TK_WORD_WHILE '(' expression ')' command { $$ = new_stat_while(STAT, STAT_WHILE, $3, $5, currentLine); }
 		 
-		 | variable '=' expression ';'	{ $$ = new_ast_node(STAT, STAT_ASSIGN, $1, $3, NULL, currentLine); }
+		 | variable '=' expression ';' { $$ = new_stat_assign(STAT, STAT_ASSIGN, $1, $3, currentLine); }
 		 
-		 | TK_WORD_RETURN expressionOptional ';'	{ $$ = new_ast_node(STAT, STAT_RETURN, $2, NULL, NULL, $1); }
+		 | TK_WORD_RETURN expressionOptional ';' { $$ = new_stat_ret(STAT, STAT_RETURN, $2, currentLine); }
 		 
-		 | funcCalling ';'	{ $$ = new_command_func_calling( $1, currentLine ); } 
+		 | funcCalling ';' { $$ = new_command_func_calling( $1, currentLine ); } 
 		
 		 | block	{ $$ = $1; } 
 ;
 
 
 
-ifElseCommand: TK_WORD_IF '(' expression ')' ifElseCommand TK_WORD_ELSE ifElseCommand	{ $$ = new_ast_node(STAT, STAT_IFELSE, $3, $5, $7, $6); }
+ifElseCommand: TK_WORD_IF '(' expression ')' ifElseCommand TK_WORD_ELSE ifElseCommand	{ $$ = new_stat_if(STAT, STAT_IFELSE, $3, $5, $7, currentLine); }
 			   
-			   | TK_WORD_WHILE '(' expression ')' ifElseCommand	{ $$ = new_ast_node(STAT, STAT_WHILE, $3, $5, NULL, $1); }
+			   | TK_WORD_WHILE '(' expression ')' ifElseCommand	{ $$ = new_stat_while(STAT, STAT_WHILE, $3, $5, currentLine); }
 			   
-			   | variable '=' expression ';'	{ $$ = new_ast_node(STAT, STAT_ASSIGN, $1, $3, NULL, currentLine); }
+			   | variable '=' expression ';' { $$ = new_stat_assign(STAT, STAT_ASSIGN, $1, $3, currentLine); }
 			   
-			   | TK_WORD_RETURN expressionOptional ';'	{ $$ = new_ast_node(STAT, STAT_RETURN, $2, NULL, NULL, $1); }
+			   | TK_WORD_RETURN expressionOptional ';' { $$ = new_stat_ret(STAT, STAT_RETURN, $2, currentLine); }
 			   
-			   | funcCalling ';'	{ $$ = new_command_func_calling( $1, currentLine ); } 
+			   | funcCalling ';' { $$ = new_command_func_calling( $1, currentLine ); } 
 			   
 			   | block	{ $$ = $1; } 
 ;
@@ -218,7 +234,7 @@ numeral: TK_INTEGER	{ $$ = new_ast_expInteger_node (EXPR, EXPR_INT, $1, currentL
 			| TK_CHAR 	{ $$ = new_ast_expInteger_node (EXPR, EXPR_CHAR, $1, currentLine); } ;
 
 
-literal: TK_LIT_STRING	{ $$ = new_ast_expLiteral_node (EXPR, EXPR_LIT, $1, currentLine); } ;
+literal: TK_LIT_STRING	{ $$ = new_ast_expLiteral_node (EXPR, EXPR_LIT, $1, currentLine); printf("..L..\n"); } ;
 
 %%
 
