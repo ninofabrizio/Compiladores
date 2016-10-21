@@ -1,0 +1,5 @@
+*.o
+*.txt
+tester
+monga.tab.h
+monga.tab.c
