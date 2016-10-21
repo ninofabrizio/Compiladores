@@ -21,6 +21,9 @@ char * strDup (char *s);
 /* Função para notificação de erro de comentário não fechado */
 void commentError();
 
+/* Função para extrair string de ID */
+char * idDup (char * s);
+
 %}
 
 Exp				[Ee]
@@ -38,18 +41,18 @@ Character		    ([^'\n]|\\'|\\n|\\t|\\\\|\\\"|\\0)
 \n 							{ currentLine++; }
 
 
-"char"					 			{ yylval.i = currentLine; yylval.s = yytext; return TK_WORD_CHAR; }
-"float"								{ yylval.i = currentLine; yylval.s = yytext; return TK_WORD_FLOAT; }
-"int"								{ yylval.i = currentLine; yylval.s = yytext; return TK_WORD_INT; }
-"if" 								{ yylval.i = currentLine; yylval.s = yytext; return TK_WORD_IF; }
-"else" 								{ yylval.i = currentLine; yylval.s = yytext; return TK_WORD_ELSE; }
-"while"								{ yylval.i = currentLine; yylval.s = yytext; return TK_WORD_WHILE; }
-"new"								{ yylval.i = currentLine; yylval.s = yytext; return TK_WORD_NEW; }
-"return"							{ yylval.i = currentLine; yylval.s = yytext; return TK_WORD_RETURN; }
-"void"								{ yylval.i = currentLine; yylval.s = yytext; return TK_WORD_VOID; }
+"char"					 			{ return TK_WORD_CHAR; }
+"float"								{ return TK_WORD_FLOAT; }
+"int"								{ return TK_WORD_INT; }
+"if" 								{ return TK_WORD_IF; }
+"else" 								{ return TK_WORD_ELSE; }
+"while"								{ return TK_WORD_WHILE; }
+"new"								{ return TK_WORD_NEW; }
+"return"							{ return TK_WORD_RETURN; }
+"void"								{ return TK_WORD_VOID; }
 
 
-({Letter}|_)({Letter}|{Digit}|_)*	        { yylval.s = yytext; return TK_ID; }
+({Letter}|_)({Letter}|{Digit}|_)*	        { yylval.s = idDup(yytext); return TK_ID; }
 
 {Digit}+[.]?[Ff]                                        { yylval.f = strtof(yytext, NULL);     return TK_FLOAT; }
 ({Digit}*[.]{Digit}+)({Exp}[+-]?{Digit}+)?[Ff]?	        { yylval.f = strtof(yytext, NULL);     return TK_FLOAT; }
@@ -84,27 +87,27 @@ Character		    ([^'\n]|\\'|\\n|\\t|\\\\|\\\"|\\0)
 <Comment><<EOF>>					{ commentError(); return yytext[0]; }
 
 
-"=="	 							{ yylval.i = currentLine; yylval.s = yytext; return TK_EQUAL; }
-"!="     							{ yylval.i = currentLine; yylval.s = yytext; return TK_NOT_EQ; }
-"="      							{ yylval.i = currentLine; return yytext[0]; }
-"<="     							{ yylval.i = currentLine; yylval.s = yytext; return TK_LESS_OR_EQ; }
-"<"      							{ yylval.i = currentLine; return yytext[0]; }
-">="     							{ yylval.i = currentLine; yylval.s = yytext; return TK_GREATER_OR_EQ; }
-">"      							{ yylval.i = currentLine; return yytext[0]; }
-"+"      							{ yylval.i = currentLine; return yytext[0]; }
-"-"      							{ yylval.i = currentLine; return yytext[0]; }
-"*"      							{ yylval.i = currentLine; return yytext[0]; }
-"/"      							{ yylval.i = currentLine; return yytext[0]; }
+"=="	 							{ yylval.s = yytext; return TK_EQUAL; }
+"!="     							{ yylval.s = yytext; return TK_NOT_EQ; }
+"="      							{ return yytext[0]; }
+"<="     							{ yylval.s = yytext; return TK_LESS_OR_EQ; }
+"<"      							{ return yytext[0]; }
+">="     							{ yylval.s = yytext; return TK_GREATER_OR_EQ; }
+">"      							{ return yytext[0]; }
+"+"      							{ return yytext[0]; }
+"-"      							{ return yytext[0]; }
+"*"      							{ return yytext[0]; }
+"/"      							{ return yytext[0]; }
 "("      							{ return yytext[0]; }
 ")"      							{ return yytext[0]; }
 "["		 							{ return yytext[0]; }
 "]"		 							{ return yytext[0]; }
 "{"		 							{ return yytext[0]; }
 "}"		 							{ return yytext[0]; }
-"||"	 							{ yylval.i = currentLine; yylval.s = strDup(yytext); return TK_OR;  }
-"&&"	 							{ yylval.i = currentLine; yylval.s = strDup(yytext); return TK_AND; }
-"!"									{ yylval.i = currentLine; return yytext[0]; }
-","		 							{ yylval.i = currentLine; return yytext[0]; }
+"||"	 							{ yylval.s = strDup(yytext); return TK_OR;  }
+"&&"	 							{ yylval.s = strDup(yytext); return TK_AND; }
+"!"									{ return yytext[0]; }
+","		 							{ return yytext[0]; }
 ";"      							{ return yytext[0]; }
 
 
@@ -119,9 +122,22 @@ void setInput (FILE *file) {
 	yyin = file;
 }
 
+char * idDup (char * s) {
+
+    int length = strlen(s) + 1;
+    char * d = (char *)malloc( length);
+
+    if(d == NULL) 
+        fprintf(stderr, "MEMORY SHORTAGE ERROR");
+    
+    memcpy(d, s, length);
+
+    return d;
+}
+
 void commentError() {
 
-	printf("\nerror type 'Comment not closed': from line %d\n", openComment);
+	fprintf(stderr, "\nerror type 'Comment not closed': from line %d\n", openComment);
 }
 
 char charTreat(char first, char second) {
@@ -173,7 +189,7 @@ char * strDup (char *s) {
 
 	dup = (char *) malloc (sizeof(char)*length);
     if (dup == NULL) {
-    	printf("\nMemory allocation error in line %d\n", currentLine);
+    	fprintf(stderr, "\nMemory allocation error in line %d\n", currentLine);
     	return NULL; 
     }
 
