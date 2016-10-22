@@ -17,39 +17,29 @@ typedef struct Param Param;
 typedef struct DefVar DefVar;
 typedef struct Def Def;
 typedef struct Stat Stat;
-typedef struct IfElse IfElse;
-
 
 AST_Node* new_ast_node ( int node, int node_type, AST_Node* left, AST_Node* right, AST_Node* center, int line );
-
 AST_Node* new_ast_expInteger_node ( int node, int node_type, int value, int line );
 AST_Node* new_ast_expFloat_node ( int node, int node_type, float value, int line );
 AST_Node* new_ast_expLiteral_node ( int node, int node_type, const char *value, int line );
 AST_Node* new_ast_expFuncCall_node ( int node, int node_type, Call *funcCall, int line );
 AST_Node* new_ast_expVariable_node( int node, int node_type, AST_Node *variableNode );
-
 AST_Node* new_ast_variable_node( int node, int node_type, const char *id, AST_Node *exp1, AST_Node *exp2, AST_Node *nextVarNode, int line );
 AST_Node* new_ast_type_node( int node, int node_type, const char *baseType, int line );
 AST_Node* new_ast_defVariable_node( int node, int node_type, AST_Node* typeNode, AST_Node* varListNode );
 AST_Node* new_func_def( const char* returnType, const char *funcName, Param *param, AST_Node *block, AST_Node *node, int line );
 AST_Node* new_command_func_calling( Call *func, int line );
-
 Call* new_funcCall( const char* id, AST_Node *expListNode );
 Param* new_param( AST_Node *type, const char *paramName, Param *nextParam );
-
 AST_Node* connect_exp_list( AST_Node *father, AST_Node *son );
 Param* connect_param_list( Param *father, Param *son );
 AST_Node* isArrayType( AST_Node *typeNode );
-
 AST_Node*connect_node_left(AST_Node *varDef, AST_Node *commandSeq);
 AST_Node*connect_node_right(AST_Node *varDef, AST_Node *commandSeq);
-
 AST_Node* new_stat_if( int i, int j, AST_Node* n1, AST_Node* n2, AST_Node* n3, int line);
 AST_Node* new_stat_while( int i, int j, AST_Node* n1, AST_Node* n2, int line);
 AST_Node* new_stat_assign( int i, int j, AST_Node* n1, AST_Node* n2, int line);
 AST_Node* new_stat_ret( int i, int j, AST_Node* n1, int line);
-
-
 extern void print_tree(AST_Node *a);
 
 
@@ -183,7 +173,7 @@ struct Def {
 	
 	union {
 		DefVar *defVar;
-		struct { const char *funcName; int openPar; int closePar; Param *param; 
+		struct { const char *funcName; Param *param; 
 		     	 union { const char *voidType; AST_Node *dataTypeNode; } ret;
 			 	 int tagReturnType; // for void return 0; for other types return 1.
 				 AST_Node *block;
@@ -200,15 +190,7 @@ struct Stat {
 		struct { int returnType; AST_Node *exp00Node; } retCommand;
 		struct { int whileType; AST_Node *exp00Node; AST_Node *commandListNode; } whileLoop;
 		struct { AST_Node *exp00Node; AST_Node *block; AST_Node *elseNo; } ifCondition;
-		IfElse *ifElseCondition;
 	} u;
-};
-
-struct IfElse {
-		
-	IfElse *proxIfElseNode;
-	struct { int ifType; int openPar; int closePar; AST_Node *exp00Node; AST_Node *commandBlock; } ifCondition;
-	struct { int elseType; AST_Node *commandBlock; } elseCondition;
 };
 
 #endif

@@ -29,9 +29,6 @@ new_ast_node ( int node, int node_type, AST_Node* left, AST_Node* right, AST_Nod
 }
 
 
-
-// SPECIFIC NODE GENERATORS
-
 AST_Node*
 new_ast_expInteger_node ( int node, int node_type, int value, int line ) {
 
@@ -206,8 +203,6 @@ new_command_func_calling( Call *func, int line ) {
 }
 
 
-// STRUCT GENERATORS
-
 Call*
 new_funcCall( const char* id, AST_Node *expListNode ) {
 
@@ -241,9 +236,6 @@ new_param( AST_Node *type, const char *paramName, Param *nextParam) {
 	return paramNode;
 		
 }
-
-
-
 
 AST_Node*
 new_stat_if( int i, int j, AST_Node* n1, AST_Node* n2, AST_Node* n3, int line) {
@@ -307,18 +299,6 @@ new_stat_ret( int i, int j, AST_Node* n1, int line) {
 }
 
 
-
-
-
-
-
-
-
-
-
-
-// OTHER FUNCTIONS
-
 AST_Node*
 connect_exp_list( AST_Node *father, AST_Node *son ) {
 
@@ -365,7 +345,6 @@ connect_node_left(AST_Node *varDef, AST_Node *commandSeq) {
 }
 
 
-
 AST_Node*
 connect_node_right(AST_Node *varDef, AST_Node *commandSeq) {
 	
@@ -377,10 +356,6 @@ connect_node_right(AST_Node *varDef, AST_Node *commandSeq) {
 }
 
 
-
-
-// PRINTING FUNCTIONS
-
 static void print_type(AST_Node *a) {
 	
 	int i;
@@ -391,13 +366,13 @@ static void print_type(AST_Node *a) {
 		printf("%s\n", a -> nodeStruct.type -> baseType);	
 				
 		for(i = 0; i < a -> nodeStruct.type -> arraySequence ; i++) 
-			printf("[]\n");
-				
+			printf("[] ");
+			
+		free(a -> nodeStruct.type);		
+		free(a);
 	}
 		
 }
-
-
 
 
 static void print_exp (AST_Node *a) {
@@ -409,13 +384,14 @@ static void print_exp (AST_Node *a) {
 			printf("EXPR_VAR: ");		
 			print_var( a -> nodeStruct.exp -> u.varNode);
 			print_exp(a -> nodeStruct.exp->nextExpNode);		
-		
+			free(a -> nodeStruct.exp -> u.varNode);
+			free( a -> nodeStruct.exp);
 		} else if (a -> nodeType == EXPR_FUNC_CALL ) {
 			
 			printf("EXPR_FUNC_CALL: ");
 			print_call(a -> nodeStruct.exp -> u.functionCall);
 			print_exp(a -> nodeStruct.exp->nextExpNode);
-		
+			free( a -> nodeStruct.exp);
 		}  else if (a -> nodeType == EXPR_NEW) {
 			
 			printf("EXPR_NEW: ");
@@ -427,31 +403,31 @@ static void print_exp (AST_Node *a) {
 			printf("EXPR_INT: ");
 			printf("%d\n", a -> nodeStruct.exp -> u.ki );
 			print_exp(a -> nodeStruct.exp->nextExpNode);
-		
+			free( a -> nodeStruct.exp);
 		}  else if (a -> nodeType == EXPR_HEXA) {
 			
 			printf("EXPR_HEXA: ");
 			printf("%x\n", a -> nodeStruct.exp -> u.ki );
 			print_exp(a -> nodeStruct.exp->nextExpNode);
-		
+			free( a -> nodeStruct.exp);
 		}  else if (a -> nodeType == EXPR_CHAR ) {
 			
 			printf("EXPR_CHAR: ");
 			printf("%c\n", a -> nodeStruct.exp -> u.ki );
 			print_exp(a -> nodeStruct.exp->nextExpNode);
-		
+			free( a -> nodeStruct.exp);
 		}  else if (a -> nodeType == EXPR_FLOAT) {
 			
 			printf("EXPR_FLOAT: ");
 			printf("%g\n", a -> nodeStruct.exp -> u.kf );
 			print_exp(a -> nodeStruct.exp->nextExpNode);	
-		
+			free( a -> nodeStruct.exp);
 		}  else if (a -> nodeType == EXPR_LIT ) {
 			
 			printf("EXPR_LIT: ");
 			printf("%s\n", a -> nodeStruct.exp -> u.lit );
 			print_exp(a -> nodeStruct.exp->nextExpNode);
-		
+			free( a -> nodeStruct.exp);
 		} else { 
 				
 			if ( a -> nodeType == EXPR_OR ) {
@@ -528,14 +504,13 @@ static void print_exp (AST_Node *a) {
 		
 			print_exp(a->left);
 			print_exp(a->right);
-						
+							
 		}					
 	
-		
+		free(a);
 	}
 		
 }
-
 
 
 static void print_var(AST_Node *a) {
@@ -549,7 +524,7 @@ static void print_var(AST_Node *a) {
 		}
 		else {		
 			
-			printf("	VAR_INDEXED\n");
+			printf("VAR_INDEXED: ");
 			print_exp(a->left);
 			print_exp(a->right);		
 		}
@@ -557,10 +532,12 @@ static void print_var(AST_Node *a) {
 		print_var(a -> nodeStruct.var -> nextVarNode);
 		print_tree(a->left);
 		print_tree(a->right);		
+	
+		free(a -> nodeStruct.var);
+		
 	}
 		
 }
-
 
 
 static void print_params(Param *p) {
@@ -570,16 +547,21 @@ static void print_params(Param *p) {
 		printf("PARAM:\n");
 		print_type(p -> var -> dataTypeNode);
 		print_var(p -> var -> varListNode);
+		
+		
+		if ( p -> var -> varListNode -> nodeType == VAR_INDEXED)
+			printf("%s\n", p -> var -> varListNode -> nodeStruct.var -> varName);
+		
 		print_params(p -> proxParam);			
+	
+		free(p -> var -> varListNode);
+		free(p -> var);
+		free(p);
+	
 	}
-
+	
 }
 
-
-
-
-
-		
 
 static void print_stat (AST_Node *a) {
 	
@@ -592,6 +574,7 @@ static void print_stat (AST_Node *a) {
 			print_exp(a -> nodeStruct.stat -> u.whileLoop.exp00Node);
 			print_stat(a -> nodeStruct.stat -> u.whileLoop.commandListNode);
 			
+				
 		} else if (a -> nodeType == STAT_IF) {
 		
 			printf("\nSTAT_IF\n");
@@ -606,7 +589,7 @@ static void print_stat (AST_Node *a) {
 			print_exp(a -> nodeStruct.stat -> u.ifCondition.exp00Node);
 			print_stat(a -> nodeStruct.stat -> u.ifCondition.block);
 			print_stat(a -> nodeStruct.stat -> u.ifCondition.elseNo);	
-		
+			
 		
 		
 		} else if(a -> nodeType == STAT_ASSIGN) {
@@ -615,13 +598,14 @@ static void print_stat (AST_Node *a) {
 			
 			print_var(a -> nodeStruct.stat -> u.assign.varNode);
 			print_exp(a -> nodeStruct.stat -> u.assign.exp00Node);
-			
+			free(a -> nodeStruct.stat -> u.assign.varNode);
 			
 		} else if(a -> nodeType == STAT_RETURN) {
 			
 			printf("\nSTAT_RETURN\n");
 			print_exp(a -> nodeStruct.stat -> u.retCommand.exp00Node);
 				
+		
 		} else {
 		
 			printf("\nSTAT_FUNC\n");
@@ -631,6 +615,8 @@ static void print_stat (AST_Node *a) {
 		print_tree(a->right);
 		print_tree(a->left);
 		
+		free(a);
+	
 	}	
 }
 
@@ -641,10 +627,10 @@ static void print_call (Call *a) {
 		
 		printf("FUNC_CALL: ");
 		printf("%s\n", a -> funcName );
-		print_exp(a -> expressionNode);
-		
+		print_exp(a -> expressionNode);	
 	}
-	
+
+	free(a);
 }
 
 
@@ -659,10 +645,11 @@ static void print_block(AST_Node *a) {
 			print_def(a);
 			printf("\n");
 			print_stat(a->right);
-		
+
 		} else	
-			print_stat(a);		
-	}		
+			print_stat(a);				
+	}			
+
 }
 
 
@@ -677,9 +664,16 @@ print_def(AST_Node *a) {
 		if(a -> nodeType == DEF_VAR) {
 		
 			printf("\nDEF_VAR\n");
+			
 			print_type( a -> nodeStruct.def -> u.defVar -> dataTypeNode );
 			print_var(  a -> nodeStruct.def -> u.defVar -> varListNode );		
 	
+			if( a -> nodeStruct.def -> u.defVar -> varListNode -> nodeType == VAR_INDEXED )
+				printf("%s", a -> nodeStruct.def -> u.defVar -> varListNode -> nodeStruct.var -> varName);
+			
+			free(a -> nodeStruct.def -> u.defVar -> varListNode);
+			free(a -> nodeStruct.def -> u.defVar);
+
 		} else {
 		
 			printf("\tDEF_FUNC:\n");
@@ -689,15 +683,17 @@ print_def(AST_Node *a) {
 			else printf("void\n");
 		
 		
-			printf("%s\n", a -> nodeStruct.def -> u.func.funcName );	
-		
+			printf("%s\n", a -> nodeStruct.def -> u.func.funcName );
 			print_params( a -> nodeStruct.def -> u.func.param );
 			print_block( a -> nodeStruct.def -> u.func.block );
-					
+		
 		}
 		
 		print_tree(a->left);
-		
+	
+		free(a -> nodeStruct.def);
+		free(a);
+	
 	}
 
 }
@@ -714,9 +710,6 @@ void print_tree(AST_Node *a) {
 			case TYPE: print_type(a); break;
 	  
 	   	 default: printf("internal error: bad node %c\n", a->nodeType);
-		}  
+	 	}  
+
 }
-
-
-
-

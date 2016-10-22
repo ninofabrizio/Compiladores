@@ -1,12 +1,15 @@
 #! /bin/bash
-echo "Arvore.."
+echo "ARVORE SINTATICA:\n"
 
-for file in syntax_examples/*.in
+for file in ast_examples/*.in
 do
     filename=$(basename "$file")
     filename="${filename%.*}"
 
-    ./tester syntax_examples/$filename.in
+	echo "\n++++++PRINTANDO ARVORE DE $filename\n"
 
+    ./tester ast_examples/$filename.in
+
+	echo "\n*****FIM DA ARVORE SINTATICA*****\n\n\n\n\n"
 done
 

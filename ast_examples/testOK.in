@@ -2,14 +2,17 @@
 /* Some stupid Monga program */
 
 float test(int a, float var, char [] id) {
+	
+	float x, y;
 
-	return /* monga function teste \t */
+	while ( x < 5.4) {
+	
+		y = sqrt(x);	
+		eval(1, 2, "parseTree");
+	}
+		
+	return /* monga function teste \t */;
 
-
-
-
-
-;
 }
 
 void main () {
@@ -24,10 +27,6 @@ void main () {
 	a = 4 ;
 	b = a / 2 ;
 	
-	f(new float [a+b*4]);
-	vetor[f(x)] = 0x3deff;
-	(new int[3])[2] = 5.44f;
-
 	if ( i == 0 )
 		print("ok");
 	if( i == 5 ) {
@@ -37,19 +36,7 @@ void main () {
 		print("aqui");
 	} else
 		print("no ok!");
-	
-	while(EVER) {
-	
-		b = "\nstring aqui\\";	
-		if( !f(b + a) == -5.55f ) {
-			vetor [i] = i + 1;
-			func(a, b, c, f(5));
-		} else 
-			return;
-	
-		EVER = -1;		
-	}
-	
+		
 	printThis(b);
 
 	test(1, 2, "3");
