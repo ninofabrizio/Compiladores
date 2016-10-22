@@ -1,5 +1,7 @@
 *.o
 *.txt
+*.output
 tester
+monga.c
 monga.tab.h
 monga.tab.c
