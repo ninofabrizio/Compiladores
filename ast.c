@@ -527,6 +527,10 @@ static void print_var(AST_Node *a) {
 			printf("VAR_INDEXED: ");
 			print_exp(a->left);
 			print_exp(a->right);		
+		
+			a->left = NULL;
+			a->right = NULL;
+		
 		}
 					
 		print_var(a -> nodeStruct.var -> nextVarNode);

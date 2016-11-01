@@ -1,6 +1,6 @@
   # compiler flags:
   #  -Wall turns on most, but not all, compiler warnings
-CFLAGS  = -Wall
+CFLAGS  = -Wall -std=c99 -O2
 
   # the build target executable:
 
@@ -28,4 +28,9 @@ tester: monga.o main.o monga.tab.o ast.o
 automatic: automatic.sh
 	sh automatic.sh
 
-run: monga.tab.c monga.tab.o monga.c monga.o ast.o main.o tester automatic
+compile: monga.tab.c monga.tab.o monga.c monga.o ast.o main.o tester
+
+test: automatic
+
+clear:
+	rm -f *.o monga.c monga.tab.c monga.tab.h tester
