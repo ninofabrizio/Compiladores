@@ -105,6 +105,18 @@ new_ast_expVariable_node( int node, int node_type, AST_Node *variableNode ) {
 }
 
 AST_Node*
+new_ast_expNode (int node, int node_type, AST_Node *left, AST_Node *right, AST_Node *center, int line ) {
+
+	AST_Node *treeNode = new_ast_node(node, node_type, left, right, center, line);
+	Exp *exp = new(Exp);
+
+	exp -> nextExpNode = NULL;
+	treeNode -> nodeStruct.exp = exp;
+
+	return treeNode;
+}
+
+AST_Node*
 new_ast_variable_node( int node, int node_type, const char *id, AST_Node *exp01, AST_Node *exp02, AST_Node *nextVarNode, int line ) {
 
 	AST_Node *treeNode;
@@ -163,7 +175,7 @@ new_ast_defVariable_node( int node, int node_type, AST_Node* typeNode, AST_Node*
 }
 
 AST_Node*
-new_func_def( const char* returnType, const char *funcName, Param *param, AST_Node *block, AST_Node *node, int line ) {
+new_func_def( const char* returnVoid, const char *funcName, Param *param, AST_Node *block, AST_Node *nodeType, int line ) {
 	
 	AST_Node *funcNode = new_ast_node(DEF, DEF_FUNC, NULL, NULL, NULL, line);
 	Def *def = new(Def);
@@ -172,16 +184,15 @@ new_func_def( const char* returnType, const char *funcName, Param *param, AST_No
 	def -> u.func.param = param;
 	def -> u.func.funcName = funcName;
 	
-	if ( node == NULL ) {
+	if ( nodeType == NULL ) {
 		
 		def -> u.func.tagReturnType = 0;
-		def -> u.func.ret.voidType = returnType;	
+		def -> u.func.ret.voidType = returnVoid;	
 	}
 	else {
 		
 		def -> u.func.tagReturnType = 1;
-		def -> u.func.ret.dataTypeNode = node;
-			
+		def -> u.func.ret.dataTypeNode = nodeType;
 	}
 	
 	funcNode -> nodeStruct.def = def;
@@ -194,10 +205,10 @@ new_command_func_calling( Call *func, int line ) {
 	
 	AST_Node *funcNode = new_ast_node(STAT, STAT_FUNC_CALL, NULL, NULL, NULL, line);
 	
-	Stat *call = new(Stat);
-	(call -> u).callFunc = func;
+	Stat *Statcall = new(Stat);
+	Statcall -> u.callFunc = func;
 	
-	(funcNode -> nodeStruct).stat = call;
+	funcNode -> nodeStruct.stat = Statcall;
 	
 	return funcNode;	
 }
@@ -238,63 +249,63 @@ new_param( AST_Node *type, const char *paramName, Param *nextParam) {
 }
 
 AST_Node*
-new_stat_if( int i, int j, AST_Node* n1, AST_Node* n2, AST_Node* n3, int line) {
+new_stat_if( int node, int nodeType, AST_Node* n1, AST_Node* n2, AST_Node* n3, int line) {
 	
-	AST_Node *node = new_ast_node(i, j, NULL, NULL, NULL, line);
+	AST_Node *treeNode = new_ast_node(node, nodeType, NULL, NULL, NULL, line);
 	
 	Stat *statIf = new(Stat);
 	statIf -> u.ifCondition.exp00Node = n1;
 	statIf -> u.ifCondition.block = n2;
 	statIf -> u.ifCondition.elseNo = n3;
 	
-	node -> nodeStruct.stat = statIf;
+	treeNode -> nodeStruct.stat = statIf;
 	
-	return node;
+	return treeNode;
 		
 }
 
 
 AST_Node*
-new_stat_while( int i, int j, AST_Node* n1, AST_Node* n2, int line) {
+new_stat_while( int node, int nodeType, AST_Node* n1, AST_Node* n2, int line) {
 	
-	AST_Node *node = new_ast_node(i, j, NULL, NULL, NULL, line);
+	AST_Node *treeNode = new_ast_node(node, nodeType, NULL, NULL, NULL, line);
 	
 	Stat *statW = new(Stat);
 	statW -> u.whileLoop.exp00Node = n1;
 	statW -> u.whileLoop.commandListNode = n2;
 	
-	node -> nodeStruct.stat = statW;
+	treeNode -> nodeStruct.stat = statW;
 	
-	return node;		
+	return treeNode;		
 }
 	
 AST_Node*
-new_stat_assign( int i, int j, AST_Node* n1, AST_Node* n2, int line) {
+new_stat_assign( int node, int nodeType, AST_Node* n1, AST_Node* n2, int line) {
 	
-	AST_Node *node = new_ast_node(i, j, NULL, NULL, NULL, line);
+	AST_Node *treeNode = new_ast_node(node, nodeType, NULL, NULL, NULL, line);
 	
 	Stat *statA = new(Stat);
 	statA -> u.assign.exp00Node = n2;
 	statA -> u.assign.varNode = n1;
 		
-	node -> nodeStruct.stat = statA;
+	treeNode -> nodeStruct.stat = statA;
 	
-	return node;		
+	return treeNode;		
 		
 }
 	
 	
 AST_Node*
-new_stat_ret( int i, int j, AST_Node* n1, int line) {
+new_stat_ret( int node, int nodeType, AST_Node* n1, int line) {
 	
-	AST_Node *node = new_ast_node(i, j, NULL, NULL, NULL, line);
+	AST_Node *treeNode = new_ast_node(node, nodeType, NULL, NULL, NULL, line);
 	
 	Stat *statR = new(Stat);
 	statR -> u.retCommand.exp00Node = n1;
 		
-	node -> nodeStruct.stat = statR;
+	treeNode -> nodeStruct.stat = statR;
 	
-	return node;		
+	return treeNode;
 		
 }
 
@@ -335,24 +346,24 @@ connect_param_list( Param *father, Param *son ) {
 }
 
 AST_Node*
-connect_node_left(AST_Node *varDef, AST_Node *commandSeq) {
+connect_node_left(AST_Node *node1, AST_Node *node2) {
 	
-	if ( varDef == NULL)
-		return commandSeq;
+	if ( node1 == NULL)
+		return node2;
 	
-	varDef -> left = commandSeq;
-	return varDef;	
+	node1 -> left = node2;
+	return node1;	
 }
 
 
 AST_Node*
-connect_node_right(AST_Node *varDef, AST_Node *commandSeq) {
+connect_node_right(AST_Node *node1, AST_Node *node2) {
 	
-	if ( varDef == NULL)
-		return commandSeq;
+	if ( node1 == NULL)
+		return node2;
 	
-	varDef -> right = commandSeq;
-	return varDef;	
+	node1 -> right = node2;
+	return node1;	
 }
 
 
@@ -363,11 +374,12 @@ static void print_type(AST_Node *a) {
 	if( a != NULL) {
 		
 		printf("TYPE: ");
-		printf("%s\n", a -> nodeStruct.type -> baseType);	
+		printf("%s", a -> nodeStruct.type -> baseType);	
 				
 		for(i = 0; i < a -> nodeStruct.type -> arraySequence ; i++) 
-			printf("[] ");
+			printf("[]");
 			
+		printf("\n");	
 		free(a -> nodeStruct.type);		
 		free(a);
 	}
@@ -382,130 +394,123 @@ static void print_exp (AST_Node *a) {
 		if ( a -> nodeType == EXPR_VAR) {
 			
 			printf("EXPR_VAR: ");		
-			print_var( a -> nodeStruct.exp -> u.varNode);
-			print_exp(a -> nodeStruct.exp->nextExpNode);		
+			print_var( a -> nodeStruct.exp -> u.varNode);	
 			free(a -> nodeStruct.exp -> u.varNode);
-			free( a -> nodeStruct.exp);
+
 		} else if (a -> nodeType == EXPR_FUNC_CALL ) {
 			
 			printf("EXPR_FUNC_CALL: ");
 			print_call(a -> nodeStruct.exp -> u.functionCall);
-			print_exp(a -> nodeStruct.exp->nextExpNode);
-			free( a -> nodeStruct.exp);
+
 		}  else if (a -> nodeType == EXPR_NEW) {
 			
 			printf("EXPR_NEW: ");
 			print_type(a->left);
 			print_exp(a->right);
+			a->left = NULL;
+			a->right = NULL;
 			
 		}  else if (a -> nodeType == EXPR_INT) {
 			
 			printf("EXPR_INT: ");
 			printf("%d\n", a -> nodeStruct.exp -> u.ki );
-			print_exp(a -> nodeStruct.exp->nextExpNode);
-			free( a -> nodeStruct.exp);
+
 		}  else if (a -> nodeType == EXPR_HEXA) {
 			
 			printf("EXPR_HEXA: ");
 			printf("%x\n", a -> nodeStruct.exp -> u.ki );
-			print_exp(a -> nodeStruct.exp->nextExpNode);
-			free( a -> nodeStruct.exp);
+
 		}  else if (a -> nodeType == EXPR_CHAR ) {
 			
 			printf("EXPR_CHAR: ");
 			printf("%c\n", a -> nodeStruct.exp -> u.ki );
-			print_exp(a -> nodeStruct.exp->nextExpNode);
-			free( a -> nodeStruct.exp);
+
 		}  else if (a -> nodeType == EXPR_FLOAT) {
 			
 			printf("EXPR_FLOAT: ");
-			printf("%g\n", a -> nodeStruct.exp -> u.kf );
-			print_exp(a -> nodeStruct.exp->nextExpNode);	
-			free( a -> nodeStruct.exp);
+			printf("%f\n", a -> nodeStruct.exp -> u.kf );
+			
 		}  else if (a -> nodeType == EXPR_LIT ) {
 			
 			printf("EXPR_LIT: ");
 			printf("%s\n", a -> nodeStruct.exp -> u.lit );
-			print_exp(a -> nodeStruct.exp->nextExpNode);
-			free( a -> nodeStruct.exp);
-		} else { 
+			
+		} else if ( a -> nodeType == EXPR_OR ) {
+			
+			printf("EXPR_OR\n");
+			
+		} else if ( a -> nodeType == EXPR_AND) {
+			
+			printf("EXPR_AND\n");
+			
+			
+		} else if ( a -> nodeType == EXPR_EQUAL ) {
+			
+			printf("EXPR_EQUAL\n");
+			
+			
+		} else if ( a -> nodeType == EXPR_LEEQ ) {
+			
+			printf("EXPR_LEEQ\n");
+			
+			
+		} else if ( a -> nodeType == EXPR_GREQ) {
+			
+			printf("EXPR_GREQ\n");
+			
+			
+		} else if ( a -> nodeType == EXPR_GREATER) {
+			
+			printf("EXPR_GREATER\n");
+			
+			
+		} else if ( a -> nodeType == EXPR_LESS) {
+			
+			printf("EXPR_LESS\n");
+			
+			
+		} else if ( a -> nodeType == EXPR_NOEQ ) {
+			
+			printf("EXPR_NOEQ\n");
+			
+			
+			
+		} else if ( a -> nodeType == EXPR_ADD) {
+			
+			printf("EXPR_ADD\n");
+			
+			
+		} else if ( a -> nodeType == EXPR_MIN) {
+			
+			printf("EXPR_MIN\n");
+			
+			
+		} else if ( a -> nodeType == EXPR_MUL) {
+			
+			printf("EXPR_MUL\n");
+			
+			
+		} else if ( a -> nodeType == EXPR_DIV) {
+			
+			printf("EXPR_DIV\n");
+			
+			
+		} else if ( a -> nodeType == EXPR_NOT ) {
+			
+			printf("EXPR_NOT\n");
+			
+			
+		} else {
+			
+			printf("EXPR_NEG\n");	
 				
-			if ( a -> nodeType == EXPR_OR ) {
-			
-				printf("EXPR_OR\n");
-			
-			
-			} else if ( a -> nodeType == EXPR_AND) {
-			
-				printf("EXPR_AND\n");
-			
-			
-			} else if ( a -> nodeType == EXPR_EQUAL ) {
-			
-				printf("EXPR_EQUAL\n");
-			
-			
-			} else if ( a -> nodeType == EXPR_LEEQ ) {
-			
-				printf("EXPR_LEEQ\n");
-			
-			
-			} else if ( a -> nodeType == EXPR_GREQ) {
-			
-				printf("EXPR_GREQ\n");
-			
-			
-			} else if ( a -> nodeType == EXPR_GREATER) {
-			
-				printf("EXPR_GREATER\n");
-			
-			
-			} else if ( a -> nodeType == EXPR_LESS) {
-			
-				printf("EXPR_LESS\n");
-			
-			
-			} else if ( a -> nodeType == EXPR_NOEQ ) {
-			
-				printf("EXPR_NOEQ\n");
-			
-			
-			
-			} else if ( a -> nodeType == EXPR_ADD) {
-			
-				printf("EXPR_ADD\n");
-			
-			
-			} else if ( a -> nodeType == EXPR_MIN) {
-			
-				printf("EXPR_MIN\n");
-			
-			
-			} else if ( a -> nodeType == EXPR_MUL) {
-			
-				printf("EXPR_MUL\n");
-			
-			
-			} else if ( a -> nodeType == EXPR_DIV) {
-			
-				printf("EXPR_DIV\n");
-			
-			
-			} else if ( a -> nodeType == EXPR_NOT ) {
-			
-				printf("EXPR_NOT\n");
-			
-			
-			} else {
-			
-				printf("EXPR_NEG\n");	
-				
-			}
+		}
 		
-			print_exp(a->left);
-			print_exp(a->right);
-							
-		}					
+		print_exp(a -> nodeStruct.exp -> nextExpNode);	
+		free( a -> nodeStruct.exp);
+
+		print_exp(a->left);
+		print_exp(a->right);							
 	
 		free(a);
 	}
@@ -525,8 +530,10 @@ static void print_var(AST_Node *a) {
 		else {		
 			
 			printf("VAR_INDEXED: ");
+			printf("%s\n",  a -> nodeStruct.var -> varName );
+		
 			print_exp(a->left);
-			print_exp(a->right);		
+			print_exp(a->right);
 		
 			a->left = NULL;
 			a->right = NULL;
@@ -534,9 +541,10 @@ static void print_var(AST_Node *a) {
 		}
 					
 		print_var(a -> nodeStruct.var -> nextVarNode);
+
 		print_tree(a->left);
-		print_tree(a->right);		
-	
+		print_tree(a->right);
+		
 		free(a -> nodeStruct.var);
 		
 	}
@@ -553,8 +561,8 @@ static void print_params(Param *p) {
 		print_var(p -> var -> varListNode);
 		
 		
-		if ( p -> var -> varListNode -> nodeType == VAR_INDEXED)
-			printf("%s\n", p -> var -> varListNode -> nodeStruct.var -> varName);
+		//if ( p -> var -> varListNode -> nodeType == VAR_INDEXED)
+		//	printf("%s\n", p -> var -> varListNode -> nodeStruct.var -> varName);
 		
 		print_params(p -> proxParam);			
 	
@@ -630,7 +638,7 @@ static void print_call (Call *a) {
 	if( a != NULL) {
 		
 		printf("FUNC_CALL: ");
-		printf("%s\n", a -> funcName );
+		printf("%s\n", a -> funcName);
 		print_exp(a -> expressionNode);	
 	}
 
@@ -664,7 +672,7 @@ print_def(AST_Node *a) {
 	
 	if( a != NULL ) {
 	
-	
+		
 		if(a -> nodeType == DEF_VAR) {
 		
 			printf("\nDEF_VAR\n");
@@ -672,17 +680,17 @@ print_def(AST_Node *a) {
 			print_type( a -> nodeStruct.def -> u.defVar -> dataTypeNode );
 			print_var(  a -> nodeStruct.def -> u.defVar -> varListNode );		
 	
-			if( a -> nodeStruct.def -> u.defVar -> varListNode -> nodeType == VAR_INDEXED )
-				printf("%s", a -> nodeStruct.def -> u.defVar -> varListNode -> nodeStruct.var -> varName);
+			//if( a -> nodeStruct.def -> u.defVar -> varListNode -> nodeType == VAR_INDEXED )
+			//	printf("%s", a -> nodeStruct.def -> u.defVar -> varListNode -> nodeStruct.var -> varName);
 			
 			free(a -> nodeStruct.def -> u.defVar -> varListNode);
 			free(a -> nodeStruct.def -> u.defVar);
 
-		} else {
+		} else  {
 		
-			printf("\tDEF_FUNC:\n");
+			printf("\n\tDEF_FUNC:\n");
 		
-			if(a -> nodeStruct.def -> u.func.tagReturnType)
+			if(a -> nodeStruct.def -> u.func.tagReturnType == 1)
 				print_type( a -> nodeStruct.def -> u.func.ret.dataTypeNode);
 			else printf("void\n");
 		
@@ -706,6 +714,7 @@ print_def(AST_Node *a) {
 void print_tree(AST_Node *a) {
 	 
  	if( a!= NULL )
+
  	   switch( a -> node ) {
 			case DEF:  print_def(a); break;
 			case VAR:  print_var(a); break;

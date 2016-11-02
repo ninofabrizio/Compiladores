@@ -58,7 +58,7 @@
 %%
 
 
-program: definitions { $$ = $1; AST_Root = $$;} 
+program: definitions { $$ = $1; AST_Root = $$; } 
 ; 
 
 
@@ -177,35 +177,35 @@ variable:	TK_ID 	{ $$ = new_ast_variable_node(VAR, VAR_UNIQUE, $1, NULL, NULL, N
 expression: expressionOr	{ $$ = $1; } ;
 
 
-expressionOr:	expressionOr TK_OR expressionAnd	{ $$ = new_ast_node(EXPR, EXPR_OR, $1, $3, NULL, $2); }
+expressionOr:	expressionOr TK_OR expressionAnd	{ $$ = new_ast_expNode(EXPR, EXPR_OR, $1, $3, NULL, currentLine); }
 				| expressionAnd	{ $$ = $1; } ;
 
 
-expressionAnd:	expressionAnd TK_AND expressionComp	{ $$ = new_ast_node(EXPR, EXPR_AND, $1, $3, NULL, $2); }
+expressionAnd:	expressionAnd TK_AND expressionComp	{ $$ = new_ast_expNode(EXPR, EXPR_AND, $1, $3, NULL, currentLine); }
 				| expressionComp	{ $$ = $1; } ;
 
 
-expressionComp:	expressionComp TK_EQUAL expressionAddMin	{ $$ = new_ast_node(EXPR, EXPR_EQUAL, $1, $3, NULL, $2); }
-					| expressionComp TK_LESS_OR_EQ expressionAddMin	{ $$ = new_ast_node(EXPR, EXPR_LEEQ, $1, $3, NULL, $2); }
-					| expressionComp TK_GREATER_OR_EQ expressionAddMin	{ $$ = new_ast_node(EXPR, EXPR_GREQ, $1, $3, NULL, $2); }
-					| expressionComp '<' expressionAddMin	{ $$ = new_ast_node(EXPR, EXPR_LESS, $1, $3, NULL, currentLine); }
-					| expressionComp '>' expressionAddMin	{ $$ = new_ast_node(EXPR, EXPR_GREATER, $1, $3, NULL, currentLine); }
-					| expressionComp TK_NOT_EQ expressionAddMin	{ $$ = new_ast_node(EXPR, EXPR_NOEQ, $1, $3, NULL, $2); }
+expressionComp:	expressionComp TK_EQUAL expressionAddMin	{ $$ = new_ast_expNode(EXPR, EXPR_EQUAL, $1, $3, NULL, currentLine); }
+					| expressionComp TK_LESS_OR_EQ expressionAddMin	{ $$ = new_ast_expNode(EXPR, EXPR_LEEQ, $1, $3, NULL, currentLine); }
+					| expressionComp TK_GREATER_OR_EQ expressionAddMin	{ $$ = new_ast_expNode(EXPR, EXPR_GREQ, $1, $3, NULL, currentLine); }
+					| expressionComp '<' expressionAddMin	{ $$ = new_ast_expNode(EXPR, EXPR_LESS, $1, $3, NULL, currentLine); }
+					| expressionComp '>' expressionAddMin	{ $$ = new_ast_expNode(EXPR, EXPR_GREATER, $1, $3, NULL, currentLine); }
+					| expressionComp TK_NOT_EQ expressionAddMin	{ $$ = new_ast_expNode(EXPR, EXPR_NOEQ, $1, $3, NULL, currentLine); }
 					| expressionAddMin	{ $$ = $1; } ;
 
 
-expressionAddMin:	expressionAddMin '+' expressionMulDiv	{ $$ = new_ast_node(EXPR, EXPR_ADD, $1, $3, NULL, currentLine); }
-					| expressionAddMin '-' expressionMulDiv	{ $$ = new_ast_node(EXPR, EXPR_MIN, $1, $3, NULL, currentLine); }
+expressionAddMin:	expressionAddMin '+' expressionMulDiv	{ $$ = new_ast_expNode(EXPR, EXPR_ADD, $1, $3, NULL, currentLine); }
+					| expressionAddMin '-' expressionMulDiv	{ $$ = new_ast_expNode(EXPR, EXPR_MIN, $1, $3, NULL, currentLine); }
 					| expressionMulDiv	{ $$ = $1; } ;
 
 
-expressionMulDiv:	expressionMulDiv '*' expressionUna	{ $$ = new_ast_node(EXPR, EXPR_MUL, $1, $3, NULL, currentLine); }
-					| expressionMulDiv '/' expressionUna	{ $$ = new_ast_node(EXPR, EXPR_DIV, $1, $3, NULL, currentLine); }
+expressionMulDiv:	expressionMulDiv '*' expressionUna	{ $$ = new_ast_expNode(EXPR, EXPR_MUL, $1, $3, NULL, currentLine); }
+					| expressionMulDiv '/' expressionUna	{ $$ = new_ast_expNode(EXPR, EXPR_DIV, $1, $3, NULL, currentLine); }
 					| expressionUna	{ $$ = $1; } ;
 
 
-expressionUna:	'!' expressionPrim	{ $$ = new_ast_node(EXPR, EXPR_NOT, $2, NULL, NULL, currentLine); }
-				| '-' expressionPrim	{ $$ = new_ast_node(EXPR, EXPR_NEG, $2, NULL, NULL, currentLine); }
+expressionUna:	'!' expressionPrim	{ $$ = new_ast_expNode(EXPR, EXPR_NOT, $2, NULL, NULL, currentLine); }
+				| '-' expressionPrim	{ $$ = new_ast_expNode(EXPR, EXPR_NEG, $2, NULL, NULL, currentLine); }
 				| expressionPrim	{ $$ = $1; } ;
 
 
@@ -214,7 +214,7 @@ expressionPrim:	numeral	{ $$ = $1; }
 				| variable	{ $$ = new_ast_expVariable_node(EXPR, EXPR_VAR, $1); }
 				| '(' expression ')'	{ $$ = $2; }
 				| funcCalling	{ $$ = new_ast_expFuncCall_node(EXPR, EXPR_FUNC_CALL, $1, currentLine); }
-				| TK_WORD_NEW type '[' expression ']'	{ $$ = new_ast_node(EXPR, EXPR_NEW, $2, $4, NULL, $1); } ;
+				| TK_WORD_NEW type '[' expression ']'	{ $$ = new_ast_expNode(EXPR, EXPR_NEW, $2, $4, NULL, currentLine); } ;
 
 
 funcCalling: TK_ID '(' expList ')'	{ $$ = new_funcCall($1, $3); } ;
