@@ -228,10 +228,10 @@ expressionSequence: ',' expression expressionSequence	{ $$ = connect_exp_list($2
 					|	{ $$ = NULL; } ;
 
 
-numeral: TK_INTEGER	{ $$ = new_ast_expInteger_node (EXPR, EXPR_INT, $1, currentLine); }
-			| TK_HEXA	{ $$ = new_ast_expInteger_node (EXPR, EXPR_HEXA, $1, currentLine); }
-			| TK_FLOAT 	{ $$ = new_ast_expFloat_node (EXPR, EXPR_FLOAT, $1, currentLine); } 
-			| TK_CHAR 	{ $$ = new_ast_expInteger_node (EXPR, EXPR_CHAR, $1, currentLine); } ;
+numeral: TK_INTEGER	{ $$ = new_ast_expInteger_node(EXPR, EXPR_INT, $1, currentLine); }
+			| TK_HEXA	{ $$ = new_ast_expInteger_node(EXPR, EXPR_HEXA, $1, currentLine); }
+			| TK_FLOAT 	{ $$ = new_ast_expFloat_node(EXPR, EXPR_FLOAT, $1, currentLine); } 
+			| TK_CHAR 	{ $$ = new_ast_expInteger_node(EXPR, EXPR_CHAR, $1, currentLine); } ;
 
 
 literal: TK_LIT_STRING	{ $$ = new_ast_expLiteral_node (EXPR, EXPR_LIT, $1, currentLine); } ;

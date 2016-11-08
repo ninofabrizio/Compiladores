@@ -41,7 +41,7 @@ AST_Node* new_stat_if( int node, int nodeType, AST_Node* n1, AST_Node* n2, AST_N
 AST_Node* new_stat_while( int node, int nodeType, AST_Node* n1, AST_Node* n2, int line);
 AST_Node* new_stat_assign( int node, int nodeType, AST_Node* n1, AST_Node* n2, int line);
 AST_Node* new_stat_ret( int node, int nodeType, AST_Node* n1, int line);
-extern void print_tree(AST_Node *a);
+extern void print_tree(AST_Node *a, int tabIndex);
 
 
 enum nodeEnum {

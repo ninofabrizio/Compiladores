@@ -3,7 +3,7 @@
 
 int yyparse();
 AST_Node *AST_Root;
-void print_tree(AST_Node *a);
+void print_tree(AST_Node *a, int tabIndex);
 
 int main( int argc, char *argv[] ) {
 	
@@ -22,7 +22,7 @@ int main( int argc, char *argv[] ) {
 	
 	retParse = yyparse();
 	
-	print_tree(AST_Root);
+	print_tree(AST_Root, 0);
 	
 	fclose(file);
 	
