@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 typedef enum nodeEnum nodeEnum;
 typedef enum nodeTypeEnum nodeTypeEnum;
@@ -37,8 +38,8 @@ Param* connect_param_list( Param *father, Param *son );
 AST_Node* isArrayType( AST_Node *typeNode );
 AST_Node*connect_node_left(AST_Node *varDef, AST_Node *commandSeq);
 AST_Node*connect_node_right(AST_Node *varDef, AST_Node *commandSeq);
-AST_Node* new_stat_if( int node, int nodeType, AST_Node* n1, AST_Node* n2, AST_Node* n3, int line);
-AST_Node* new_stat_while( int node, int nodeType, AST_Node* n1, AST_Node* n2, int line);
+AST_Node* new_stat_if( int node, int nodeType, AST_Node* n1, AST_Node* n2, AST_Node* n3);
+AST_Node* new_stat_while( int node, int nodeType, AST_Node* n1, AST_Node* n2);
 AST_Node* new_stat_assign( int node, int nodeType, AST_Node* n1, AST_Node* n2, int line);
 AST_Node* new_stat_ret( int node, int nodeType, AST_Node* n1, int line);
 extern void print_tree(AST_Node *a, int tabIndex);

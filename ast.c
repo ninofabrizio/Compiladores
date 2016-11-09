@@ -185,8 +185,16 @@ new_ast_defVariable_node( int node, int node_type, AST_Node* typeNode, AST_Node*
 AST_Node*
 new_func_def( const char* returnVoid, const char *funcName, Param *param, AST_Node *block, AST_Node *nodeType, int line ) {
 	
-	AST_Node *funcNode = new_ast_node(DEF, DEF_FUNC, NULL, NULL, NULL, line);
+	AST_Node *funcNode;
 	Def *def = new(Def);
+
+	// Just so we try to get the nearest line number of where the actual definition is
+	if(nodeType != NULL)
+		funcNode = new_ast_node(DEF, DEF_FUNC, NULL, NULL, NULL, nodeType -> line);
+	else if(param != NULL)
+		funcNode = new_ast_node(DEF, DEF_FUNC, NULL, NULL, NULL, param -> var -> dataTypeNode -> line);
+	else
+		funcNode = new_ast_node(DEF, DEF_FUNC, NULL, NULL, NULL, line);
 	
 	def -> u.func.block = block;
 	def -> u.func.param = param;
@@ -211,7 +219,13 @@ new_func_def( const char* returnVoid, const char *funcName, Param *param, AST_No
 AST_Node*
 new_command_func_calling( Call *func, int line ) {
 	
-	AST_Node *funcNode = new_ast_node(STAT, STAT_FUNC_CALL, NULL, NULL, NULL, line);
+	AST_Node *funcNode;
+
+	// Just so we try to get the nearest line number of where the actual function calling is
+	if(func -> expressionNode != NULL )
+		funcNode = new_ast_node(STAT, STAT_FUNC_CALL, NULL, NULL, NULL, func -> expressionNode -> line);
+	else
+		funcNode = new_ast_node(STAT, STAT_FUNC_CALL, NULL, NULL, NULL, line);
 	
 	Stat *Statcall = new(Stat);
 	Statcall -> u.callFunc = func;
@@ -257,9 +271,9 @@ new_param( AST_Node *type, const char *paramName, Param *nextParam) {
 }
 
 AST_Node*
-new_stat_if( int node, int nodeType, AST_Node* n1, AST_Node* n2, AST_Node* n3, int line) {
+new_stat_if( int node, int nodeType, AST_Node* n1, AST_Node* n2, AST_Node* n3 ) {
 	
-	AST_Node *treeNode = new_ast_node(node, nodeType, NULL, NULL, NULL, line);
+	AST_Node *treeNode = new_ast_node(node, nodeType, NULL, NULL, NULL, n1 -> line);
 	
 	Stat *statIf = new(Stat);
 	statIf -> u.ifCondition.exp00Node = n1;
@@ -274,9 +288,9 @@ new_stat_if( int node, int nodeType, AST_Node* n1, AST_Node* n2, AST_Node* n3, i
 
 
 AST_Node*
-new_stat_while( int node, int nodeType, AST_Node* n1, AST_Node* n2, int line) {
+new_stat_while( int node, int nodeType, AST_Node* n1, AST_Node* n2 ) {
 	
-	AST_Node *treeNode = new_ast_node(node, nodeType, NULL, NULL, NULL, line);
+	AST_Node *treeNode = new_ast_node(node, nodeType, NULL, NULL, NULL, n1 -> line);
 	
 	Stat *statW = new(Stat);
 	statW -> u.whileLoop.exp00Node = n1;
@@ -412,18 +426,18 @@ print_exp (AST_Node *a, int tabIndex) {
 
 		if ( a -> nodeType == EXPR_VAR ) {
 			
-			printf("EXPR_VAR {\n");	
+			printf("Line [%d] EXPR_VAR {\n", a -> line);	
 			print_var(a -> nodeStruct.exp -> u.varNode, tabIndex+1);	
 			free(a -> nodeStruct.exp -> u.varNode);
 
 		} else if ( a -> nodeType == EXPR_FUNC_CALL ) {
 			
-			printf("EXPR_FUNC_CALL {\n");
+			printf("Line [%d] EXPR_FUNC_CALL {\n", a -> line);
 			print_call(a -> nodeStruct.exp -> u.functionCall, tabIndex+1);
 
 		}  else if ( a -> nodeType == EXPR_NEW ) {
 			
-			printf("EXPR_NEW {\n");
+			printf("Line [%d] EXPR_NEW {\n", a -> line);
 			print_type(a->left, tabIndex+1);
 			print_exp(a->right, tabIndex+1);
 			a->left = NULL;
@@ -431,7 +445,7 @@ print_exp (AST_Node *a, int tabIndex) {
 			
 		}  else if ( a -> nodeType == EXPR_INT ) {
 			
-			printf("EXPR_INT {\n");
+			printf("Line [%d] EXPR_INT {\n", a -> line);
 
 			for(count = 0; count < tabIndex+1; count++)
 				printf("\t");
@@ -440,16 +454,16 @@ print_exp (AST_Node *a, int tabIndex) {
 
 		}  else if ( a -> nodeType == EXPR_HEXA ) {
 			
-			printf("EXPR_HEXA {\n");
+			printf("Line [%d] EXPR_HEXA {\n", a -> line);
 
 			for(count = 0; count < tabIndex+1; count++)
 				printf("\t");
 
-			printf("VALUE: %x\n", a -> nodeStruct.exp -> u.ki);
+			printf("VALUE: %#x\n", a -> nodeStruct.exp -> u.ki);
 
 		}  else if ( a -> nodeType == EXPR_CHAR ) {
 			
-			printf("EXPR_CHAR {\n");
+			printf("Line [%d] EXPR_CHAR {\n", a -> line);
 
 			for(count = 0; count < tabIndex+1; count++)
 				printf("\t");
@@ -458,7 +472,7 @@ print_exp (AST_Node *a, int tabIndex) {
 
 		}  else if ( a -> nodeType == EXPR_FLOAT ) {
 			
-			printf("EXPR_FLOAT {\n");
+			printf("Line [%d] EXPR_FLOAT {\n", a -> line);
 
 			for(count = 0; count < tabIndex+1; count++)
 				printf("\t");
@@ -467,68 +481,68 @@ print_exp (AST_Node *a, int tabIndex) {
 			
 		}  else if ( a -> nodeType == EXPR_LIT ) {
 			
-			printf("EXPR_LIT {\n");
+			printf("Line [%d] EXPR_LIT {\n", a -> line);
 
 			for(count = 0; count < tabIndex+1; count++)
 				printf("\t");
 
-			printf("VALUE: %s\n", a -> nodeStruct.exp -> u.lit);
+			printf("VALUE: \"%s\"", a -> nodeStruct.exp -> u.lit);
 			
 		} else if ( a -> nodeType == EXPR_OR ) {
 			
-			printf("EXPR_OR {\n");
+			printf("Line [%d] EXPR_OR {\n", a -> line);
 			
 		} else if ( a -> nodeType == EXPR_AND ) {
 			
-			printf("EXPR_AND {\n");
+			printf("Line [%d] EXPR_AND {\n", a -> line);
 			
 		} else if ( a -> nodeType == EXPR_EQUAL ) {
 			
-			printf("EXPR_EQUAL {\n");
+			printf("Line [%d] EXPR_EQUAL {\n", a -> line);
 			
 		} else if ( a -> nodeType == EXPR_LEEQ ) {
 			
-			printf("EXPR_LEEQ {\n");
+			printf("Line [%d] EXPR_LEEQ {\n", a -> line);
 			
 		} else if ( a -> nodeType == EXPR_GREQ ) {
 			
-			printf("EXPR_GREQ {\n");
+			printf("Line [%d] EXPR_GREQ {\n", a -> line);
 			
 		} else if ( a -> nodeType == EXPR_GREATER ) {
 			
-			printf("EXPR_GREATER {\n");
+			printf("Line [%d] EXPR_GREATER {\n", a -> line);
 			
 		} else if ( a -> nodeType == EXPR_LESS ) {
 			
-			printf("EXPR_LESS {\n");
+			printf("Line [%d] EXPR_LESS {\n", a -> line);
 			
 		} else if ( a -> nodeType == EXPR_NOEQ ) {
 			
-			printf("EXPR_NOEQ {\n");
+			printf("Line [%d] EXPR_NOEQ {\n", a -> line);
 			
 		} else if ( a -> nodeType == EXPR_ADD ) {
 			
-			printf("EXPR_ADD {\n");
+			printf("Line [%d] EXPR_ADD {\n", a -> line);
 			
 		} else if ( a -> nodeType == EXPR_MIN ) {
 			
-			printf("EXPR_MIN {\n");
+			printf("Line [%d] EXPR_MIN {\n", a -> line);
 			
 		} else if ( a -> nodeType == EXPR_MUL ) {
 			
-			printf("EXPR_MUL {\n");
+			printf("Line [%d] EXPR_MUL {\n", a -> line);
 			
 		} else if ( a -> nodeType == EXPR_DIV ) {
 			
-			printf("EXPR_DIV {\n");
+			printf("Line [%d] EXPR_DIV {\n", a -> line);
 			
 		} else if ( a -> nodeType == EXPR_NOT ) {
 			
-			printf("EXPR_NOT {\n");
+			printf("Line [%d] EXPR_NOT {\n", a -> line);
 			
 		} else {
 			
-			printf("EXPR_NEG {\n");	
+			printf("Line [%d] EXPR_NEG {\n", a -> line);
 		}
 		
 		print_exp(a->left, tabIndex+1);
@@ -572,11 +586,14 @@ print_var( AST_Node *a, int tabIndex ) {
 			
 			printf("VAR_INDEXED {\n");
 
-			//printf("\n");
-			for(count = 0; count < tabIndex+1; count++)
-				printf("\t");
+			// GAMBIARRA: A way to not print NULL value for the name
+			if(a -> nodeStruct.var -> varName != NULL) {
+				//printf("\n");
+				for(count = 0; count < tabIndex+1; count++)
+					printf("\t");
 
-			printf("VAR NAME: %s\n", a -> nodeStruct.var -> varName);
+				printf("VAR NAME: %s\n", a -> nodeStruct.var -> varName);
+			}
 		
 			print_exp(a->left, tabIndex+1);
 			print_exp(a->right, tabIndex+1);
@@ -644,38 +661,38 @@ print_stat ( AST_Node *a, int tabIndex ) {
 		
 		if( a -> nodeType == STAT_WHILE ) {
 			
-			printf("STAT_WHILE {\n");
+			printf("Line [%d] STAT_WHILE {\n", a -> line);
 			print_exp(a -> nodeStruct.stat -> u.whileLoop.exp00Node, tabIndex+1);
 			print_stat(a -> nodeStruct.stat -> u.whileLoop.commandListNode, tabIndex+1);
 				
 		} else if ( a -> nodeType == STAT_IF ) {
 		
-			printf("STAT_IF {\n");
+			printf("Line [%d] STAT_IF {\n", a -> line);
 			print_exp(a -> nodeStruct.stat -> u.ifCondition.exp00Node, tabIndex+1);
 			print_stat(a -> nodeStruct.stat -> u.ifCondition.block, tabIndex+1);
 		
 		} else if( a -> nodeType == STAT_IFELSE ) {
 			
-			printf("STAT_IFELSE {\n");
+			printf("Line [%d] STAT_IFELSE {\n", a -> line);
 			print_exp(a -> nodeStruct.stat -> u.ifCondition.exp00Node, tabIndex+1);
 			print_stat(a -> nodeStruct.stat -> u.ifCondition.block, tabIndex+1);
 			print_stat(a -> nodeStruct.stat -> u.ifCondition.elseNo, tabIndex+1);	
 		
 		} else if( a -> nodeType == STAT_ASSIGN ) {
 			
-			printf("STAT_ASSIGN {\n");
+			printf("Line [%d] STAT_ASSIGN {\n", a -> line);
 			print_var(a -> nodeStruct.stat -> u.assign.varNode, tabIndex+1);
 			print_exp(a -> nodeStruct.stat -> u.assign.exp00Node, tabIndex+1);
 			free(a -> nodeStruct.stat -> u.assign.varNode);
 			
 		} else if( a -> nodeType == STAT_RETURN ) {
 			
-			printf("STAT_RETURN {\n");
+			printf("Line [%d] STAT_RETURN {\n", a -> line);
 			print_exp(a -> nodeStruct.stat -> u.retCommand.exp00Node, tabIndex+1);
 		
 		} else {
 		
-			printf("STAT_FUNC {\n");
+			printf("Line [%d] STAT_FUNC {\n", a -> line);
 			print_call(a -> nodeStruct.stat -> u.callFunc, tabIndex+1);	
 		}
 	
@@ -770,7 +787,7 @@ print_def ( AST_Node *a, int tabIndex ) {
 		
 		if( a -> nodeType == DEF_VAR ) {
 
-			printf("DEF_VAR {\n");
+			printf("Line [%d] DEF_VAR {\n", a -> line);
 			
 			print_type(a -> nodeStruct.def -> u.defVar -> dataTypeNode, tabIndex+1);
 			print_var(a -> nodeStruct.def -> u.defVar -> varListNode, tabIndex+1);		
@@ -783,7 +800,7 @@ print_def ( AST_Node *a, int tabIndex ) {
 
 		} else  {
 		
-			printf("DEF_FUNC {\n");
+			printf("Line [%d] DEF_FUNC {\n", a -> line);
 
 			if(a -> nodeStruct.def -> u.func.tagReturnType == 1)
 				print_type(a -> nodeStruct.def -> u.func.ret.dataTypeNode, tabIndex+1);
@@ -806,7 +823,7 @@ print_def ( AST_Node *a, int tabIndex ) {
 		
 		for(count = 0; count < tabIndex; count++)
 			printf("\t");
-		printf("}\n\n");
+		printf("}\n");
 
 		print_tree(a->left, tabIndex);
 		//print_tree(a->right, tabIndex);

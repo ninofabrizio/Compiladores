@@ -135,11 +135,11 @@ commandSequence: command commandSequence	{ $$ = connect_node_left($1, $2); }
 ;
 
 
-command: TK_WORD_IF '(' expression ')' command 	{ $$ = new_stat_if(STAT, STAT_IF, $3, $5, NULL, currentLine); }
+command: TK_WORD_IF '(' expression ')' command 	{ $$ = new_stat_if(STAT, STAT_IF, $3, $5, NULL); }
 		 
-		 | TK_WORD_IF '(' expression ')' ifElseCommand TK_WORD_ELSE command { $$ = new_stat_if(STAT, STAT_IFELSE, $3, $5, $7, currentLine); }
+		 | TK_WORD_IF '(' expression ')' ifElseCommand TK_WORD_ELSE command { $$ = new_stat_if(STAT, STAT_IFELSE, $3, $5, $7); }
 		 
-		 | TK_WORD_WHILE '(' expression ')' command { $$ = new_stat_while(STAT, STAT_WHILE, $3, $5, currentLine); }
+		 | TK_WORD_WHILE '(' expression ')' command { $$ = new_stat_while(STAT, STAT_WHILE, $3, $5); }
 		 
 		 | variable '=' expression ';' { $$ = new_stat_assign(STAT, STAT_ASSIGN, $1, $3, currentLine); }
 		 
@@ -152,9 +152,9 @@ command: TK_WORD_IF '(' expression ')' command 	{ $$ = new_stat_if(STAT, STAT_IF
 
 
 
-ifElseCommand: TK_WORD_IF '(' expression ')' ifElseCommand TK_WORD_ELSE ifElseCommand	{ $$ = new_stat_if(STAT, STAT_IFELSE, $3, $5, $7, currentLine); }
+ifElseCommand: TK_WORD_IF '(' expression ')' ifElseCommand TK_WORD_ELSE ifElseCommand	{ $$ = new_stat_if(STAT, STAT_IFELSE, $3, $5, $7); }
 			   
-			   | TK_WORD_WHILE '(' expression ')' ifElseCommand	{ $$ = new_stat_while(STAT, STAT_WHILE, $3, $5, currentLine); }
+			   | TK_WORD_WHILE '(' expression ')' ifElseCommand	{ $$ = new_stat_while(STAT, STAT_WHILE, $3, $5); }
 			   
 			   | variable '=' expression ';' { $$ = new_stat_assign(STAT, STAT_ASSIGN, $1, $3, currentLine); }
 			   
