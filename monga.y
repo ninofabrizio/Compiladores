@@ -213,7 +213,7 @@ expressionPrim:	numeral	{ $$ = $1; }
 				| literal	{ $$ = $1; }
 				| variable	{ $$ = new_ast_expVariable_node(EXPR, EXPR_VAR, $1); }
 				| '(' expression ')'	{ $$ = $2; }
-				| funcCalling	{ $$ = new_ast_expFuncCall_node(EXPR, EXPR_FUNC_CALL, $1, currentLine); }
+				| funcCalling	{ $$ = new_ast_expFuncCall_node(EXPR, EXPR_FUNC_CALL, $1, currentLine); } 			// TIPO: aqui preciso da costura pra ver tipo da declaração
 				| TK_WORD_NEW type '[' expression ']'	{ $$ = new_ast_expNode(EXPR, EXPR_NEW, $2, $4, NULL, currentLine); } ;
 
 

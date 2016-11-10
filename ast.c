@@ -37,6 +37,7 @@ new_ast_expInteger_node ( int node, int node_type, int value, int line ) {
 	
 	exp -> nextExpNode = NULL;
 	exp -> u.ki = value;
+	exp -> typing = NULL;
 
 	treeNode = new_ast_node(node, node_type, NULL, NULL, NULL, line);
 	treeNode -> nodeStruct.exp = exp;
@@ -52,6 +53,7 @@ new_ast_expFloat_node ( int node, int node_type, float value, int line ) {
 	
 	exp -> nextExpNode = NULL;
 	exp -> u.kf = value;
+	exp -> typing = NULL;
 
 	treeNode = new_ast_node(node, node_type, NULL, NULL, NULL, line);
 	treeNode -> nodeStruct.exp = exp;
@@ -67,6 +69,7 @@ new_ast_expLiteral_node ( int node, int node_type, const char *value, int line )
 
 	exp -> nextExpNode = NULL;
 	exp -> u.lit = value;
+	exp -> typing = NULL;
 
 	treeNode = new_ast_node(node, node_type, NULL, NULL, NULL, line);
 	treeNode -> nodeStruct.exp = exp;
@@ -82,6 +85,7 @@ new_ast_expFuncCall_node ( int node, int node_type, Call *funcCall, int line ) {
 	
 	exp -> nextExpNode = NULL;
 	exp -> u.functionCall = funcCall;
+	exp -> typing = NULL;
 
 	treeNode = new_ast_node(node, node_type, NULL, NULL, NULL, line);
 	treeNode -> nodeStruct.exp = exp;
@@ -97,6 +101,7 @@ new_ast_expVariable_node( int node, int node_type, AST_Node *variableNode ) {
 	
 	exp -> nextExpNode = NULL;
 	exp -> u.varNode = variableNode;
+	exp -> typing = NULL;
 
 	treeNode = new_ast_node(node, node_type, NULL, NULL, NULL, variableNode -> line);
 	treeNode -> nodeStruct.exp = exp;
@@ -111,6 +116,7 @@ new_ast_expNode (int node, int node_type, AST_Node *left, AST_Node *right, AST_N
 	Exp *exp = new(Exp);
 
 	exp -> nextExpNode = NULL;
+	exp -> typing = NULL;
 	treeNode -> nodeStruct.exp = exp;
 
 	// Turning value to actual negative
@@ -131,6 +137,7 @@ new_ast_variable_node( int node, int node_type, const char *id, AST_Node *exp01,
 	Var *var = new(Var);
 	
 	var -> nextVarNode = nextVarNode;
+	var -> typing = NULL;
 
 	treeNode = new_ast_node(node, node_type, exp01, exp02, NULL, line);
 	
@@ -229,6 +236,7 @@ new_command_func_calling( Call *func, int line ) {
 	
 	Stat *Statcall = new(Stat);
 	Statcall -> u.callFunc = func;
+	Statcall -> typing = NULL;
 	
 	funcNode -> nodeStruct.stat = Statcall;
 	
@@ -279,6 +287,7 @@ new_stat_if( int node, int nodeType, AST_Node* n1, AST_Node* n2, AST_Node* n3 ) 
 	statIf -> u.ifCondition.exp00Node = n1;
 	statIf -> u.ifCondition.block = n2;
 	statIf -> u.ifCondition.elseNo = n3;
+	statIf -> typing = NULL;
 	
 	treeNode -> nodeStruct.stat = statIf;
 	
@@ -295,6 +304,7 @@ new_stat_while( int node, int nodeType, AST_Node* n1, AST_Node* n2 ) {
 	Stat *statW = new(Stat);
 	statW -> u.whileLoop.exp00Node = n1;
 	statW -> u.whileLoop.commandListNode = n2;
+	statW -> typing = NULL;
 	
 	treeNode -> nodeStruct.stat = statW;
 	
@@ -309,6 +319,7 @@ new_stat_assign( int node, int nodeType, AST_Node* n1, AST_Node* n2, int line) {
 	Stat *statA = new(Stat);
 	statA -> u.assign.varNode = n1;
 	statA -> u.assign.exp00Node = n2;
+	statA -> typing = NULL;
 		
 	treeNode -> nodeStruct.stat = statA;
 	
@@ -324,6 +335,7 @@ new_stat_ret( int node, int nodeType, AST_Node* n1, int line) {
 	
 	Stat *statR = new(Stat);
 	statR -> u.retCommand.exp00Node = n1;
+	statR -> typing = NULL;
 		
 	treeNode -> nodeStruct.stat = statR;
 	
@@ -844,6 +856,6 @@ print_tree ( AST_Node *a, int tabIndex ) {
 			case EXPR: print_exp(a, tabIndex); break;
 			case STAT: print_stat(a, tabIndex); break;	   
 			case TYPE: print_type(a, tabIndex); break;
-	   	 	default: fprintf(stderr, "internal error: bad node %c\n", a->nodeType); exit(0);
+	   	 	default: fprintf(stderr, "AST PRINTING ERROR: UNKNOWN NODE \"%c\"\n", a->nodeType); exit(0);
 	 	}
 }
