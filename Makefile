@@ -19,11 +19,20 @@ monga.tab.c: monga.y
 monga.tab.o: monga.tab.c
 	gcc -o $(CLFLAGS) monga.tab.o -c monga.tab.c	
 
+stack.o: stack.c
+	gcc -o $(CLFLAGS) stack.o -c stack.c
+	
+symtab.o: symtab.c
+	gcc -o $(CLFLAGS) symtab.o -c symtab.c
+
+single_table.o: single_table.c
+	gcc -o $(CLFLAGS) single_table.o -c single_table.c
+
 main.o: main.c
 	gcc -o $(CLFLAGS) main.o -c main.c
   
-tester: monga.o main.o monga.tab.o ast.o
-	gcc -o tester main.o monga.o ast.o monga.tab.o -ll
+tester: monga.o main.o monga.tab.o ast.o symtab.o stack.o single_table.o
+	gcc -o tester main.o monga.o ast.o monga.tab.o symtab.o stack.o single_table.o -ll
   
 automatic: automatic.sh
 	sh automatic.sh

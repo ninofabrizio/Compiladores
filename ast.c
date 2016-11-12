@@ -8,6 +8,21 @@ static void print_stat (AST_Node *a, int tabIndex);
 static void print_type(AST_Node *a, int tabIndex);
 static void print_var(AST_Node *a, int tabIndex);
 
+symbol_table* symbol_table_create (void);
+void symbol_table_destroy (symbol_table* table);
+id_entry* symbol_table_find_entry (symbol_table *table, const char *name);
+symbol_table* insert (symbol_table *table, const char *type, const char *name, boolean isArray, boolean *present);
+Stack* single_table_create (void);
+void single_table_destroy (Stack *single_table);
+id_entry* single_table_find (Stack *single_table, const char *elemFound);
+id_entry* single_table_find_current_scope (Stack *single_table, const char *elemFound);
+void single_table_insert_current_scope (Stack *single_table, const char *type, const char *name, boolean isArray, boolean *present);
+symbol_table* single_table_pop_scope (Stack *single_table);
+void single_table_push_scope (Stack *single_table, symbol_table *newTable);
+
+
+extern Stack *single_table;
+
 #define new(T) ((T*)myMalloc(sizeof(T)))
 
 
@@ -856,6 +871,81 @@ print_tree ( AST_Node *a, int tabIndex ) {
 			case EXPR: print_exp(a, tabIndex); break;
 			case STAT: print_stat(a, tabIndex); break;	   
 			case TYPE: print_type(a, tabIndex); break;
-	   	 	default: fprintf(stderr, "AST PRINTING ERROR: UNKNOWN NODE \"%c\"\n", a->nodeType); exit(0);
+	   	 	default: fprintf(stderr, "AST PRINTING ERROR: UNKNOWN NODE \"%c\"\n", a->nodeType); 
+			exit(0);
 	 	}
+}
+
+
+
+void 
+build_single_table (AST_Node *a) {
+
+	boolean present;
+	id_entry* id;
+
+	if (a != NULL && a -> node == DEF) {
+
+		if (a -> nodeType == DEF_FUNC) {
+
+				Param *prox;
+
+				symbol_table* sym = symbol_table_create ();
+				single_table_push_scope (single_table, sym);
+
+				if(a -> nodeStruct.def -> u.func.tagReturnType == 1)
+					single_table_insert_current_scope (single_table,
+												   a -> nodeStruct.def -> u.func.ret.dataTypeNode -> nodeStruct.type -> baseType,
+				                                   a -> nodeStruct.def -> u.func.funcName,
+												   a -> nodeStruct.def -> u.func.ret.dataTypeNode -> nodeStruct.type -> arraySequence,
+												   &present);
+
+				else
+					single_table_insert_current_scope (single_table,
+												       "void",
+				                                       a -> nodeStruct.def -> u.func.funcName,
+												   	   false,
+												   	   &present);
+
+
+
+				if (a -> nodeStruct.def -> u.func.param != NULL) {
+
+					single_table_insert_current_scope (single_table,
+													   a -> nodeStruct.def -> u.func.param -> var -> dataTypeNode -> nodeStruct.type -> baseType,
+													   a -> nodeStruct.def -> u.func.param -> var -> varListNode -> nodeStruct.var -> varName,
+													   a -> nodeStruct.def -> u.func.param -> var -> dataTypeNode -> nodeStruct.type -> arraySequence,
+													   &present);
+
+
+
+				for (prox = a -> nodeStruct.def -> u.func.param -> proxParam; prox != NULL; prox = prox -> proxParam)
+
+					single_table_insert_current_scope (single_table,
+													   prox -> var -> dataTypeNode -> nodeStruct.type -> baseType,
+													   prox -> var -> varListNode -> nodeStruct.var -> varName,
+													   prox -> var -> dataTypeNode -> nodeStruct.type -> arraySequence,
+													   &present);
+
+
+				}
+
+
+				build_single_table(a -> nodeStruct.def -> u.func.block);
+
+		}
+
+		if (a -> nodeType == DEF_VAR) {
+
+			single_table_insert_current_scope (single_table,
+											   a -> nodeStruct.def -> u.defVar -> dataTypeNode -> nodeStruct.type -> baseType,
+											   a -> nodeStruct.def -> u.defVar -> varListNode -> nodeStruct.var -> varName,
+											   a -> nodeStruct.def -> u.defVar -> dataTypeNode -> nodeStruct.type -> arraySequence,
+											   &present);
+
+			build_single_table(a->left);
+
+		}
+
+	}
 }

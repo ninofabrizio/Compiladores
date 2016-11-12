@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "type.h"
+#include "stack.h"
 
 typedef enum nodeEnum nodeEnum;
 typedef enum nodeTypeEnum nodeTypeEnum;
@@ -44,6 +45,7 @@ AST_Node* new_stat_while( int node, int nodeType, AST_Node* n1, AST_Node* n2);
 AST_Node* new_stat_assign( int node, int nodeType, AST_Node* n1, AST_Node* n2, int line);
 AST_Node* new_stat_ret( int node, int nodeType, AST_Node* n1, int line);
 extern void print_tree(AST_Node *a, int tabIndex);
+extern void build_single_table (AST_Node *a);
 
 
 enum nodeEnum {
@@ -153,8 +155,7 @@ struct Var {
 	
 	Typing *typing;//			TIPAGEM AQUI
 
-	AST_Node *nextVarNode; 
-	
+	AST_Node *nextVarNode;	
 	const char *varName;
 };
 
