@@ -138,7 +138,6 @@ struct Call {
 	const char *funcName;
 
 	AST_Node *expressionNode;
-	
 };
 
 struct Type {
@@ -178,7 +177,6 @@ struct Param {
 
 	Param *proxParam;
 	DefVar *var;
-	
 };
 
 
