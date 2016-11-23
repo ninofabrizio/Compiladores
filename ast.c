@@ -21,7 +21,7 @@ symbol_table* single_table_pop_scope (Stack *single_table);
 void single_table_push_scope (Stack *single_table, symbol_table *newTable);
 
 
-extern Stack *single_table;
+extern Stack *single_table; /* tabela de simbolos sendo uma pilha de escopos */
 
 #define new(T) ((T*)myMalloc(sizeof(T)))
 
@@ -879,73 +879,126 @@ print_tree ( AST_Node *a, int tabIndex ) {
 
 
 void 
-build_single_table (AST_Node *a) {
+build_single_table (AST_Node *root) 
+{
 
-	boolean present;
-	id_entry* id;
+	boolean present;	
+	const char *type;
+	Param *param;
+	AST_Node *var;
+	
+	
+	if ( root != NULL ) {
+	
+		if ( root -> node == DEF ) {
+	
+			if ( root -> nodeType == DEF_VAR )
+		
+				for ( var = root -> nodeStruct.def -> u.defVar -> varListNode; var != NULL; var = var -> nodeStruct.var -> nextVarNode ) 
+			
+					single_table_insert_current_scope ( single_table, 
+											  	   		root -> nodeStruct.def -> u.defVar -> dataTypeNode -> nodeStruct.type -> baseType, 
+											  	   	 	var -> nodeStruct.var -> varName,
+											  	   	 	root -> nodeStruct.def -> u.defVar -> dataTypeNode -> nodeStruct.type -> arraySequence, 
+											  	   	 	&present );		
+			else {
 
-	if (a != NULL && a -> node == DEF) {
+				single_table_push_scope ( single_table, symbol_table_create ( ) );
 
-		if (a -> nodeType == DEF_FUNC) {
+				type = root -> nodeStruct.def -> u.func.ret.dataTypeNode -> nodeStruct.type -> baseType;
 
-				Param *prox;
-
-				symbol_table* sym = symbol_table_create ();
-				single_table_push_scope (single_table, sym);
-
-				if(a -> nodeStruct.def -> u.func.tagReturnType == 1)
-					single_table_insert_current_scope (single_table,
-												   a -> nodeStruct.def -> u.func.ret.dataTypeNode -> nodeStruct.type -> baseType,
-				                                   a -> nodeStruct.def -> u.func.funcName,
-												   a -> nodeStruct.def -> u.func.ret.dataTypeNode -> nodeStruct.type -> arraySequence,
-												   &present);
-
-				else
-					single_table_insert_current_scope (single_table,
-												       "void",
-				                                       a -> nodeStruct.def -> u.func.funcName,
-												   	   false,
-												   	   &present);
-
-
-
-				if (a -> nodeStruct.def -> u.func.param != NULL) {
-
-					single_table_insert_current_scope (single_table,
-													   a -> nodeStruct.def -> u.func.param -> var -> dataTypeNode -> nodeStruct.type -> baseType,
-													   a -> nodeStruct.def -> u.func.param -> var -> varListNode -> nodeStruct.var -> varName,
-													   a -> nodeStruct.def -> u.func.param -> var -> dataTypeNode -> nodeStruct.type -> arraySequence,
-													   &present);
+				single_table_insert_current_scope ( single_table,
+											  	  (root -> nodeStruct.def -> u.func.tagReturnType)? type : "void",
+			 								  	   root -> nodeStruct.def -> u.func.funcName,
+											  	   root -> nodeStruct.def -> u.func.ret.dataTypeNode -> nodeStruct.type -> arraySequence,
+											  	   &present );
 
 
 
-				for (prox = a -> nodeStruct.def -> u.func.param -> proxParam; prox != NULL; prox = prox -> proxParam)
+			    /* List of function parameters, if they exist */
+			    if ( root -> nodeStruct.def -> u.func.param != NULL )
 
-					single_table_insert_current_scope (single_table,
-													   prox -> var -> dataTypeNode -> nodeStruct.type -> baseType,
-													   prox -> var -> varListNode -> nodeStruct.var -> varName,
-													   prox -> var -> dataTypeNode -> nodeStruct.type -> arraySequence,
-													   &present);
+					for ( param = ( root -> nodeStruct.def -> u.func.param ); param != NULL; param = param -> proxParam )
 
-
-				}
-
-
-				build_single_table(a -> nodeStruct.def -> u.func.block);
-
+					single_table_insert_current_scope ( single_table,
+											  			param -> var -> dataTypeNode -> nodeStruct.type -> baseType,
+														param -> var -> varListNode -> nodeStruct.var -> varName,
+														param -> var -> dataTypeNode -> nodeStruct.type -> arraySequence,
+														&present );
+		
+		
+		           build_single_table( root -> nodeStruct.def -> u.func.block );
+		
+		  	}
+				
+		
+		} else if (root -> node == STAT) {
+			
+			if ( root -> nodeType == STAT_IF ) {
+				
+				single_table_push_scope ( single_table, symbol_table_create ( ) );
+				build_single_table( root -> nodeStruct.stat -> u.ifCondition.block );
+								
+			} else if ( root -> nodeType == STAT_WHILE ) {
+						
+				single_table_push_scope ( single_table, symbol_table_create ( ) );	
+				build_single_table( root -> nodeStruct.stat -> u.whileLoop.commandListNode );
+					
+			} else {
+				
+				single_table_push_scope ( single_table, symbol_table_create ( ) );
+				build_single_table( root -> nodeStruct.stat -> u.ifCondition.block );
+				
+				single_table_push_scope ( single_table, symbol_table_create ( ) );
+				build_single_table( root -> nodeStruct.stat -> u.ifCondition.elseNo );	
+	
+			}
+			
+				
 		}
-
-		if (a -> nodeType == DEF_VAR) {
-
-			single_table_insert_current_scope (single_table,
-											   a -> nodeStruct.def -> u.defVar -> dataTypeNode -> nodeStruct.type -> baseType,
-											   a -> nodeStruct.def -> u.defVar -> varListNode -> nodeStruct.var -> varName,
-											   a -> nodeStruct.def -> u.defVar -> dataTypeNode -> nodeStruct.type -> arraySequence,
-											   &present);
-
-			build_single_table(a->left);
-
-		}
-
+		
+	
+			build_single_table( root -> left  );
+			build_single_table( root -> right );	
 	}
+
+
+}	
+	
+	
+
+void 
+print_single_table ( Stack *mySingleTable ) 
+{
+	
+	symbol_table *scope;
+	id_entry *elem;
+	int scopeNum = 0;
+	
+	printf("\n\nOPEN_SCOPES_STACK:");
+	
+	while ( !stack_empty (mySingleTable) ) {
+		
+		scope = single_table_pop_scope (mySingleTable);
+		scopeNum += 1;
+		
+		printf( "\n\n_____________________OPEN_SCOPE - %d\n", scopeNum );
+		
+		for ( elem = scope -> prim; elem != NULL; elem = elem -> prox )
+			
+			printf( "\nisArray: %s\nType: %s\nName: %s\n", ( elem -> isArray )? "true"  :  "false" , elem -> type, elem -> name_id );
+			
+		printf( "____________________CLOSE_SCOPE - %d\n", scopeNum );
+	
+	}
+	
+	printf("\n\nCLOSE_SCOPES_STACK!\n\n");
+		
 }
+
+
+
+
+
+
+

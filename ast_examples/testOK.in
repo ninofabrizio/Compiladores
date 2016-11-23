@@ -1,42 +1,20 @@
-void main () {
+int [] main (int a, int b) {
 	
- 	float EVER; 
-	int a, b; /* remember that in Monga, we have to declare
-			   AND THEN, we can assign values to the variables */
+	int x; 
+	
+	float y;
+	
 	char [] vetor;
-	
-	EVER = 1.f;
-	vetor = new int [5];
-	a = 4 ;
-	b = a / 2 ;
-	
-	f(new float [a+b*4]);
-	vetor[f(x)] = 0x3deff;
-	(new int[3])[2] = 5.44f;
 
+	while ( x == 4) {
 	
+		int w, r;
 	
-	
-	/* if(i == exp)
-		print("aqui");
-	} else
-		print("no ok!");
-	
-	while(EVER) {
-	
-		b = "\nstring aqui\\";	
-		if( !f(b + a) == -5.55f ) {
-			vetor [i] = i + 1;
-			func(a, b, c, f(5));
-		} else 
-			return;
-	
-		EVER = -1;		
 	}
 	
-	printThis(b);
+	
+	a = 2*3 + y;
 
-	test(1, 2, "3"); */
 
 	return 0;
 }
