@@ -817,7 +817,8 @@ print_def ( AST_Node *a, int tabIndex ) {
 			printf("Line [%d] DEF_VAR {\n", a -> line);
 			
 			print_type(a -> nodeStruct.def -> u.defVar -> dataTypeNode, tabIndex+1);
-			print_var(a -> nodeStruct.def -> u.defVar -> varListNode, tabIndex+1);		
+			print_var(a -> nodeStruct.def -> u.defVar -> varListNode, tabIndex + 1);
+				
 	
 			//if( a -> nodeStruct.def -> u.defVar -> varListNode -> nodeType == VAR_INDEXED )
 			//	printf("%s", a -> nodeStruct.def -> u.defVar -> varListNode -> nodeStruct.var -> varName);
@@ -843,8 +844,8 @@ print_def ( AST_Node *a, int tabIndex ) {
 				printf("\t");
 		
 			printf("FUNC NAME: %s\n", a -> nodeStruct.def -> u.func.funcName);
-			print_params(a -> nodeStruct.def -> u.func.param, tabIndex+1);
-			print_block(a -> nodeStruct.def -> u.func.block, tabIndex+1);
+			print_params(a -> nodeStruct.def -> u.func.param, tabIndex + 1);
+			print_block(a -> nodeStruct.def -> u.func.block, tabIndex + 1);
 				
 		}
 		
@@ -932,39 +933,75 @@ build_single_table (AST_Node *root)
 		  	}
 				
 		
-		} else if (root -> node == STAT) {
+		} else if ( root -> node == STAT ) {
+			
 			
 			if ( root -> nodeType == STAT_IF ) {
 				
 				single_table_push_scope ( single_table, symbol_table_create ( ) );
+				build_single_table( root -> nodeStruct.stat -> u.ifCondition.exp00Node );
 				build_single_table( root -> nodeStruct.stat -> u.ifCondition.block );
 								
 			} else if ( root -> nodeType == STAT_WHILE ) {
 						
-				single_table_push_scope ( single_table, symbol_table_create ( ) );	
+				single_table_push_scope ( single_table, symbol_table_create ( ) );
+				build_single_table( root -> nodeStruct.stat -> u.whileLoop.exp00Node );	
 				build_single_table( root -> nodeStruct.stat -> u.whileLoop.commandListNode );
 					
-			} else {
+			} else if ( root -> nodeType == STAT_IFELSE ) {
 				
 				single_table_push_scope ( single_table, symbol_table_create ( ) );
+				build_single_table( root -> nodeStruct.stat -> u.ifCondition.exp00Node );
 				build_single_table( root -> nodeStruct.stat -> u.ifCondition.block );
-				
+							
 				single_table_push_scope ( single_table, symbol_table_create ( ) );
 				build_single_table( root -> nodeStruct.stat -> u.ifCondition.elseNo );	
 	
-			}
-			
+			} else if( root -> nodeType == STAT_ASSIGN ) {
+					
+				build_single_table( root -> nodeStruct.stat -> u.assign.varNode );
+				build_single_table( root -> nodeStruct.stat -> u.assign.exp00Node);
+						
+			} else if( root -> nodeType == STAT_RETURN ) {
 				
-		}
+				build_single_table( root -> nodeStruct.stat -> u.retCommand.exp00Node);
+					
+			} else {
+				
+				build_single_table( root -> nodeStruct.stat -> u.retCommand.exp00Node );
+								
+			}
+					
 		
-	
+		} else if ( root -> node == VAR ) {
+			
+				id_entry* elem = single_table_find_current_scope ( single_table, 
+																 (root -> nodeStruct.var -> varName) );
+			
+				if ( elem == NULL )
+					printf( "\n\n**ERROR: Variable %s won't declared**", (root -> nodeStruct.var -> varName) );
+				
+				else
+					//printf( "\n....Costurou a var: %s....\n", (root -> nodeStruct.var -> varName) );
+			
+				root -> tableLink = elem;
+			
+		} else if ( root -> node == EXPR ) {
+			
+			if ( root -> nodeType == EXPR_VAR ) { }
+			
+				// expressoes aqui!
+						
+		}
+				
 			build_single_table( root -> left  );
-			build_single_table( root -> right );	
+			build_single_table( root -> right );
+			build_single_table( root -> center );	
+	
 	}
 
 
 }	
-	
 	
 
 void 
@@ -975,7 +1012,7 @@ print_single_table ( Stack *mySingleTable )
 	id_entry *elem;
 	int scopeNum = 0;
 	
-	printf("\n\nOPEN_SCOPES_STACK:");
+	printf("\n\nOPEN_SCOPES_STACK( TOP -> DOWN ):");
 	
 	while ( !stack_empty (mySingleTable) ) {
 		
@@ -992,13 +1029,6 @@ print_single_table ( Stack *mySingleTable )
 	
 	}
 	
-	printf("\n\nCLOSE_SCOPES_STACK!\n\n");
+	printf("\n\nCLOSE_SCOPES_STACK!!\n\n");
 		
 }
-
-
-
-
-
-
-

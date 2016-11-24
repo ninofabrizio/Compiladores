@@ -1,0 +1,11 @@
+float foo (char s, int c) {
+
+	float x;
+	
+	x = s + c;
+	
+	y = 4 + 3; /* erro aqui */
+
+	return x;
+
+}

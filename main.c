@@ -41,7 +41,6 @@ int main( int argc, char *argv[] ) {
 
 	single_table = single_table_create();
 	build_single_table(AST_Root);
-	
 	print_single_table ( single_table );
 	
 	//print_tree(AST_Root, 0);

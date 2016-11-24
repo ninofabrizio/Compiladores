@@ -76,9 +76,9 @@ getTypingFromType ( AST_Node *a ) {
 			temp -> nextTyping = typing;
 			typing = temp;
 		}
-
-		return typing;
 	}
+
+	return typing;
 }
 
 
@@ -89,12 +89,18 @@ verifySameType ( Typing *type1, Typing *type2 ) {
 	int ret = 0;
 
 	if(type1 -> typeKind == type2 -> typeKind) {
-		if(type1 -> typeKind == ARRAY)
+		
+		ret = 1;
+		
+		if( type1 -> typeKind == ARRAY)
+			
 			ret = verifySameType(type1 -> nextTyping, type2 -> nextTyping);
-		else
-			return ret = 1;
+		
+		else	
+			return ret;
+	
 	}
-	else 
+	
 		return ret;
 }
 
@@ -108,7 +114,8 @@ verifyTypeList ( Typing *type, typeList *types ) {
 
 	if(types == NULL && type -> typeKind == VOID)
 		return 1;
-	else if(types != NULL && type -> typeKind != VOID)
+	else if(types != NULL && type -> typeKind != VOID) {
+		
 		while(types != NULL && ret == 1) {
 
 			ret = verifySameType(type, types -> typing);
@@ -117,7 +124,7 @@ verifyTypeList ( Typing *type, typeList *types ) {
 			free(types);
 			types = temp;
 		}
-
+	}
 	if(types != NULL) {
 		ret = 0;
 		while(types != NULL) {
@@ -275,12 +282,13 @@ verifyAttributionType ( Typing *type1, Typing *type2, Typing *t1, Typing *t2 ) {
 static int
 passValue ( Typing *type1, Typing *type2 ) {
 
-	if(type2 -> type == NONE || (type2 -> type == INT_VALUE && type2 -> typeKind != INTEGER) || (type2 -> type == STRING && type2 -> typeKind != STRING_TYPE)
-		|| (type2 -> type != STRING && type2 -> typeKind == STRING_TYPE) || (type1 -> type == STRING && type1 -> typeKind != STRING_TYPE)
-		|| (type2 -> type == FLOAT_VALUE && type2 -> typeKind != FLOAT) || (type1 -> type != NONE && (type1 -> type != type2 -> type)
-		|| (type1 -> type == INT_VALUE && type1 -> typeKind != INTEGER) || (type1 -> type == FLOAT_VALUE && type1 -> typeKind != FLOAT)
-		|| (type1 -> type != STRING && type1 -> typeKind == STRING_TYPE)))
+	if( type2 -> type == NONE || (type2 -> type == INT_VALUE && type2 -> typeKind != INTEGER)  || (type2 -> type == STRING && type2 -> typeKind != STRING_TYPE)
+							  || (type2 -> type != STRING && type2 -> typeKind == STRING_TYPE) || (type1 -> type == STRING && type1 -> typeKind != STRING_TYPE)
+		                      || (type2 -> type == FLOAT_VALUE && type2 -> typeKind != FLOAT)  || (type1 -> type != NONE && (type1 -> type != type2 -> type))
+		                      || (type1 -> type == INT_VALUE && type1 -> typeKind != INTEGER)  || (type1 -> type == FLOAT_VALUE && type1 -> typeKind != FLOAT)
+		                      || (type1 -> type != STRING && type1 -> typeKind == STRING_TYPE))
 		return 0;
+	
 	else {
 		if(type1 -> type == NONE)
 			type1 -> type = type2 -> type;

@@ -1,24 +1,26 @@
-int [] main (int a, int b) {
+int main () {
 	
-	int x; 
+	int x, y; 
 	
-	float y;
+	float [] vector;
 	
-	char [] vetor;
-
-	while ( x == 4) {
+	vector = new int [4];
 	
-		int w, r;
+	x = 4 + y;
 	
+	if (x == 1) {
+		int r;	
 	}
 	
-	
-	a = 2*3 + y;
-
-
 	return 0;
 }
 
+float [] foo (char t) {
+
+	int a, b , c;
+
+
+}
 
 
 

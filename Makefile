@@ -28,11 +28,14 @@ symtab.o: symtab.c
 single_table.o: single_table.c
 	gcc -o $(CLFLAGS) single_table.o -c single_table.c
 
+type.o: type.c
+	gcc -o $(CLFLAGS) type.o -c type.c
+
 main.o: main.c
 	gcc -o $(CLFLAGS) main.o -c main.c
   
-tester: monga.o main.o monga.tab.o ast.o symtab.o stack.o single_table.o
-	gcc -o tester main.o monga.o ast.o monga.tab.o symtab.o stack.o single_table.o -ll
+tester: monga.o main.o monga.tab.o ast.o symtab.o stack.o single_table.o type.o
+	gcc -o tester main.o monga.o ast.o monga.tab.o symtab.o stack.o single_table.o type.o -ll
   
 automatic: automatic.sh
 	sh automatic.sh
