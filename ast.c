@@ -184,15 +184,8 @@ AST_Node*
 new_ast_defVariable_node( int node, int node_type, AST_Node* typeNode, AST_Node* varListNode ) {
 
 	AST_Node *treeNode;
-	AST_Node *temp;
 	Def *def = new(Def);
 	DefVar *defVar = new(DefVar);
-	
-	if(typeNode -> nodeStruct.type -> arraySequence > 0) { // Is an array
-		
-		for(temp = varListNode; temp != NULL; temp = temp -> nodeStruct.var -> nextVarNode)
-			temp -> nodeType = VAR_INDEXED;
-	}
 
 	defVar -> dataTypeNode = typeNode;
 	defVar -> varListNode = varListNode;
@@ -614,13 +607,13 @@ print_var( AST_Node *a, int tabIndex ) {
 			printf("VAR_INDEXED {\n");
 
 			// GAMBIARRA: A way to not print NULL value for the name
-			if(a -> nodeStruct.var -> varName != NULL) {
+			/*if(a -> nodeStruct.var -> varName != NULL) {
 				//printf("\n");
 				for(count = 0; count < tabIndex+1; count++)
 					printf("\t");
 
 				printf("VAR NAME: %s\n", a -> nodeStruct.var -> varName);
-			}
+			}*/
 		
 			print_exp(a->left, tabIndex+1);
 			print_exp(a->right, tabIndex+1);
@@ -817,7 +810,7 @@ print_def ( AST_Node *a, int tabIndex ) {
 			printf("Line [%d] DEF_VAR {\n", a -> line);
 			
 			print_type(a -> nodeStruct.def -> u.defVar -> dataTypeNode, tabIndex+1);
-			print_var(a -> nodeStruct.def -> u.defVar -> varListNode, tabIndex + 1);
+			print_var(a -> nodeStruct.def -> u.defVar -> varListNode, tabIndex+1);
 				
 	
 			//if( a -> nodeStruct.def -> u.defVar -> varListNode -> nodeType == VAR_INDEXED )
