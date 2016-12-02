@@ -424,7 +424,7 @@ binaryExpressions( Typing *type1, Typing *type2, nodeTypeEnum kind ) {
 			binary -> typeKind = FLOAT;
 			binary -> type = FLOAT_VALUE;
 		}
-	else if(kind == EXPR_DIV)
+	else if(kind == EXPR_DIV) { 
 		if(t1 -> typeKind == INTEGER) {
 			binary -> typeValue.intValue = (t1 -> typeValue.intValue / t2 -> typeValue.intValue);
 			binary -> typeKind = INTEGER;
@@ -435,7 +435,7 @@ binaryExpressions( Typing *type1, Typing *type2, nodeTypeEnum kind ) {
 			binary -> typeKind = FLOAT;
 			binary -> type = FLOAT_VALUE;
 		}
-
+	}
 	if(type1 -> typeKind != FLOAT_VALUE)
 		free(t1);
 	if(type2 -> typeKind != FLOAT_VALUE)

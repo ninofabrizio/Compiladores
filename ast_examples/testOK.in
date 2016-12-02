@@ -1,27 +1,16 @@
-int main () {
-	
-	int x, y; 
-	
-	float [] vector;
-	
-	vector = new int [4];
-	
-	x = 4 + y;
-	
-	if (x == 1) {
-		int r;	
-	}
+float foo (int a, float b) {
+
+
+}
+
+
+int main (){
+
+	foo(1, 4);
 	
 	return 0;
-}
-
-float [] foo (char t) {
-
-	int a, b , c;
-
 
 }
-
 
 
 

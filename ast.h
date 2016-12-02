@@ -1,4 +1,4 @@
-#if !defined AST_H
+#ifndef AST_H
 #define AST_H
 
 #include <stdio.h>
@@ -8,7 +8,7 @@
 
 typedef enum nodeEnum nodeEnum;
 typedef enum nodeTypeEnum nodeTypeEnum;
-//typedef enum typeEnum typeEnum;			TIPAGEM AQUI
+//typedef enum typeEnum typeEnum; TIPAGEM AQUI
 
 typedef struct AST_Node AST_Node;
 
@@ -133,8 +133,6 @@ struct AST_Node
 	} nodeStruct;
 
 
-	id_entry *tableLink; /* link with symbol table */
-
 };
 
 // Structs
@@ -142,8 +140,11 @@ struct AST_Node
 struct Call {
 
 	const char *funcName;
-
+	
 	AST_Node *expressionNode;
+
+	AST_Node *linkedFuncNode;
+
 };
 
 struct Type {
@@ -156,12 +157,17 @@ struct Type {
 	Type *nextType;*/
 };
 
+
 struct Var {
 	
-	Typing *typing;//			TIPAGEM AQUI
+	Typing *typing; // TIPAGEM AQUI
 
 	AST_Node *nextVarNode;	
+	
+	AST_Node *linkedVarNode;
+	
 	const char *varName;
+
 };
 
 struct Exp {

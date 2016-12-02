@@ -1,5 +1,6 @@
 #include "symtab.h"
 
+
 extern symbol_table* 
 symbol_table_create (void) {
 	
@@ -37,8 +38,9 @@ symbol_table_find_entry (symbol_table *table, const char *name) {
 
 }
 
+
 extern symbol_table* 
-insert (symbol_table *table, const char *type, const char *name, boolean isArray, boolean *present) {
+insert (symbol_table *table, const char *name, void* nodeRef, boolean *present) {
 	
 	
 	symbol_table* table_aux = (symbol_table*)malloc(sizeof(symbol_table));
@@ -53,10 +55,9 @@ insert (symbol_table *table, const char *type, const char *name, boolean isArray
 	
 	}
 	
-	entry = (id_entry*)malloc(sizeof(id_entry));	
-	entry -> type = type;
-	entry -> isArray = isArray;
+	entry = (id_entry*)malloc(sizeof(id_entry));
 	entry -> name_id = name;
+	entry -> nodeRef = nodeRef;
 	entry -> prox = table -> prim;
 	
 	table_aux -> prim = entry;

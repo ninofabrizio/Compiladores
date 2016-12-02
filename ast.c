@@ -11,12 +11,12 @@ static void print_var(AST_Node *a, int tabIndex);
 symbol_table* symbol_table_create (void);
 void symbol_table_destroy (symbol_table* table);
 id_entry* symbol_table_find_entry (symbol_table *table, const char *name);
-symbol_table* insert (symbol_table *table, const char *type, const char *name, boolean isArray, boolean *present);
+symbol_table* insert (symbol_table *table, const char *name, void* nodeRef, boolean *present);
 Stack* single_table_create (void);
 void single_table_destroy (Stack *single_table);
 id_entry* single_table_find (Stack *single_table, const char *elemFound);
 id_entry* single_table_find_current_scope (Stack *single_table, const char *elemFound);
-void single_table_insert_current_scope (Stack *single_table, const char *type, const char *name, boolean isArray, boolean *present);
+void single_table_insert_current_scope (Stack *single_table, const char *name, void* nodeRef, boolean *present);
 symbol_table* single_table_pop_scope (Stack *single_table);
 void single_table_push_scope (Stack *single_table, symbol_table *newTable);
 
@@ -872,6 +872,7 @@ print_tree ( AST_Node *a, int tabIndex ) {
 
 
 
+
 void 
 build_single_table (AST_Node *root) 
 {
@@ -890,42 +891,53 @@ build_single_table (AST_Node *root)
 		
 				for ( var = root -> nodeStruct.def -> u.defVar -> varListNode; var != NULL; var = var -> nodeStruct.var -> nextVarNode ) 
 			
-					single_table_insert_current_scope ( single_table, 
-											  	   		root -> nodeStruct.def -> u.defVar -> dataTypeNode -> nodeStruct.type -> baseType, 
-											  	   	 	var -> nodeStruct.var -> varName,
-											  	   	 	root -> nodeStruct.def -> u.defVar -> dataTypeNode -> nodeStruct.type -> arraySequence, 
-											  	   	 	&present );		
+					single_table_insert_current_scope (single_table,
+													   var -> nodeStruct.var -> varName, 
+													   root, 
+													   &present);			
 			else {
-
+					
+				
+				if (single_table -> prim != NULL) {				
+					
+					symbol_table *closeScope;
+				
+					closeScope = single_table_pop_scope (single_table); /* close scope before */
+								
+				}
+				
 				single_table_push_scope ( single_table, symbol_table_create ( ) );
-
-				type = root -> nodeStruct.def -> u.func.ret.dataTypeNode -> nodeStruct.type -> baseType;
-
-				single_table_insert_current_scope ( single_table,
-											  	  (root -> nodeStruct.def -> u.func.tagReturnType)? type : "void",
-			 								  	   root -> nodeStruct.def -> u.func.funcName,
-											  	   root -> nodeStruct.def -> u.func.ret.dataTypeNode -> nodeStruct.type -> arraySequence,
-											  	   &present );
-
-
-
-			    /* List of function parameters, if they exist */
-			    if ( root -> nodeStruct.def -> u.func.param != NULL )
-
+					
+				single_table_insert_current_scope (single_table, 
+												   root -> nodeStruct.def -> u.func.funcName, 
+												   root, 
+												   &present);			
+				
+				
+				
+				single_table_push_scope ( single_table, symbol_table_create ( ) );
+				
+				/* List of function parameters, if they exist */
+			    if ( root -> nodeStruct.def -> u.func.param != NULL ) {
+								
+					//printf("oi\n\n");
+					
+					id_entry* entry;
+					
 					for ( param = ( root -> nodeStruct.def -> u.func.param ); param != NULL; param = param -> proxParam )
 
-					single_table_insert_current_scope ( single_table,
-											  			param -> var -> dataTypeNode -> nodeStruct.type -> baseType,
-														param -> var -> varListNode -> nodeStruct.var -> varName,
-														param -> var -> dataTypeNode -> nodeStruct.type -> arraySequence,
-														&present );
-		
-		
-		           build_single_table( root -> nodeStruct.def -> u.func.block );
-		
-		  	}
+						single_table_insert_current_scope (single_table,
+														   param -> var -> varListNode -> nodeStruct.var -> varName, 
+														   param -> var -> varListNode,
+														   &present);
 				
-		
+						
+						
+			 }
+														   
+		        build_single_table( root -> nodeStruct.def -> u.func.block );		
+		  	}
+					
 		} else if ( root -> node == STAT ) {
 			
 			
@@ -934,22 +946,29 @@ build_single_table (AST_Node *root)
 				single_table_push_scope ( single_table, symbol_table_create ( ) );
 				build_single_table( root -> nodeStruct.stat -> u.ifCondition.exp00Node );
 				build_single_table( root -> nodeStruct.stat -> u.ifCondition.block );
+				symbol_table *closeScope = single_table_pop_scope (single_table); /* closing if scope */
 								
 			} else if ( root -> nodeType == STAT_WHILE ) {
 						
 				single_table_push_scope ( single_table, symbol_table_create ( ) );
 				build_single_table( root -> nodeStruct.stat -> u.whileLoop.exp00Node );	
 				build_single_table( root -> nodeStruct.stat -> u.whileLoop.commandListNode );
+				symbol_table *closeScope = single_table_pop_scope (single_table); /* closing while scope */
 					
 			} else if ( root -> nodeType == STAT_IFELSE ) {
 				
+				symbol_table *closeScope;
+				
 				single_table_push_scope ( single_table, symbol_table_create ( ) );
 				build_single_table( root -> nodeStruct.stat -> u.ifCondition.exp00Node );
-				build_single_table( root -> nodeStruct.stat -> u.ifCondition.block );
-							
+				build_single_table( root -> nodeStruct.stat -> u.ifCondition.block );			
+				closeScope = single_table_pop_scope (single_table); /* closing if scope */
+				
 				single_table_push_scope ( single_table, symbol_table_create ( ) );
-				build_single_table( root -> nodeStruct.stat -> u.ifCondition.elseNo );	
+				build_single_table( root -> nodeStruct.stat -> u.ifCondition.elseNo );
+				closeScope = single_table_pop_scope (single_table); /* closing else scope */	
 	
+			
 			} else if( root -> nodeType == STAT_ASSIGN ) {
 					
 				build_single_table( root -> nodeStruct.stat -> u.assign.varNode );
@@ -961,67 +980,208 @@ build_single_table (AST_Node *root)
 					
 			} else {
 				
-				build_single_table( root -> nodeStruct.stat -> u.retCommand.exp00Node );
+					id_entry* elem;
+			
+					AST_Node *test;
+					
+					elem = single_table_find ( single_table, 
+										     ( root -> nodeStruct.stat -> u.callFunc -> funcName) );
+				
+					if ( elem == NULL ) {
+						printf( "\n\n**ERROR: function %s won't declared**", (root -> nodeStruct.stat -> u.callFunc -> funcName) );
+						exit(0);
+				
+					}
+				
+					// else
+// 						printf( "\n....Costurou a function: %s....\n", (root -> nodeStruct.stat -> u.callFunc -> funcName) );
+//
+//
+					root -> nodeStruct.stat -> u.callFunc -> linkedFuncNode = (AST_Node *)(elem -> nodeRef);
+					
+					
+					test = root -> nodeStruct.stat -> u.callFunc -> linkedFuncNode;
+				
+				
+					//printf( "\n**Func: %s **\n", (test -> nodeStruct.def -> u.func.funcName) );
 								
 			}
 					
 		
 		} else if ( root -> node == VAR ) {
 			
-				id_entry* elem = single_table_find_current_scope ( single_table, 
-																 (root -> nodeStruct.var -> varName) );
-			
-				if ( elem == NULL )
-					printf( "\n\n**ERROR: Variable %s won't declared**", (root -> nodeStruct.var -> varName) );
+				id_entry* elem;
 				
-				else
+				AST_Node *test;
+			
+				elem = single_table_find_current_scope ( single_table, 
+			 										   ( root -> nodeStruct.var -> varName) );
+			
+				
+				if ( elem == NULL )
+					
+					elem = single_table_find ( single_table, 
+											 ( root -> nodeStruct.var -> varName) );
+					
+					
+				if ( elem == NULL ) {
+					printf( "\n\n**ERROR: Variable won't declared**\n\n");
+					exit(0);
+				}
+				
+				//else
 					//printf( "\n....Costurou a var: %s....\n", (root -> nodeStruct.var -> varName) );
 			
-				root -> tableLink = elem;
+				
+				root -> nodeStruct.var -> linkedVarNode = (AST_Node *)(elem -> nodeRef);
+		
+				
+				////////////////TESTE.....///////////////////
+				
+				test = root -> nodeStruct.var -> linkedVarNode;
+				
+				// if ( test -> node == DEF)
+// 					printf( "\n**Variable: %s **\n", (test -> nodeStruct.def -> u.defVar -> varListNode -> nodeStruct.var -> varName) );
+//
+// 				else if (test -> node == VAR)
+// 					printf( "\n**Variable: %s **\n", (test -> nodeStruct.var -> varName) );
+//
+				
+		
+		
+		
+				////////////////////////////////////////////
+		
+		
+		
 			
 		} else if ( root -> node == EXPR ) {
 			
-			if ( root -> nodeType == EXPR_VAR ) { }
+			AST_Node *test;
+		
+			if ( root -> nodeType == EXPR_VAR ) {
+				
+				build_single_table(root -> nodeStruct.exp -> u.varNode);	
+				
+			} else if ( root -> nodeType == EXPR_FUNC_CALL ) {
 			
-				// expressoes aqui!
+				id_entry* elem;
+			
+				elem = single_table_find ( single_table, 
+									     ( root -> nodeStruct.exp -> u.functionCall -> funcName) );
+				
+				if ( elem == NULL ){
+					printf( "\n\n**ERROR: function %s won't declared**", (root -> nodeStruct.exp -> u.functionCall -> funcName) );
+					exit(0);
+				}
+				//else
+					//printf( "\n....Costurou a function: %s....\n", (root -> nodeStruct.exp -> u.functionCall -> funcName) );
+			
+				
+				root -> nodeStruct.exp -> u.functionCall -> linkedFuncNode = (AST_Node *)(elem -> nodeRef);
+			
+				////////////////////////TESTE/////////////////////////////////
+				test = root -> nodeStruct.exp -> u.functionCall -> linkedFuncNode;
+				
+				
+				//printf( "\n**Func: %s **\n", (test -> nodeStruct.def -> u.func.funcName) );
+		
+				
+				
+				
+				
+				/////////////////////////////////////////////////////////////
+				
+			
+			
+				
+			}  else if ( root -> nodeType == EXPR_NEW ) {
+			
+				build_single_table(root->right);
+				root->left = NULL;
+				root->right = NULL;
+			
+			}  else if ( root -> nodeType == EXPR_INT ) {
+			
+			}  else if ( root -> nodeType == EXPR_HEXA ) {
+			
+			}  else if ( root -> nodeType == EXPR_CHAR ) {		
+
+			}  else if ( root -> nodeType == EXPR_FLOAT ) {
 						
+			}  else if ( root -> nodeType == EXPR_LIT ) {
+					
+			} else if ( root -> nodeType == EXPR_OR ) {
+			
+			} else if ( root -> nodeType == EXPR_AND ) {
+			
+			} else if ( root -> nodeType == EXPR_EQUAL ) {
+			
+			} else if ( root -> nodeType == EXPR_LEEQ ) {
+			
+			} else if ( root -> nodeType == EXPR_GREQ ) {
+			
+			} else if ( root -> nodeType == EXPR_GREATER ) {
+	
+			} else if ( root -> nodeType == EXPR_LESS ) {
+			
+			} else if ( root -> nodeType == EXPR_NOEQ ) {
+			
+			} else if ( root -> nodeType == EXPR_ADD ) {
+			
+			} else if ( root -> nodeType == EXPR_MIN ) {
+			
+			} else if ( root -> nodeType == EXPR_MUL ) {
+			
+			} else if ( root -> nodeType == EXPR_DIV ) {
+			
+			} else if ( root -> nodeType == EXPR_NOT ) {
+			
+			} else {
+
+			}
+		
+			build_single_table(root -> left);
+			build_single_table(root -> right);		
+			build_single_table(root -> nodeStruct.exp -> nextExpNode);
+		
 		}
 				
-			build_single_table( root -> left  );
-			build_single_table( root -> right );
-			build_single_table( root -> center );	
+		build_single_table( root -> left  );
+		build_single_table( root -> right );
+		build_single_table( root -> center );	
 	
 	}
 
-
 }	
 	
+
 
 void 
 print_single_table ( Stack *mySingleTable ) 
 {
 	
-	symbol_table *scope;
-	id_entry *elem;
-	int scopeNum = 0;
-	
-	printf("\n\nOPEN_SCOPES_STACK( TOP -> DOWN ):");
-	
-	while ( !stack_empty (mySingleTable) ) {
-		
-		scope = single_table_pop_scope (mySingleTable);
-		scopeNum += 1;
-		
-		printf( "\n\n_____________________OPEN_SCOPE - %d\n", scopeNum );
-		
-		for ( elem = scope -> prim; elem != NULL; elem = elem -> prox )
-			
-			printf( "\nisArray: %s\nType: %s\nName: %s\n", ( elem -> isArray )? "true"  :  "false" , elem -> type, elem -> name_id );
-			
-		printf( "____________________CLOSE_SCOPE - %d\n", scopeNum );
-	
-	}
-	
-	printf("\n\nCLOSE_SCOPES_STACK!!\n\n");
-		
+	// symbol_table *scope;
+	// id_entry *elem;
+	// int scopeNum = 0;
+	//
+	// printf("\n\nOPEN_SCOPES_STACK( TOP -> DOWN ):");
+	//
+	// while ( !stack_empty (mySingleTable) ) {
+	//
+	// 	scope = single_table_pop_scope (mySingleTable);
+	// 	scopeNum += 1;
+	//
+	// 	printf( "\n\n_____________________OPEN_SCOPE - %d\n", scopeNum );
+	//
+	// 	for ( elem = scope -> prim; elem != NULL; elem = elem -> prox )
+	//
+	// 		printf( "\nisArray: %s\nType: %s\nName: %s\n", ( elem -> isArray )? "true"  :  "false" , elem -> type, elem -> name_id );
+	//
+	// 	printf( "____________________CLOSE_SCOPE - %d\n", scopeNum );
+	//
+	// }
+	//
+	// printf("\n\nCLOSE_SCOPES_STACK!!\n\n");
+	//
 }
