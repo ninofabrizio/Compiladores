@@ -2,10 +2,13 @@
 #include "ast.h"
 #include "single_table.h"
 #include "type.h"
+#include"geracod.h"
+
 
 int yyparse();
 AST_Node *AST_Root;
 void print_tree(AST_Node *a, int tabIndex);
+const char* buffer[MAX_TAM];
 
 void print_single_table ( Stack *mySingleTable );
 void build_single_table (AST_Node *a);
@@ -45,6 +48,8 @@ int main( int argc, char *argv[] ) {
 	
 	//print_tree(AST_Root, 0);
 	
+	initialBuffer( buffer );
+	void geraCodigo(AST_Node* root);
 	fclose(file);
 	
 	return retParse;

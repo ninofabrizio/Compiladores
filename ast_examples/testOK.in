@@ -1,12 +1,9 @@
-float foo (int a, float b) {
 
+int main () {
 
-}
-
-
-int main (){
-
-	foo(1, 4);
+	int a;
+	
+	a = 4;
 	
 	return 0;
 
