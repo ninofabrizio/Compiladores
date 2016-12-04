@@ -22,8 +22,8 @@ stack_push (Stack *p, symbol_table *t) {
 symbol_table* 
 stack_pop (Stack *p) {
 	
-	Node* n;
-    symbol_table *t;
+	Node* n = NULL;
+    symbol_table *t = NULL;
 	
 	if (stack_empty(p)) {		
 		printf("Empty Stack.\n");

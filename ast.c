@@ -20,7 +20,6 @@ void single_table_insert_current_scope (Stack *single_table, const char *name, v
 symbol_table* single_table_pop_scope (Stack *single_table);
 void single_table_push_scope (Stack *single_table, symbol_table *newTable);
 
-
 extern Stack *single_table; /* tabela de simbolos sendo uma pilha de escopos */
 
 #define new(T) ((T*)myMalloc(sizeof(T)))
@@ -153,6 +152,7 @@ new_ast_variable_node( int node, int node_type, const char *id, AST_Node *exp01,
 	
 	var -> nextVarNode = nextVarNode;
 	var -> typing = NULL;
+	var -> linkedVarNode = NULL;
 
 	treeNode = new_ast_node(node, node_type, exp01, exp02, NULL, line);
 	
@@ -259,6 +259,7 @@ new_funcCall( const char* id, AST_Node *expListNode ) {
 	
 	funcCall -> funcName = id;
 	funcCall -> expressionNode = expListNode;
+	funcCall -> linkedFuncNode = NULL;
 
 	return funcCall;
 }
@@ -270,9 +271,6 @@ new_param( AST_Node *type, const char *paramName, Param *nextParam) {
 	Param *paramNode = new(Param);
 	DefVar* defVar = new(DefVar);
 	int varType = VAR_UNIQUE;
-		
-	if(type -> nodeStruct.type -> arraySequence > 0)
-		varType = VAR_INDEXED;
 
 	varNode = new_ast_variable_node(VAR, varType, paramName, NULL, NULL, NULL, type -> line);
 	
@@ -878,9 +876,9 @@ build_single_table (AST_Node *root)
 {
 
 	boolean present;	
-	const char *type;
-	Param *param;
-	AST_Node *var;
+	const char *type = NULL;
+	Param *param = NULL;
+	AST_Node *var = NULL;
 	
 	
 	if ( root != NULL ) {
@@ -919,10 +917,8 @@ build_single_table (AST_Node *root)
 				
 				/* List of function parameters, if they exist */
 			    if ( root -> nodeStruct.def -> u.func.param != NULL ) {
-								
-					//printf("oi\n\n");
 					
-					id_entry* entry;
+					id_entry* entry = NULL;
 					
 					for ( param = ( root -> nodeStruct.def -> u.func.param ); param != NULL; param = param -> proxParam )
 
@@ -957,7 +953,7 @@ build_single_table (AST_Node *root)
 					
 			} else if ( root -> nodeType == STAT_IFELSE ) {
 				
-				symbol_table *closeScope;
+				symbol_table *closeScope = NULL;
 				
 				single_table_push_scope ( single_table, symbol_table_create ( ) );
 				build_single_table( root -> nodeStruct.stat -> u.ifCondition.exp00Node );
@@ -980,72 +976,77 @@ build_single_table (AST_Node *root)
 					
 			} else {
 				
-					id_entry* elem;
+					id_entry* elem = NULL;
 			
-					AST_Node *test;
+					AST_Node *test = NULL;
 					
 					elem = single_table_find ( single_table, 
 										     ( root -> nodeStruct.stat -> u.callFunc -> funcName) );
 				
 					if ( elem == NULL ) {
-						printf( "\n\n**ERROR: function %s won't declared**", (root -> nodeStruct.stat -> u.callFunc -> funcName) );
+						printf( "\n\n**ERROR: function \"%s\" not declared**", (root -> nodeStruct.stat -> u.callFunc -> funcName) );
 						exit(0);
 				
 					}
 				
-					// else
-// 						printf( "\n....Costurou a function: %s....\n", (root -> nodeStruct.stat -> u.callFunc -> funcName) );
-//
-//
+					 //else
+ 						//printf( "\n....Costurou a function: %s....\n", (root -> nodeStruct.stat -> u.callFunc -> funcName) );
+
 					root -> nodeStruct.stat -> u.callFunc -> linkedFuncNode = (AST_Node *)(elem -> nodeRef);
 					
 					
-					test = root -> nodeStruct.stat -> u.callFunc -> linkedFuncNode;
+					//test = root -> nodeStruct.stat -> u.callFunc -> linkedFuncNode;
 				
 				
 					//printf( "\n**Func: %s **\n", (test -> nodeStruct.def -> u.func.funcName) );
-								
+
+					build_single_table(root -> nodeStruct.stat -> u.callFunc -> expressionNode);
 			}
 					
 		
 		} else if ( root -> node == VAR ) {
 			
-				id_entry* elem;
+				id_entry* elem = NULL;
 				
-				AST_Node *test;
+				AST_Node *test = NULL;
 			
 				elem = single_table_find_current_scope ( single_table, 
 			 										   ( root -> nodeStruct.var -> varName) );
 			
 				
-				if ( elem == NULL )
+				if ( elem == NULL ) {
 					
 					elem = single_table_find ( single_table, 
 											 ( root -> nodeStruct.var -> varName) );
 					
 					
-				if ( elem == NULL ) {
-					printf( "\n\n**ERROR: Variable won't declared**\n\n");
-					exit(0);
+					if ( elem == NULL ) {
+						printf( "\n\n**ERROR: Variable \"%s\" not declared**\n\n", root -> nodeStruct.var -> varName);
+						exit(0);
+					}
+				
 				}
 				
-				//else
-					//printf( "\n....Costurou a var: %s....\n", (root -> nodeStruct.var -> varName) );
+				if( ((AST_Node *)(elem -> nodeRef)) -> nodeType == DEF_FUNC ) {
+					printf( "\n\n**ERROR: Variable \"%s\" has been connected to a function**\n\n", root -> nodeStruct.var -> varName);
+					exit(0);
+				}
+
+				//printf( "\n....Costurou a var: %s....\n", (root -> nodeStruct.var -> varName) );
 			
 				
 				root -> nodeStruct.var -> linkedVarNode = (AST_Node *)(elem -> nodeRef);
-		
 				
 				////////////////TESTE.....///////////////////
 				
-				test = root -> nodeStruct.var -> linkedVarNode;
+				//test = root -> nodeStruct.var -> linkedVarNode;
 				
-				// if ( test -> node == DEF)
-// 					printf( "\n**Variable: %s **\n", (test -> nodeStruct.def -> u.defVar -> varListNode -> nodeStruct.var -> varName) );
-//
-// 				else if (test -> node == VAR)
-// 					printf( "\n**Variable: %s **\n", (test -> nodeStruct.var -> varName) );
-//
+				 //if ( test -> node == DEF)
+ 				//	printf( "\n**Variable: %s **\n", (test -> nodeStruct.def -> u.defVar -> varListNode -> nodeStruct.var -> varName) );
+
+ 				//else if (test -> node == VAR)
+ 				//	printf( "\n**Variable: %s **\n", (test -> nodeStruct.var -> varName) );
+
 				
 		
 		
@@ -1057,7 +1058,7 @@ build_single_table (AST_Node *root)
 			
 		} else if ( root -> node == EXPR ) {
 			
-			AST_Node *test;
+			AST_Node *test = NULL;
 		
 			if ( root -> nodeType == EXPR_VAR ) {
 				
@@ -1065,23 +1066,23 @@ build_single_table (AST_Node *root)
 				
 			} else if ( root -> nodeType == EXPR_FUNC_CALL ) {
 			
-				id_entry* elem;
+				id_entry* elem = NULL;
 			
 				elem = single_table_find ( single_table, 
 									     ( root -> nodeStruct.exp -> u.functionCall -> funcName) );
 				
 				if ( elem == NULL ){
-					printf( "\n\n**ERROR: function %s won't declared**", (root -> nodeStruct.exp -> u.functionCall -> funcName) );
+					printf( "\n\n**ERROR: function \"%s\" not declared**", (root -> nodeStruct.exp -> u.functionCall -> funcName) );
 					exit(0);
 				}
 				//else
-					//printf( "\n....Costurou a function: %s....\n", (root -> nodeStruct.exp -> u.functionCall -> funcName) );
+				//	printf( "\n....Costurou a function: %s....\n", (root -> nodeStruct.exp -> u.functionCall -> funcName) );
 			
 				
 				root -> nodeStruct.exp -> u.functionCall -> linkedFuncNode = (AST_Node *)(elem -> nodeRef);
 			
 				////////////////////////TESTE/////////////////////////////////
-				test = root -> nodeStruct.exp -> u.functionCall -> linkedFuncNode;
+				//test = root -> nodeStruct.exp -> u.functionCall -> linkedFuncNode;
 				
 				
 				//printf( "\n**Func: %s **\n", (test -> nodeStruct.def -> u.func.funcName) );
@@ -1092,8 +1093,7 @@ build_single_table (AST_Node *root)
 				
 				/////////////////////////////////////////////////////////////
 				
-			
-			
+				build_single_table(root -> nodeStruct.exp -> u.functionCall -> expressionNode);
 				
 			}  else if ( root -> nodeType == EXPR_NEW ) {
 			
@@ -1153,6 +1153,7 @@ build_single_table (AST_Node *root)
 	
 	}
 
+	//single_table_destroy(single_table);
 }	
 	
 

@@ -1,0 +1,14 @@
+float printf(float b) {
+	int a;
+	a = b;
+	return b;
+}
+
+int conta(float hmm) {
+	return 5;
+}
+
+void main() {
+
+	printf(conta(printf(6.0)));
+}

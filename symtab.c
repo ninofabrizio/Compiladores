@@ -28,7 +28,7 @@ symbol_table_destroy (symbol_table* table) {
 extern id_entry* 
 symbol_table_find_entry (symbol_table *table, const char *name) {
 	
-	id_entry* entry;
+	id_entry* entry = NULL;
 	
 	for (entry = table -> prim; entry != NULL; entry = entry -> prox) 
 		if ( (strcmp(entry->name_id, name) ) == 0) 		
@@ -44,7 +44,7 @@ insert (symbol_table *table, const char *name, void* nodeRef, boolean *present) 
 	
 	
 	symbol_table* table_aux = (symbol_table*)malloc(sizeof(symbol_table));
-	id_entry* entry;
+	id_entry* entry = NULL;
 	
 	entry = symbol_table_find_entry ( table, name);
 	

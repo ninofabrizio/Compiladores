@@ -8,7 +8,6 @@
 
 typedef enum nodeEnum nodeEnum;
 typedef enum nodeTypeEnum nodeTypeEnum;
-//typedef enum typeEnum typeEnum; TIPAGEM AQUI
 
 typedef struct AST_Node AST_Node;
 
@@ -102,13 +101,6 @@ enum nodeTypeEnum {
 	EXPR_LIT
 };
 
-/*enum typeEnum {			TIPAGEM AQUI
-	
-	INTEGER,
-	FLOAT,
-	VOID,
-	ARRAY
-};*/
 
 // Tree node
 
@@ -151,16 +143,12 @@ struct Type {
 	
 	const char *baseType;
 	int arraySequence; // counter == 0 if not array | >= 1 if array (we can have array of array of array...)
-
-	// Ao invés de usar as outras duas viariáveis acima, usar isto			TIPAGEM AQUI
-	/*typeEnum typeKind; 
-	Type *nextType;*/
 };
 
 
 struct Var {
 	
-	Typing *typing; // TIPAGEM AQUI
+	Typing *typing;
 
 	AST_Node *nextVarNode;	
 	
@@ -174,7 +162,7 @@ struct Exp {
 	
 	AST_Node *nextExpNode;
 	
-	Typing *typing;//			TIPAGEM AQUI
+	Typing *typing;
 
 	union {
 		AST_Node *varNode;
@@ -202,12 +190,11 @@ struct Def {
 
 	union {
 		DefVar *defVar;
-		// Var *var; TROCAR POR ESTE, SE VAR CARREGAR TYPING
+		
 		struct { const char *funcName; Param *param; 
 
-		     	 union { const char *voidType; AST_Node *dataTypeNode; } ret;		// TIPAGEM "JÁ ESTAVA" AQUI
+		     	 union { const char *voidType; AST_Node *dataTypeNode; } ret;
 			 	 int tagReturnType; // for void return 0; for other types return 1.
-			 	 //OU Typing *typing;
 
 				 AST_Node *block;
 		} func;		
@@ -216,7 +203,7 @@ struct Def {
 
 struct Stat {
 	
-	Typing *typing;//			TIPAGEM AQUI
+	Typing *typing;
 
 	union {
 		Call *callFunc;

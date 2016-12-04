@@ -8,7 +8,6 @@ static void type_def ( AST_Node *a );
 static void type_block ( AST_Node *a, typeList *retList );
 static void type_call ( Call *a );
 static void type_stat ( AST_Node *a, typeList *retList );
-//static void type_type ( AST_Node *a );
 static void type_var ( AST_Node *a );
 static void type_exp ( AST_Node *a, typeList *arguments );
 
@@ -18,12 +17,12 @@ static int verifyTypeList ( Typing *type, typeList *types );
 static int verifyFuncParameters ( typeList *parameters, typeList *arguments );
 static Typing * convertTo ( Typing *type, typeEnum thisType );
 static int verifyBoolean ( Typing *type );
-static Typing * createTypingValue ( typeEnum type, valueEnum valueType, int intValue, float floatValue, const char *string );
-static int passValue ( Typing *type1, Typing *type2 );
+static Typing * createTypingValue ( typeEnum type );
 static Typing * logicExpressions ( Typing *type1, Typing *type2, nodeTypeEnum kind );
 static Typing * binaryExpressions ( Typing *type1, Typing *type2, nodeTypeEnum kind );
 static int notOfType ( typeEnum type, typeEnum comparison );
 static void verifyIfLiterals ( Typing *type1, Typing *type2, const char* enumT, int line );
+static void getParametersList ( typeList * funcParameters, AST_Node *funcDefNode );
 
 #define new(T) ((T*)myMalloc(sizeof(T)))
 
@@ -55,24 +54,19 @@ getTypingFromType ( AST_Node *a ) {
 
 	int i;
 	Typing *typing = NULL, *temp = NULL;
-	const char *type = NULL;
 
 	if(a != NULL) {
 
 		typing = new(Typing);
-		type = a -> nodeStruct.type -> baseType;
 
-		if(strcmp(type, "int") == 0 || strcmp(type, "char") == 0)
+		if(a -> nodeType == TYPE_INT || a -> nodeType == TYPE_CHAR)
 			typing -> typeKind = INTEGER;
-		else if(strcmp(type, "float") == 0)
+		else if(a -> nodeType == TYPE_FLOAT)
 			typing -> typeKind = FLOAT;
-
-		typing -> type = NONE;
 
 		for(i = 0; i < a -> nodeStruct.type -> arraySequence ; i++) {
 			temp = new(Typing);
 			temp -> typeKind = ARRAY;
-			temp -> type = NONE;
 
 			temp -> nextTyping = typing;
 			typing = temp;
@@ -129,7 +123,7 @@ verifyTypeList ( Typing *type, typeList *types ) {
 			types = temp;
 		}
 	}
-	
+
 	return ret;
 }
 
@@ -155,9 +149,11 @@ verifyFuncParameters ( typeList *parameters, typeList *arguments ) {
 			arguments = temp;
 		}
 
-	if(ret == 1 && arguments -> typing == NULL && parameters -> typing != NULL)
+	if(ret == 1 && ((arguments == NULL && parameters != NULL)
+					|| (arguments != NULL && arguments -> typing == NULL && parameters != NULL && parameters -> typing != NULL)))
 		ret = 2;
-	else if(ret == 1 && parameters -> typing == NULL && arguments -> typing != NULL)
+	else if(ret == 1 && ((parameters == NULL && arguments != NULL)
+						|| (parameters != NULL && parameters -> typing == NULL && arguments != NULL && arguments -> typing != NULL)))
 		ret = 3;
 
 	if(parameters != NULL) {
@@ -190,30 +186,10 @@ convertTo ( Typing *type, typeEnum thisType ) {
 	while(temp -> typeKind == ARRAY)
 		temp = temp -> nextTyping;
 
-	if(thisType == INTEGER) {
-
+	if(thisType == INTEGER)
 		convertedTyping -> typeKind = INTEGER;
-		convertedTyping -> type = INT_VALUE;
-
-		if(temp -> type == FLOAT_VALUE) {
-			if(temp -> typeValue.floatValue >= 0)
-        		convertedTyping -> typeValue.intValue = (int) (temp -> typeValue.floatValue + 0.5); 
-   			else 
-        		convertedTyping -> typeValue.intValue = (int) (temp -> typeValue.floatValue - 0.5);
-		}
-		else if(temp -> type == STRING)
-			convertedTyping -> typeValue.intValue = 1;
-	}
-	else {
-
+	else
 		convertedTyping -> typeKind = FLOAT;
-		convertedTyping -> type = FLOAT_VALUE;
-
-		if(temp -> type == INT_VALUE)
-			convertedTyping -> typeValue.floatValue = (float) (temp -> typeValue.intValue);
-		else if(temp -> type == STRING)
-			convertedTyping -> typeValue.floatValue = 1.0;
-	}
 
 	return convertedTyping;
 }
@@ -223,53 +199,21 @@ convertTo ( Typing *type, typeEnum thisType ) {
 static int
 verifyBoolean ( Typing *type ) {
 
-	if(type -> type != INT_VALUE)
+	if(type -> typeKind != INTEGER)
 		return -1;
-
-	return (type -> typeValue.intValue != 0);
 }
 
 
 // Creates a new Typing structure with it's respective value inside
 static Typing *
-createTypingValue ( typeEnum typeNum, valueEnum valueType, int intValue, float floatValue, const char *string ) {
+createTypingValue ( typeEnum typeNum/*, valueEnum valueType, int intValue, float floatValue, const char *string*/ ) {
 
 	Typing *type = new(Typing);
 
 	type -> typeKind = typeNum;
-	type -> type = valueType;
 	type -> nextTyping = NULL;
 
-	if(valueType == INT_VALUE)
-		type -> typeValue.intValue = intValue;
-	else if(valueType == FLOAT_VALUE)
-		type -> typeValue.floatValue = floatValue;
-	else if(typeNum == STRING_TYPE && valueType == STRING)
-		type -> typeValue.string = string;
-
 	return type;
-}
-
-
-// Pass value from type2 to type1, returns 1 if done with no problems, 0 if values inside Typings are not matching or type2 value is empty
-static int
-passValue ( Typing *type1, Typing *type2 ) {
-
-	if( type2 -> type == NONE || (type1 -> type != NONE && (type1 -> type != type2 -> type)))
-		return 0;
-	else {
-		if(type1 -> type == NONE)
-			type1 -> type = type2 -> type;
-
-		if(type1 -> type == INT_VALUE)
-			type1 -> typeValue.intValue = type2 -> typeValue.intValue;
-		else if(type1 -> type == FLOAT_VALUE)
-			type1 -> typeValue.floatValue = type2 -> typeValue.floatValue;
-		else if(type1 -> type == STRING)
-			type1 -> typeValue.string = type2 -> typeValue.string;
-	}
-
-	return 1;
 }
 
 
@@ -279,31 +223,21 @@ logicExpressions ( Typing *type1, Typing *type2, nodeTypeEnum kind ) {
 
 	Typing *logic = new(Typing), *t1 = NULL, *t2 = NULL;
 	logic -> typeKind = INTEGER;
-	logic -> type = INT_VALUE;
 
-	if(type2 == NULL && kind == EXPR_NOT)
-		logic -> typeValue.intValue = !(type1 -> typeValue.intValue);
-	else{
-		if(type1 -> typeKind != INT_VALUE)
-			t1 = convertTo(type1, INTEGER);
-		else
-			t1 = type1;
+	if(type1 -> typeKind != INTEGER)
+		t1 = convertTo(type1, INTEGER);
+	else
+		t1 = type1;
 		
-		if(type2 -> typeKind != INT_VALUE)
-			t2 = convertTo(type2, INTEGER);
-		else
-			t2 = type2;
+	if(type2 -> typeKind != INTEGER)
+		t2 = convertTo(type2, INTEGER);
+	else
+		t2 = type2;
 
-		if(kind == EXPR_OR)
-			logic -> typeValue.intValue = (t1 -> typeValue.intValue || t2 -> typeValue.intValue);
-		else if(kind == EXPR_AND)
-			logic -> typeValue.intValue = (t1 -> typeValue.intValue && t2 -> typeValue.intValue);
-
-		if(type1 -> typeKind != INT_VALUE)
-			free(t1);
-		if(type2 -> typeKind != INT_VALUE)
-			free(t2);
-	}
+	if(type1 -> typeKind != INTEGER)
+		free(t1);
+	if(type2 -> typeKind != INTEGER)
+		free(t2);
 	
 	return logic;
 }
@@ -315,130 +249,24 @@ binaryExpressions( Typing *type1, Typing *type2, nodeTypeEnum kind ) {
 
 	Typing *binary = new(Typing), *t1 = NULL, *t2 = NULL;
 
-	if(type1 -> typeKind != type2 -> typeKind && type1 -> typeKind != FLOAT_VALUE)
+	if(type1 -> typeKind != type2 -> typeKind && type1 -> typeKind != FLOAT)
 		t1 = convertTo(type1, FLOAT);
 	else
 		t1 = type1;
 	
-	if(type1 -> typeKind != type2 -> typeKind && type2 -> typeKind != FLOAT_VALUE)
+	if(type1 -> typeKind != type2 -> typeKind && type2 -> typeKind != FLOAT)
 		t2 = convertTo(type2, FLOAT);
 	else
 		t2 = type2;
 
-	if(kind == EXPR_EQUAL)
-		if(t1 -> typeKind == INTEGER) {
-			binary -> typeValue.intValue = (t1 -> typeValue.intValue == t2 -> typeValue.intValue);
-			binary -> typeKind = INTEGER;
-			binary -> type = INT_VALUE;
-		}
-		else {
-			binary -> typeValue.floatValue = (t1 -> typeValue.floatValue == t2 -> typeValue.floatValue);
-			binary -> typeKind = FLOAT;
-			binary -> type = FLOAT_VALUE;
-		}
-	else if(kind == EXPR_LEEQ)
-		if(t1 -> typeKind == INTEGER) {
-			binary -> typeValue.intValue = (t1 -> typeValue.intValue <= t2 -> typeValue.intValue);
-			binary -> typeKind = INTEGER;
-			binary -> type = INT_VALUE;
-		}
-		else {
-			binary -> typeValue.floatValue = (t1 -> typeValue.floatValue <= t2 -> typeValue.floatValue);
-			binary -> typeKind = FLOAT;
-			binary -> type = FLOAT_VALUE;
-		}
-	else if(kind == EXPR_GREQ)
-		if(t1 -> typeKind == INTEGER) {
-			binary -> typeValue.intValue = (t1 -> typeValue.intValue >= t2 -> typeValue.intValue);
-			binary -> typeKind = INTEGER;
-			binary -> type = INT_VALUE;
-		}
-		else {
-			binary -> typeValue.floatValue = (t1 -> typeValue.floatValue >= t2 -> typeValue.floatValue);
-			binary -> typeKind = FLOAT;
-			binary -> type = FLOAT_VALUE;
-		}
-	else if(kind == EXPR_GREATER)
-		if(t1 -> typeKind == INTEGER) {
-			binary -> typeValue.intValue = (t1 -> typeValue.intValue > t2 -> typeValue.intValue);
-			binary -> typeKind = INTEGER;
-			binary -> type = INT_VALUE;
-		}
-		else {
-			binary -> typeValue.floatValue = (t1 -> typeValue.floatValue > t2 -> typeValue.floatValue);
-			binary -> typeKind = FLOAT;
-			binary -> type = FLOAT_VALUE;
-		}
-	else if(kind == EXPR_LESS)
-		if(t1 -> typeKind == INTEGER) {
-			binary -> typeValue.intValue = (t1 -> typeValue.intValue < t2 -> typeValue.intValue);
-			binary -> typeKind = INTEGER;
-			binary -> type = INT_VALUE;
-		}
-		else {
-			binary -> typeValue.floatValue = (t1 -> typeValue.floatValue < t2 -> typeValue.floatValue);
-			binary -> typeKind = FLOAT;
-			binary -> type = FLOAT_VALUE;
-		}
-	else if(kind == EXPR_NOEQ)
-		if(t1 -> typeKind == INTEGER) {
-			binary -> typeValue.intValue = (t1 -> typeValue.intValue != t2 -> typeValue.intValue);
-			binary -> typeKind = INTEGER;
-			binary -> type = INT_VALUE;
-		}
-		else {
-			binary -> typeValue.floatValue = (t1 -> typeValue.floatValue != t2 -> typeValue.floatValue);
-			binary -> typeKind = FLOAT;
-			binary -> type = FLOAT_VALUE;
-		}
-	else if(kind == EXPR_ADD)
-		if(t1 -> typeKind == INTEGER) {
-			binary -> typeValue.intValue = (t1 -> typeValue.intValue + t2 -> typeValue.intValue);
-			binary -> typeKind = INTEGER;
-			binary -> type = INT_VALUE;
-		}
-		else {
-			binary -> typeValue.floatValue = (t1 -> typeValue.floatValue + t2 -> typeValue.floatValue);
-			binary -> typeKind = FLOAT;
-			binary -> type = FLOAT_VALUE;
-		}
-	else if(kind == EXPR_MIN)
-		if(t1 -> typeKind == INTEGER) {
-			binary -> typeValue.intValue = (t1 -> typeValue.intValue - t2 -> typeValue.intValue);
-			binary -> typeKind = INTEGER;
-			binary -> type = INT_VALUE;
-		}
-		else {
-			binary -> typeValue.floatValue = (t1 -> typeValue.floatValue - t2 -> typeValue.floatValue);
-			binary -> typeKind = FLOAT;
-			binary -> type = FLOAT_VALUE;
-		}
-	else if(kind == EXPR_MUL)
-		if(t1 -> typeKind == INTEGER) {
-			binary -> typeValue.intValue = (t1 -> typeValue.intValue * t2 -> typeValue.intValue);
-			binary -> typeKind = INTEGER;
-			binary -> type = INT_VALUE;
-		}
-		else {
-			binary -> typeValue.floatValue = (t1 -> typeValue.floatValue * t2 -> typeValue.floatValue);
-			binary -> typeKind = FLOAT;
-			binary -> type = FLOAT_VALUE;
-		}
-	else if(kind == EXPR_DIV) { 
-		if(t1 -> typeKind == INTEGER) {
-			binary -> typeValue.intValue = (t1 -> typeValue.intValue / t2 -> typeValue.intValue);
-			binary -> typeKind = INTEGER;
-			binary -> type = INT_VALUE;
-		}
-		else {
-			binary -> typeValue.floatValue = (t1 -> typeValue.floatValue / t2 -> typeValue.floatValue);
-			binary -> typeKind = FLOAT;
-			binary -> type = FLOAT_VALUE;
-		}
-	}
-	if(type1 -> typeKind != FLOAT_VALUE)
+	if(t1 -> typeKind == INTEGER)
+		binary -> typeKind = INTEGER;
+	else 
+		binary -> typeKind = FLOAT;
+
+	if(type1 -> typeKind != FLOAT)
 		free(t1);
-	if(type2 -> typeKind != FLOAT_VALUE)
+	if(type2 -> typeKind != FLOAT)
 		free(t2);
 	
 	return binary;
@@ -471,9 +299,9 @@ printFuncCallErrorMsg( int ret, Call *a ) {
 
 	if(ret == 0) {
 		if(a -> expressionNode == NULL)
-			printf("\nFUNC_CALL TYPES NOT MATCHING\tFUNC NAME: %s\n", a -> funcName);
+			printf("\nFUNC_CALL ARGUMENT TYPES NOT MATCHING\tFUNC NAME: %s\n", a -> funcName);
 		else
-			printf("\nFUNC_CALL TYPES NOT MATCHING\tFUNC NAME: %s\tLINE: %d\n", a -> funcName, a -> expressionNode -> line);
+			printf("\nFUNC_CALL ARGUMENT TYPES NOT MATCHING\tFUNC NAME: %s\tLINE: %d\n", a -> funcName, a -> expressionNode -> line);
 	}
 	else if(ret == 2) {
 		if(a -> expressionNode == NULL)
@@ -492,23 +320,38 @@ printFuncCallErrorMsg( int ret, Call *a ) {
 }
 
 
-/*static void
-type_type ( AST_Node *a ) {
-	
-	if( a != NULL ) {
+// Populates the list of typyings from the received function's parameters
+static void
+getParametersList ( typeList * funcParameters, AST_Node *funcDefNode ) {
 
-		printf("TYPE: ");
-		printf("%s", a -> nodeStruct.type -> baseType);
-	}	
-}*/
+	Param *param = funcDefNode -> nodeStruct.def -> u.func.param;
+	typeList *temp1 = NULL, *temp2 = funcParameters;
+	Var *var = NULL;
+
+	while(param != NULL) {
+
+		var = param -> var -> varListNode -> nodeStruct.var;
+
+		if(funcParameters -> typing == NULL)
+			funcParameters -> typing = var -> typing;
+		else {
+
+			temp1 = new(typeList);
+			temp1 -> typing = var -> typing;
+			temp1 -> nextTypingNode = NULL;
+
+			temp2-> nextTypingNode = temp1;
+			temp2 = temp1;
+		}
+
+		param = param -> proxParam;
+	}
+}
 
 
-static void//			TODO INACABADO
+static void
 type_exp ( AST_Node *a, typeList *arguments ) {
 
-	int intVal = 0;
-	float floatVal = 0.0;
-	const char *stringVal = NULL;
 	Typing *temp = NULL;
 	typeList *tempList = NULL;
 
@@ -523,24 +366,21 @@ type_exp ( AST_Node *a, typeList *arguments ) {
 			while(temp -> typeKind == ARRAY)
 				temp = temp -> nextTyping;
 
-			if(temp -> type == INT_VALUE)
-				intVal = temp -> typeValue.intValue;
-			else if(temp -> type == FLOAT_VALUE)
-				floatVal = temp -> typeValue.floatValue;
-			else if(temp -> type == STRING)
-				stringVal = temp -> typeValue.string;
-
-			a -> nodeStruct.exp -> typing = createTypingValue(temp -> typeKind, temp -> type, intVal, floatVal, stringVal);
+			a -> nodeStruct.exp -> typing = createTypingValue(temp -> typeKind);
 		}
 		else if ( a -> nodeType == EXPR_FUNC_CALL ) {
 			
 			type_call(a -> nodeStruct.exp -> u.functionCall);
 
-			//a -> nodeStruct.exp -> typing = createTypingValue( TIPO DADO PELA TABELA? , NONE, intVal, floatVal, stringVal);
+			if(a -> nodeStruct.exp -> u.functionCall -> linkedFuncNode -> nodeStruct.def -> u.func.tagReturnType == 1)
+				temp = getTypingFromType(a -> nodeStruct.exp -> u.functionCall -> linkedFuncNode -> nodeStruct.def -> u.func.ret.dataTypeNode);
+			else
+				temp = createTypingValue(VOID);
+
+			a -> nodeStruct.exp -> typing = temp;
 		}
 		else if ( a -> nodeType == EXPR_NEW ) {
-			
-			//type_type(a->left);
+
 			type_exp(a->right, NULL);
 			
 			temp = a -> right -> nodeStruct.exp -> typing;
@@ -555,15 +395,15 @@ type_exp ( AST_Node *a, typeList *arguments ) {
 		}
 		else if ( a -> nodeType == EXPR_INT || a -> nodeType == EXPR_HEXA || a -> nodeType == EXPR_CHAR ) {
 
-			a -> nodeStruct.exp -> typing = createTypingValue(INTEGER, INT_VALUE, a -> nodeStruct.exp -> u.ki, 0.0, NULL);
+			a -> nodeStruct.exp -> typing = createTypingValue(INTEGER);
 		}
 		else if ( a -> nodeType == EXPR_FLOAT ) {
 
-			a -> nodeStruct.exp -> typing = createTypingValue(FLOAT, FLOAT_VALUE, 0, a -> nodeStruct.exp -> u.kf, NULL);
+			a -> nodeStruct.exp -> typing = createTypingValue(FLOAT);
 		}
 		else if ( a -> nodeType == EXPR_LIT ) {
 
-			a -> nodeStruct.exp -> typing = createTypingValue(STRING_TYPE, STRING, 0, 0.0, a -> nodeStruct.exp -> u.lit);
+			a -> nodeStruct.exp -> typing = createTypingValue(STRING_TYPE);
 		}
 		else if ( a -> nodeType == EXPR_OR ) {
 			
@@ -667,13 +507,6 @@ type_exp ( AST_Node *a, typeList *arguments ) {
 
 			verifyIfLiterals(a -> left -> nodeStruct.exp -> typing, a -> right -> nodeStruct.exp -> typing, "EXPR_DIV", a -> line);
 
-			if((a -> right -> nodeStruct.exp -> typing -> type == INT_VALUE && a -> right -> nodeStruct.exp -> typing -> typeValue.intValue == 0)
-				|| (a -> right -> nodeStruct.exp -> typing -> type == FLOAT_VALUE && a -> right -> nodeStruct.exp -> typing -> typeValue.floatValue == 0.0)) {
-
-				printf("\nEXPR_DIV EXP IN THE DIVIDER IS ZERO\tLINE: %d\n", a -> line);
-				exit(0);
-			}
-
 			a -> nodeStruct.exp -> typing = binaryExpressions(a -> left -> nodeStruct.exp -> typing, a -> right -> nodeStruct.exp -> typing, EXPR_DIV);
 		}
 		else if ( a -> nodeType == EXPR_NOT ) {
@@ -686,19 +519,19 @@ type_exp ( AST_Node *a, typeList *arguments ) {
 
 			type_exp(a->left, NULL);
 
-			if(a -> left -> nodeStruct.exp -> typing -> type != INT_VALUE && a -> left -> nodeStruct.exp -> typing -> type != FLOAT_VALUE) {
+			if(a -> left -> nodeStruct.exp -> typing -> typeKind != INTEGER && a -> left -> nodeStruct.exp -> typing -> typeKind != FLOAT) {
 
 				printf("\nEXPR_NEG EXP VALUE IS NOT INTEGER OR FLOAT\tLINE: %d\n", a -> line);
 				exit(0);
 			}
 
-			if( a -> left -> nodeStruct.exp -> typing -> type == INT_VALUE ) {
+			if( a -> left -> nodeStruct.exp -> typing -> typeKind == INTEGER ) {
 				
-				a -> nodeStruct.exp -> typing = createTypingValue(INTEGER, INT_VALUE, a -> left -> nodeStruct.exp -> typing -> typeValue.intValue, 0.0, NULL);
+				a -> nodeStruct.exp -> typing = createTypingValue(INTEGER);
 			}
-			else if( a -> left -> nodeStruct.exp -> typing -> type == FLOAT_VALUE ) {
+			else if( a -> left -> nodeStruct.exp -> typing -> typeKind == FLOAT ) {
 				
-				a -> nodeStruct.exp -> typing = createTypingValue(INTEGER, INT_VALUE, 0, a -> left -> nodeStruct.exp -> typing -> typeValue.floatValue, NULL);
+				a -> nodeStruct.exp -> typing = createTypingValue(INTEGER);
 			}
 		}
 		else {
@@ -730,25 +563,24 @@ type_exp ( AST_Node *a, typeList *arguments ) {
 			arguments -> nextTypingNode = NULL;
 		}
 
-		/*if(a -> left != NULL && a -> left -> node == EXPR)
-			type_exp(a->left, NULL);
-		if(a -> right != NULL && a -> right -> node == EXPR)
-			type_exp(a->right, NULL);*/
-
 		type_exp(a -> nodeStruct.exp -> nextExpNode, arguments);
 	}
 }
 
 
-static void//		TODO INACABADO
+static void
 type_var( AST_Node *a ) {
 
 	if( a != NULL ) {
 
 		if ( a -> nodeType == VAR_UNIQUE ) {
 
-			//if(a -> nodeStruct.var -> typing == NULL)
-			//	a -> nodeStruct.stat -> typing = createTypingValue( TIPO DADO PELA TABELA? , TIPO VALOR DADO PELA TABELA? , VALOR DADO PELA TABELA? , VALOR DADO PELA TABELA? , STRING DADA PELA TABELA? );
+			if(a -> nodeStruct.var -> typing == NULL && a -> nodeStruct.var -> linkedVarNode != NULL) {
+				if(a -> nodeStruct.var -> linkedVarNode -> node == VAR)
+					a -> nodeStruct.var -> typing = a -> nodeStruct.var -> linkedVarNode -> nodeStruct.var -> typing;
+				else if(a -> nodeStruct.var -> linkedVarNode -> node == DEF)
+					a -> nodeStruct.var -> typing = a -> nodeStruct.var -> linkedVarNode -> nodeStruct.def -> u.defVar -> varListNode -> nodeStruct.var -> typing;
+			}
 		}
 		else if ( a -> nodeType == VAR_INDEXED ) {
 		
@@ -761,8 +593,8 @@ type_var( AST_Node *a ) {
 				exit(0);
 			}
 
-			//if(a -> nodeStruct.var -> typing == NULL)
-			//	a -> nodeStruct.var -> typing = createTypingValue( TIPO DADO PELA TABELA? , TIPO VALOR DADO PELA TABELA? , VALOR DADO PELA TABELA? , VALOR DADO PELA TABELA? , STRING DADA PELA TABELA? );			
+			if(a -> nodeStruct.var -> typing == NULL && a -> nodeStruct.var -> linkedVarNode != NULL)
+				a -> nodeStruct.var -> typing = a -> nodeStruct.var -> linkedVarNode -> nodeStruct.var -> typing;		
 		}
 		else {
 
@@ -785,7 +617,6 @@ type_params ( Param *p ) {
 
 	if( p != NULL && p -> var -> varListNode -> nodeStruct.var -> typing == NULL) {
 
-		//type_type(p -> var -> dataTypeNode);
 		type_var(p -> var -> varListNode);
 
 		if(p -> var -> varListNode -> nodeStruct.var -> typing == NULL)
@@ -823,7 +654,7 @@ type_stat ( AST_Node *a, typeList *retList ) {
 				exit(0);
 			}
 
-			type = createTypingValue(INTEGER, INT_VALUE, ret, 0.0, NULL);
+			type = createTypingValue(INTEGER);
 			a -> nodeStruct.stat -> typing = type;
 		}
 		else if ( a -> nodeType == STAT_IF ) {
@@ -844,7 +675,7 @@ type_stat ( AST_Node *a, typeList *retList ) {
 				exit(0);
 			}
 
-			type = createTypingValue(INTEGER, INT_VALUE, ret, 0.0, NULL);
+			type = createTypingValue(INTEGER);
 			a -> nodeStruct.stat -> typing = type;
 		}
 		else if( a -> nodeType == STAT_IFELSE ) {
@@ -866,7 +697,7 @@ type_stat ( AST_Node *a, typeList *retList ) {
 				exit(0);
 			}
 
-			type = createTypingValue(INTEGER, INT_VALUE, ret, 0.0, NULL);
+			type = createTypingValue(INTEGER);
 			a -> nodeStruct.stat -> typing = type;
 		}
 		else if( a -> nodeType == STAT_ASSIGN ) {
@@ -880,14 +711,6 @@ type_stat ( AST_Node *a, typeList *retList ) {
 			if(verifySameType(t1, t2) == 0) {
 
 				printf("\nSTAT_ASSIGN VAR AND EXP ARE NOT THE SAME TYPE\tVAR ENUM TYPE: %d\tEXP ENUM TYPE: %d\tLINE: %d\n", t1 -> typeKind, t2 -> typeKind, a -> line);
-				exit(0);
-			}
-
-			ret = passValue(t1, t2);
-
-			if(ret == 0) {
-
-				fprintf(stderr, "\nAST TYPING ERROR(STAT_ASSIGN): UNEXPECTED TYPING VALUE AT LINE %d\n", a -> line);
 				exit(0);
 			}
 		}
@@ -911,7 +734,7 @@ type_stat ( AST_Node *a, typeList *retList ) {
 		}
 		else if( a -> nodeType == STAT_FUNC_CALL ) {
 		
-			type_call(a -> nodeStruct.stat -> u.callFunc);	
+			type_call(a -> nodeStruct.stat -> u.callFunc);
 		}
 		else {
 
@@ -919,17 +742,16 @@ type_stat ( AST_Node *a, typeList *retList ) {
 			exit(0);
 		}
 
-		//type_tree(a->right);
 		type_stat(a->left, retList);
 	}
 }
 
 
 static void
-type_call ( Call *a ) {//		TODO INACABADO
+type_call ( Call *a ) {
 
 	int ret;
-	typeList *funcParameters = NULL; // DADO PELA ESTRUTURA DA AMARRAÇÃO?
+	typeList *funcParameters = NULL;
 	typeList *arguments = NULL;
 
 	if( a != NULL ) {
@@ -941,6 +763,8 @@ type_call ( Call *a ) {//		TODO INACABADO
 		funcParameters = new(typeList);
 		funcParameters -> typing = NULL;
 		funcParameters -> nextTypingNode = NULL;
+
+		getParametersList(funcParameters, a -> linkedFuncNode);
 
 		type_exp(a -> expressionNode, arguments);
 
@@ -984,7 +808,6 @@ type_def ( AST_Node *a ) {
 		
 		if( a -> nodeType == DEF_VAR ) {
 			
-			//type_type(a -> nodeStruct.def -> u.defVar -> dataTypeNode);
 			type_var(a -> nodeStruct.def -> u.defVar -> varListNode);
 
 			if(a -> nodeStruct.def -> u.defVar -> varListNode -> nodeStruct.var -> typing == NULL)
@@ -995,13 +818,13 @@ type_def ( AST_Node *a ) {
 			if(a -> nodeStruct.def -> u.func.tagReturnType == 1)
 				funcReturn = getTypingFromType(a -> nodeStruct.def -> u.func.ret.dataTypeNode);
 			else
-				funcReturn = createTypingValue(VOID, NONE, 0, 0.0, NULL);
+				funcReturn = createTypingValue(VOID);
 
 			returns = new(typeList);
 			returns -> typing = NULL;
 			returns -> nextTypingNode = NULL;
 
-			type_params(a -> nodeStruct.def -> u.func.param); 			// TODO DAQUI PRECISO OS PARAMETROS PRA COMPARAR COM FUNC CALL
+			type_params(a -> nodeStruct.def -> u.func.param);
 			type_block(a -> nodeStruct.def -> u.func.block, returns);
 
 			if(verifyTypeList(funcReturn, returns) != 1) {
@@ -1009,6 +832,8 @@ type_def ( AST_Node *a ) {
 				printf("\nDEF_FUNC RETURN TYPE NOT MATCHING\tFUNC NAME: %s\tLINE: %d\n", a -> nodeStruct.def -> u.func.funcName, a -> line);
 				exit(0);
 			}
+
+			free(funcReturn);
 		}
 		else {
 
@@ -1017,7 +842,6 @@ type_def ( AST_Node *a ) {
 		}
 
 		type_tree(a->left);
-		//type_tree(a->right);
 	}
 }
 
@@ -1031,7 +855,6 @@ type_tree( AST_Node *a ) {
 			case VAR:  type_var(a); break;
 			case EXPR: type_exp(a, NULL); break;
 			case STAT: type_stat(a, NULL); break;
-			//case TYPE: type_type(a); break;
-	   	 	default: fprintf(stderr, "\nAST TYPING ERROR: UNKNOWN NODE\n"); exit(0);
+	   	 	default: fprintf(stderr, "\nAST TYPING ERROR: UNKNOWN NODE ENUM %d\n", a -> node); exit(0);
 	 	}
 }
