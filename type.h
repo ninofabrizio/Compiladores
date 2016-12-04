@@ -6,7 +6,6 @@
 typedef struct AST_Node AST_Node;
 
 typedef enum typeEnum typeEnum;
-typedef enum valueEnum valueEnum;
 
 typedef struct Typing Typing;
 
@@ -21,29 +20,12 @@ enum typeEnum {
 	STRING_TYPE
 };
 
-enum valueEnum {
-	
-	NONE,
-	INT_VALUE,
-	FLOAT_VALUE,
-	STRING
-};
-
 
 struct Typing { 
 
 		Typing *nextTyping; // array case
 
 		typeEnum typeKind;
-		//OU Type *type;
-
-		valueEnum type;
-
-		union {
-			int intValue;
-			float floatValue;
-			const char *string;
-		} typeValue;
 };
 
 #endif

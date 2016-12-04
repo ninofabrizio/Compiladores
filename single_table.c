@@ -11,7 +11,7 @@ single_table_create (void) {
 void 
 single_table_destroy (Stack *single_table) {
 	
-	symbol_table *table;
+	symbol_table *table = NULL;
 	
 	while (!stack_empty(single_table)) {
 		
@@ -27,8 +27,8 @@ single_table_destroy (Stack *single_table) {
 id_entry* 
 single_table_find (Stack *single_table, const char *elemFound) {
 	
-	Node *node;
-	id_entry *entry;
+	Node *node = NULL;
+	id_entry *entry = NULL;
 	
 	for (node = single_table -> prim; node != NULL; node = node -> prox) {
 		
