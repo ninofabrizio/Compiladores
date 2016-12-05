@@ -31,16 +31,19 @@ single_table.o: single_table.c
 type.o: type.c
 	gcc -o $(CLFLAGS) type.o -c type.c
 
+geracod.o: geracod.c
+	gcc -o $(CLFLAGS) geracod.o -c geracod.c
+
 main.o: main.c
 	gcc -o $(CLFLAGS) main.o -c main.c
   
-tester: monga.o main.o monga.tab.o ast.o symtab.o stack.o single_table.o type.o
-	gcc -o tester main.o monga.o ast.o monga.tab.o symtab.o stack.o single_table.o type.o -ll
+tester: monga.o geracod.o main.o monga.tab.o ast.o symtab.o stack.o single_table.o type.o
+	gcc -o tester geracod.o main.o monga.o ast.o monga.tab.o symtab.o stack.o single_table.o type.o -ll
   
 automatic: automatic.sh
 	sh automatic.sh
 
-compile: monga.tab.c monga.tab.o monga.c monga.o ast.o main.o tester
+compile: monga.tab.c monga.tab.o monga.c monga.o ast.o geracod.o main.o tester
 
 test: automatic
 

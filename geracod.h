@@ -8,7 +8,7 @@ static int currentLabel = 0;
 extern const char* buffer[MAX_TAM];
 
 void geraCodigo(AST_Node* root);
-void initialBuffer( const char** buffer );
+extern void initialBuffer( );
 
 
 

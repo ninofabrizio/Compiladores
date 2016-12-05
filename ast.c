@@ -1041,21 +1041,12 @@ build_single_table (AST_Node *root)
 				
 				//test = root -> nodeStruct.var -> linkedVarNode;
 				
-<<<<<<< HEAD
-				if ( test -> node == DEF)
-					//printf( "\n**Variable: %s **\n", (test -> nodeStruct.def -> u.defVar -> varListNode -> nodeStruct.var -> varName) );
-//
-// 				else if (test -> node == VAR)
-// 					printf( "\n**Variable: %s **\n", (test -> nodeStruct.var -> varName) );
-//
-=======
 				 //if ( test -> node == DEF)
  				//	printf( "\n**Variable: %s **\n", (test -> nodeStruct.def -> u.defVar -> varListNode -> nodeStruct.var -> varName) );
 
  				//else if (test -> node == VAR)
  				//	printf( "\n**Variable: %s **\n", (test -> nodeStruct.var -> varName) );
 
->>>>>>> 5d492bfdd804a9d24f349850639032fb3909d6ec
 				
 		
 		

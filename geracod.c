@@ -7,8 +7,9 @@ static void geracod_def (AST_Node * root);
 static void  geracod_var(AST_Node *n);
 static void geracod_exp(AST_Node *n);
 static void geracod_stat(AST_Node *n);	
+void printBuffer( );
 
-void initialBuffer( const char** buffer ) {
+void initialBuffer(  ) {
 	
 	int i;
 	
@@ -27,7 +28,7 @@ void geraCodigo(AST_Node * root) {
 			case STAT: geracod_stat(root); break;	   
 			default: exit(0);					
 	 	}
-	void printBuffer( );
+	printBuffer( );
 }
 
 int getIndexBuffer () {
@@ -77,8 +78,6 @@ static void geracod_stat (AST_Node *n) {
 }
 
 
-
-
 static void  geracod_var(AST_Node *n){ }
 static void geracod_exp(AST_Node *n){ }
 	
@@ -94,8 +93,9 @@ void printBuffer( ) {
 	    exit(1);
 	}
 
-	for ( i = 0; buffer[i] != NULL && i < MAX_TAM; i++ )
-		fprintf(f, "%s", buffer[i]);
+	for ( i = 0; buffer[i] != NULL && i < MAX_TAM; i++ )	
+		fprintf(file, "%s", buffer[i]);
+		
 	
 	
 	fclose(file);
@@ -106,11 +106,11 @@ void printBuffer( ) {
 static void geracod_def (AST_Node * root) {
 	
 	if( root != NULL ) {
-				
+								
 		if( root -> nodeType == DEF_FUNC ) {
 											
 				buffer[getIndexBuffer()] = "; L";
-				itoa(currentLabel, buffer[getIndexBuffer()], 10 );
+				buffer[getIndexBuffer()] = "1" ; // implementar atoi
 				currentLabel++;
 				buffer[getIndexBuffer()] = ":\ndefine ";
 				
@@ -126,10 +126,8 @@ static void geracod_def (AST_Node * root) {
 				
 				geracod_def_var(root -> nodeStruct.def -> u.defVar);
 				geracod_stat(root -> nodeStruct.def -> u.func.block);
-				
-							
-		}		
-		
+											
+		}				
 	}
 	
 }

@@ -201,6 +201,9 @@ verifyBoolean ( Typing *type ) {
 
 	if(type -> typeKind != INTEGER)
 		return -1;
+
+	return 1;
+
 }
 
 

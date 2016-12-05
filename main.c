@@ -8,14 +8,14 @@
 int yyparse();
 AST_Node *AST_Root;
 void print_tree(AST_Node *a, int tabIndex);
-const char* buffer[MAX_TAM];
+const char* buffer[500];
 
 void print_single_table ( Stack *mySingleTable );
 void build_single_table (AST_Node *a);
 Stack *single_table;
 Stack* single_table_create (void);
 id_entry* single_table_find_current_scope (Stack *single_table, const char *elemFound);
-
+void initialBuffer( );
 
 void type_tree( AST_Node *a );
 
@@ -40,16 +40,15 @@ int main( int argc, char *argv[] ) {
 	// PRIMEIRO COSTURA
 
 	// DEPOIS TIPAGEM
-	//type_tree(AST_Root);
+	type_tree(AST_Root);
 
 	single_table = single_table_create();
 	build_single_table(AST_Root);
-	//print_single_table ( single_table );
 	
 	//print_tree(AST_Root, 0);
 	
-	initialBuffer( buffer );
-	void geraCodigo(AST_Node* root);
+	initialBuffer( );
+	geraCodigo(AST_Root);
 	fclose(file);
 	
 	return retParse;
