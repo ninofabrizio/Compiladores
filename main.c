@@ -2,7 +2,8 @@
 #include "ast.h"
 #include "single_table.h"
 #include "type.h"
-#include"geracod.h"
+#include "printAST.h"
+#include "geracod.h"
 
 
 int yyparse();
@@ -25,8 +26,6 @@ int main( int argc, char *argv[] ) {
     ++argv, --argc;  // skip over program name
     int retParse;
 	
-	
-	//int token;
 	FILE *file;
 
     if (argc > 0) {
@@ -36,19 +35,17 @@ int main( int argc, char *argv[] ) {
         file = stdin;
 	
 	retParse = yyparse();
-	
-	// PRIMEIRO COSTURA
-
-	// DEPOIS TIPAGEM
-	type_tree(AST_Root);
 
 	single_table = single_table_create();
 	build_single_table(AST_Root);
+
+	type_tree(AST_Root);
 	
-	//print_tree(AST_Root, 0);
-	
-	initialBuffer( );
+	initialBuffer();
 	geraCodigo(AST_Root);
+
+	print_tree(AST_Root, 0);
+
 	fclose(file);
 	
 	return retParse;

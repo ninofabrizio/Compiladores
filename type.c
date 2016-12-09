@@ -16,7 +16,6 @@ static int verifySameType ( Typing *type1, Typing *type2 );
 static int verifyTypeList ( Typing *type, typeList *types );
 static int verifyFuncParameters ( typeList *parameters, typeList *arguments );
 static Typing * convertTo ( Typing *type, typeEnum thisType );
-static int verifyBoolean ( Typing *type );
 static Typing * createTypingValue ( typeEnum type );
 static Typing * logicExpressions ( Typing *type1, Typing *type2, nodeTypeEnum kind );
 static Typing * binaryExpressions ( Typing *type1, Typing *type2, nodeTypeEnum kind );
@@ -192,18 +191,6 @@ convertTo ( Typing *type, typeEnum thisType ) {
 		convertedTyping -> typeKind = FLOAT;
 
 	return convertedTyping;
-}
-
-
-// Returns 0 if value inside Typing equals 0, 1 if it's different from 0, -1 if the value inside is not integer type
-static int
-verifyBoolean ( Typing *type ) {
-
-	if(type -> typeKind != INTEGER)
-		return -1;
-
-	return 1;
-
 }
 
 
@@ -648,14 +635,6 @@ type_stat ( AST_Node *a, typeList *retList ) {
 
 			if(notOfType(t1 -> typeKind, INTEGER))
 				t1 = convertTo(t1, INTEGER);
-			
-			ret = verifyBoolean(t1);
-
-			if(ret == -1) {
-
-				fprintf(stderr, "\nAST TYPING ERROR(STAT_WHILE): UNEXPECTED TYPING VALUE AT LINE %d\n", a -> line);
-				exit(0);
-			}
 
 			type = createTypingValue(INTEGER);
 			a -> nodeStruct.stat -> typing = type;
@@ -670,14 +649,6 @@ type_stat ( AST_Node *a, typeList *retList ) {
 			if(notOfType(t1 -> typeKind, INTEGER))
 				t1 = convertTo(t1, INTEGER);
 
-			ret = verifyBoolean(t1);
-
-			if(ret == -1) {
-					
-				fprintf(stderr, "\nAST TYPING ERROR(STAT_IF): UNEXPECTED TYPING VALUE AT LINE %d\n", a -> line);
-				exit(0);
-			}
-
 			type = createTypingValue(INTEGER);
 			a -> nodeStruct.stat -> typing = type;
 		}
@@ -691,14 +662,6 @@ type_stat ( AST_Node *a, typeList *retList ) {
 
 			if(notOfType(t1 -> typeKind, INTEGER))
 				t1 = convertTo(t1, INTEGER);
-
-			ret = verifyBoolean(t1);
-
-			if(ret == -1) {
-					
-				fprintf(stderr, "\nAST TYPING ERROR(STAT_IFELSE): UNEXPECTED TYPING VALUE AT LINE %d\n", a -> line);
-				exit(0);
-			}
 
 			type = createTypingValue(INTEGER);
 			a -> nodeStruct.stat -> typing = type;
