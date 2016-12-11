@@ -351,7 +351,7 @@ print_stat ( AST_Node *a, int tabIndex ) {
 		} else if( a -> nodeType == STAT_RETURN ) {
 			
 			printf("Line [%d] STAT_RETURN {\n", a -> line);
-			print_exp(a -> nodeStruct.stat -> u.retCommand.exp00Node, tabIndex+1);
+			print_exp(a -> nodeStruct.stat -> u.returnExp00Node, tabIndex+1);
 		
 		} else {
 		

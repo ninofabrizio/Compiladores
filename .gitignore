@@ -1,6 +1,8 @@
 *.o
 *.txt
 *.output
+*.ll
+*.exe
 tester
 monga.c
 monga.tab.h

@@ -208,8 +208,8 @@ struct Stat {
 		Call *callFunc;
 		AST_Node *block;
 		struct { AST_Node *varNode; AST_Node *exp00Node; } assign;
-		struct { int returnType; AST_Node *exp00Node; } retCommand;
-		struct { int whileType; AST_Node *exp00Node; AST_Node *commandListNode; } whileLoop;
+		AST_Node *returnExp00Node;
+		struct { AST_Node *exp00Node; AST_Node *commandListNode; } whileLoop;
 		struct { AST_Node *exp00Node; AST_Node *block; AST_Node *elseNo; } ifCondition;
 	} u;
 };

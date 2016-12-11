@@ -395,115 +395,45 @@ type_exp ( AST_Node *a, typeList *arguments ) {
 
 			a -> nodeStruct.exp -> typing = createTypingValue(STRING_TYPE);
 		}
-		else if ( a -> nodeType == EXPR_OR ) {
-			
+		else if ( a -> nodeType == EXPR_OR || a -> nodeType == EXPR_AND || a -> nodeType == EXPR_NOT ) {
+
 			type_exp(a->left, NULL);
 			type_exp(a->right, NULL);
 
-			a -> nodeStruct.exp -> typing = logicExpressions(a -> left -> nodeStruct.exp -> typing, a -> right -> nodeStruct.exp -> typing, EXPR_OR);
+			a -> nodeStruct.exp -> typing = logicExpressions(a -> left -> nodeStruct.exp -> typing, a -> right -> nodeStruct.exp -> typing, a -> nodeType);
 		}
-		else if ( a -> nodeType == EXPR_AND ) {
+		else if ( a -> nodeType == EXPR_EQUAL || a -> nodeType == EXPR_LEEQ || a -> nodeType == EXPR_GREQ || a -> nodeType == EXPR_GREATER || a -> nodeType == EXPR_LESS
+				|| a -> nodeType == EXPR_NOEQ || a -> nodeType == EXPR_ADD || a -> nodeType == EXPR_MIN || a -> nodeType == EXPR_MUL || a -> nodeType == EXPR_DIV ) {
 			
+			const char *exprType;
+
+			if(a -> nodeType == EXPR_EQUAL)
+				exprType = "EXPR_EQUAL";
+			else if(a -> nodeType == EXPR_LEEQ)
+				exprType = "EXPR_LEEQ";
+			else if(a -> nodeType == EXPR_GREQ)
+				exprType = "EXPR_GREQ";
+			else if(a -> nodeType == EXPR_GREATER)
+				exprType = "EXPR_GREATER";
+			else if(a -> nodeType == EXPR_LESS)
+				exprType = "EXPR_LESS";
+			else if(a -> nodeType == EXPR_NOEQ)
+				exprType = "EXPR_NOEQ";
+			else if(a -> nodeType == EXPR_ADD)
+				exprType = "EXPR_ADD";
+			else if(a -> nodeType == EXPR_MIN)
+				exprType = "EXPR_MIN";
+			else if(a -> nodeType == EXPR_MUL)
+				exprType = "EXPR_MUL";
+			else if(a -> nodeType == EXPR_DIV)
+				exprType = "EXPR_DIV";
+
 			type_exp(a->left, NULL);
 			type_exp(a->right, NULL);
 
-			a -> nodeStruct.exp -> typing = logicExpressions(a -> left -> nodeStruct.exp -> typing, a -> right -> nodeStruct.exp -> typing, EXPR_AND);
-		}
-		else if ( a -> nodeType == EXPR_EQUAL ) {
-			
-			type_exp(a->left, NULL);
-			type_exp(a->right, NULL);
+			verifyIfLiterals(a -> left -> nodeStruct.exp -> typing, a -> right -> nodeStruct.exp -> typing, exprType, a -> line);
 
-			verifyIfLiterals(a -> left -> nodeStruct.exp -> typing, a -> right -> nodeStruct.exp -> typing, "EXPR_EQUAL", a -> line);
-
-			a -> nodeStruct.exp -> typing = binaryExpressions(a -> left -> nodeStruct.exp -> typing, a -> right -> nodeStruct.exp -> typing, EXPR_EQUAL);
-		}
-		else if ( a -> nodeType == EXPR_LEEQ ) {
-			
-			type_exp(a->left, NULL);
-			type_exp(a->right, NULL);
-
-			verifyIfLiterals(a -> left -> nodeStruct.exp -> typing, a -> right -> nodeStruct.exp -> typing, "EXPR_LEEQ", a -> line);
-
-			a -> nodeStruct.exp -> typing = binaryExpressions(a -> left -> nodeStruct.exp -> typing, a -> right -> nodeStruct.exp -> typing, EXPR_LEEQ);
-		}
-		else if ( a -> nodeType == EXPR_GREQ ) {
-			
-			type_exp(a->left, NULL);
-			type_exp(a->right, NULL);
-
-			verifyIfLiterals(a -> left -> nodeStruct.exp -> typing, a -> right -> nodeStruct.exp -> typing, "EXPR_GREQ", a -> line);
-
-			a -> nodeStruct.exp -> typing = binaryExpressions(a -> left -> nodeStruct.exp -> typing, a -> right -> nodeStruct.exp -> typing, EXPR_GREQ);
-		}
-		else if ( a -> nodeType == EXPR_GREATER ) {
-			
-			type_exp(a->left, NULL);
-			type_exp(a->right, NULL);
-
-			verifyIfLiterals(a -> left -> nodeStruct.exp -> typing, a -> right -> nodeStruct.exp -> typing, "EXPR_GREATER", a -> line);
-
-			a -> nodeStruct.exp -> typing = binaryExpressions(a -> left -> nodeStruct.exp -> typing, a -> right -> nodeStruct.exp -> typing, EXPR_GREATER);
-		}
-		else if ( a -> nodeType == EXPR_LESS ) {
-			
-			type_exp(a->left, NULL);
-			type_exp(a->right, NULL);
-
-			verifyIfLiterals(a -> left -> nodeStruct.exp -> typing, a -> right -> nodeStruct.exp -> typing, "EXPR_LESS", a -> line);
-
-			a -> nodeStruct.exp -> typing = binaryExpressions(a -> left -> nodeStruct.exp -> typing, a -> right -> nodeStruct.exp -> typing, EXPR_LESS);
-		}
-		else if ( a -> nodeType == EXPR_NOEQ ) {
-			
-			type_exp(a->left, NULL);
-			type_exp(a->right, NULL);
-
-			verifyIfLiterals(a -> left -> nodeStruct.exp -> typing, a -> right -> nodeStruct.exp -> typing, "EXPR_NOEQ", a -> line);
-
-			a -> nodeStruct.exp -> typing = binaryExpressions(a -> left -> nodeStruct.exp -> typing, a -> right -> nodeStruct.exp -> typing, EXPR_NOEQ);
-		}
-		else if ( a -> nodeType == EXPR_ADD ) {
-			
-			type_exp(a->left, NULL);
-			type_exp(a->right, NULL);
-
-			verifyIfLiterals(a -> left -> nodeStruct.exp -> typing, a -> right -> nodeStruct.exp -> typing, "EXPR_ADD", a -> line);
-
-			a -> nodeStruct.exp -> typing = binaryExpressions(a -> left -> nodeStruct.exp -> typing, a -> right -> nodeStruct.exp -> typing, EXPR_ADD);
-		}
-		else if ( a -> nodeType == EXPR_MIN ) {
-			
-			type_exp(a->left, NULL);
-			type_exp(a->right, NULL);
-
-			verifyIfLiterals(a -> left -> nodeStruct.exp -> typing, a -> right -> nodeStruct.exp -> typing, "EXPR_MIN", a -> line);
-
-			a -> nodeStruct.exp -> typing = binaryExpressions(a -> left -> nodeStruct.exp -> typing, a -> right -> nodeStruct.exp -> typing, EXPR_MIN);
-		}
-		else if ( a -> nodeType == EXPR_MUL ) {
-			
-			type_exp(a->left, NULL);
-			type_exp(a->right, NULL);
-
-			verifyIfLiterals(a -> left -> nodeStruct.exp -> typing, a -> right -> nodeStruct.exp -> typing, "EXPR_MUL", a -> line);
-
-			a -> nodeStruct.exp -> typing = binaryExpressions(a -> left -> nodeStruct.exp -> typing, a -> right -> nodeStruct.exp -> typing, EXPR_MUL);
-		}
-		else if ( a -> nodeType == EXPR_DIV ) {
-			
-			type_exp(a->left, NULL);
-			type_exp(a->right, NULL);
-
-			verifyIfLiterals(a -> left -> nodeStruct.exp -> typing, a -> right -> nodeStruct.exp -> typing, "EXPR_DIV", a -> line);
-
-			a -> nodeStruct.exp -> typing = binaryExpressions(a -> left -> nodeStruct.exp -> typing, a -> right -> nodeStruct.exp -> typing, EXPR_DIV);
-		}
-		else if ( a -> nodeType == EXPR_NOT ) {
-			
-			type_exp(a->left, NULL);
-
-			a -> nodeStruct.exp -> typing = logicExpressions(a -> left -> nodeStruct.exp -> typing, NULL, EXPR_NOT);
+			a -> nodeStruct.exp -> typing = binaryExpressions(a -> left -> nodeStruct.exp -> typing, a -> right -> nodeStruct.exp -> typing, a -> nodeType);
 		}
 		else if ( a -> nodeType == EXPR_NEG ) {
 
@@ -682,10 +612,10 @@ type_stat ( AST_Node *a, typeList *retList ) {
 		}
 		else if( a -> nodeType == STAT_RETURN ) {
 			
-			type_exp(a -> nodeStruct.stat -> u.retCommand.exp00Node, NULL);
+			type_exp(a -> nodeStruct.stat -> u.returnExp00Node, NULL);
 
-			if(a -> nodeStruct.stat -> u.retCommand.exp00Node != NULL) {
-				t1 = a -> nodeStruct.stat -> u.retCommand.exp00Node -> nodeStruct.exp -> typing;
+			if(a -> nodeStruct.stat -> u.returnExp00Node != NULL) {
+				t1 = a -> nodeStruct.stat -> u.returnExp00Node -> nodeStruct.exp -> typing;
 
 				if(retList -> typing == NULL) {
 					retList -> typing = t1;

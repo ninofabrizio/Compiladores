@@ -334,7 +334,7 @@ new_stat_ret( int node, int nodeType, AST_Node* n1, int line) {
 	AST_Node *treeNode = new_ast_node(node, nodeType, NULL, NULL, NULL, line);
 	
 	Stat *statR = new(Stat);
-	statR -> u.retCommand.exp00Node = n1;
+	statR -> u.returnExp00Node = n1;
 	statR -> typing = NULL;
 		
 	treeNode -> nodeStruct.stat = statR;
@@ -502,7 +502,7 @@ build_single_table (AST_Node *root)
 						
 			} else if( root -> nodeType == STAT_RETURN ) {
 				
-				build_single_table( root -> nodeStruct.stat -> u.retCommand.exp00Node);
+				build_single_table( root -> nodeStruct.stat -> u.returnExp00Node);
 					
 			} else {
 				

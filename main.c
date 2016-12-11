@@ -6,20 +6,20 @@
 #include "geracod.h"
 
 
-int yyparse();
-AST_Node *AST_Root;
-void print_tree(AST_Node *a, int tabIndex);
-const char* buffer[500];
-
+int yyparse ();
+void print_tree ( AST_Node *a, int tabIndex );
 void print_single_table ( Stack *mySingleTable );
-void build_single_table (AST_Node *a);
+void build_single_table ( AST_Node *a );
+Stack* single_table_create ();
+id_entry* single_table_find_current_scope ( Stack *single_table, const char *elemFound );
+void type_tree ( AST_Node *a );
+void initialBuffer ();
+void setFilename ( char *name );
+
+
+AST_Node *AST_Root;
 Stack *single_table;
-Stack* single_table_create (void);
-id_entry* single_table_find_current_scope (Stack *single_table, const char *elemFound);
-void initialBuffer( );
-
-void type_tree( AST_Node *a );
-
+const char* buffer[MAX_TAM];
 
 int main( int argc, char *argv[] ) {
 	
@@ -42,11 +42,12 @@ int main( int argc, char *argv[] ) {
 	type_tree(AST_Root);
 	
 	initialBuffer();
+	setFilename(argv[0]);
 	geraCodigo(AST_Root);
 
 	print_tree(AST_Root, 0);
 
 	fclose(file);
-	
+
 	return retParse;
 }
