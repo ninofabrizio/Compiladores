@@ -4,12 +4,10 @@
 #include "ast.h"
 
 typedef struct AST_Node AST_Node;
-
+typedef struct Typing Typing;
 typedef enum typeEnum typeEnum;
 
-typedef struct Typing Typing;
-
-extern void type_tree( AST_Node *a );
+extern void type_tree ( AST_Node *a );
 
 enum typeEnum {
 	

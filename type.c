@@ -194,9 +194,9 @@ convertTo ( Typing *type, typeEnum thisType ) {
 }
 
 
-// Creates a new Typing structure with it's respective value inside
+// Creates a new Typing structure with it's respective kind inside
 static Typing *
-createTypingValue ( typeEnum typeNum/*, valueEnum valueType, int intValue, float floatValue, const char *string*/ ) {
+createTypingValue ( typeEnum typeNum ) {
 
 	Typing *type = new(Typing);
 
@@ -207,27 +207,13 @@ createTypingValue ( typeEnum typeNum/*, valueEnum valueType, int intValue, float
 }
 
 
-// Creates a new Typing holding the result of a logic comparison between one or two Typings from expressions, converts their values if necessary
+// Creates a new Typing holding the logic value
 static Typing *
 logicExpressions ( Typing *type1, Typing *type2, nodeTypeEnum kind ) {
 
-	Typing *logic = new(Typing), *t1 = NULL, *t2 = NULL;
+	Typing *logic = new(Typing);
+
 	logic -> typeKind = INTEGER;
-
-	if(type1 -> typeKind != INTEGER)
-		t1 = convertTo(type1, INTEGER);
-	else
-		t1 = type1;
-		
-	if(type2 -> typeKind != INTEGER)
-		t2 = convertTo(type2, INTEGER);
-	else
-		t2 = type2;
-
-	if(type1 -> typeKind != INTEGER)
-		free(t1);
-	if(type2 -> typeKind != INTEGER)
-		free(t2);
 	
 	return logic;
 }
@@ -239,25 +225,24 @@ binaryExpressions( Typing *type1, Typing *type2, nodeTypeEnum kind ) {
 
 	Typing *binary = new(Typing), *t1 = NULL, *t2 = NULL;
 
-	if(type1 -> typeKind != type2 -> typeKind && type1 -> typeKind != FLOAT)
+	if(type1 -> typeKind != type2 -> typeKind) {
 		t1 = convertTo(type1, FLOAT);
-	else
-		t1 = type1;
-	
-	if(type1 -> typeKind != type2 -> typeKind && type2 -> typeKind != FLOAT)
 		t2 = convertTo(type2, FLOAT);
-	else
+	}
+	else {
+		t1 = type2;
 		t2 = type2;
+	}
 
 	if(t1 -> typeKind == INTEGER)
 		binary -> typeKind = INTEGER;
 	else 
 		binary -> typeKind = FLOAT;
 
-	if(type1 -> typeKind != FLOAT)
+	if(type1 -> typeKind != type2 -> typeKind) {
 		free(t1);
-	if(type2 -> typeKind != FLOAT)
 		free(t2);
+	}
 	
 	return binary;
 }
@@ -497,9 +482,9 @@ type_var( AST_Node *a ) {
 
 			if(a -> nodeStruct.var -> typing == NULL && a -> nodeStruct.var -> linkedVarNode != NULL) {
 				if(a -> nodeStruct.var -> linkedVarNode -> node == VAR)
-					a -> nodeStruct.var -> typing = a -> nodeStruct.var -> linkedVarNode -> nodeStruct.var -> typing;
+					a -> nodeStruct.var -> typing = createTypingValue(a -> nodeStruct.var -> linkedVarNode -> nodeStruct.var -> typing -> typeKind);
 				else if(a -> nodeStruct.var -> linkedVarNode -> node == DEF)
-					a -> nodeStruct.var -> typing = a -> nodeStruct.var -> linkedVarNode -> nodeStruct.def -> u.defVar -> varListNode -> nodeStruct.var -> typing;
+					a -> nodeStruct.var -> typing = createTypingValue(a -> nodeStruct.var -> linkedVarNode -> nodeStruct.def -> u.defVar -> varListNode -> nodeStruct.var -> typing -> typeKind);
 			}
 		}
 		else if ( a -> nodeType == VAR_INDEXED ) {
@@ -704,10 +689,9 @@ type_def ( AST_Node *a ) {
 		
 		if( a -> nodeType == DEF_VAR ) {
 			
-			type_var(a -> nodeStruct.def -> u.defVar -> varListNode);
+			a -> nodeStruct.def -> u.defVar -> varListNode -> nodeStruct.var -> typing = getTypingFromType(a -> nodeStruct.def -> u.defVar -> dataTypeNode);
 
-			if(a -> nodeStruct.def -> u.defVar -> varListNode -> nodeStruct.var -> typing == NULL)
-				a -> nodeStruct.def -> u.defVar -> varListNode -> nodeStruct.var -> typing = getTypingFromType(a -> nodeStruct.def -> u.defVar -> dataTypeNode);
+			type_var(a -> nodeStruct.def -> u.defVar -> varListNode);
 		}
 		else if( a -> nodeType == DEF_FUNC )  {
 

@@ -149,9 +149,9 @@ struct Var {
 	
 	Typing *typing;
 
-	AST_Node *nextVarNode;	
+	AST_Node *nextVarNode; // This is for a sequence of variables (ex.: "int a, b, c;")
 	
-	AST_Node *linkedVarNode;
+	AST_Node *linkedVarNode; // This is for the linking
 	
 	const char *varName;
 

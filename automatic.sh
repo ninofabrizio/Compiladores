@@ -1,15 +1,14 @@
 #! /bin/bash
-#echo "ARVORE SINTATICA:\n"
+#echo "LLVM:\n"
 
-for file in ast_examples/*.in
+for file in llvm_examples/*.monga
 do
     filename=$(basename "$file")
     filename="${filename%.*}"
 
-	#echo "\n++++++PRINTANDO ARVORE DE $filename\n"
+	#echo "\n++++++MONTANDO LLVM DE $filename\n"
 
-    ./tester ast_examples/$filename.in
+    ./tester llvm_examples/$filename.monga
 
-	#echo "\n*****FIM DA ARVORE SINTATICA*****\n\n\n\n\n"
+	#echo "\n*****$filename.ll GERADO*****\n\n\n\n\n"
 done
-

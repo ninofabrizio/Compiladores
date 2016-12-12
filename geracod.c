@@ -7,16 +7,14 @@ static void geracod_stat ( AST_Node *a );
 static void geracod_def ( AST_Node *root );
 static void geracod_var ( AST_Node *a );
 static void geracod_exp ( AST_Node *a );
-static void geracod_stat ( AST_Node *a );
 static void geracod_param ( Param *param );
 static void geracod_call ( Call *funcCall );
-void printBuffer ();
+static void geracod_block ( AST_Node *a );
 
 
 void initialBuffer () {
 	
 	int i;
-	
 	for ( i = 0; i < MAX_TAM; i++ )
 		buffer[i] = NULL;
 }
@@ -25,7 +23,6 @@ void initialBuffer () {
 int getIndexBuffer () {
 	
 	int i;
-
 	for ( i = 0; i < MAX_TAM; i++ )
 		if ( buffer [i] == NULL)
 			break;
@@ -43,10 +40,8 @@ const char* getBitsToNumber ( AST_Node *a ) {
 
 	if ( a -> nodeType == TYPE_INT )
 		return "i32";
-
 	else if ( a -> nodeType == TYPE_FLOAT )
 		return "f32";
-
 	else
 		return "i8";
 }
@@ -94,6 +89,45 @@ void setFilename( char *name ) {
 }
 
 
+const char * getTyping ( Typing *typing ) {
+
+	if(typing -> typeKind == INTEGER)
+		return "i32";
+	else if(typing -> typeKind == FLOAT)
+		return "f32";
+	else if(typing -> typeKind == VOID)
+		return "void";
+	else if(typing -> typeKind == ARRAY) {
+		
+	}
+	else if(typing -> typeKind == STRING_TYPE) {
+		
+	}
+
+	return NULL;
+}
+
+
+void geracod_varDef ( AST_Node *a ) {
+
+	if(a != NULL) {
+		
+		buffer[getIndexBuffer()] = " ";
+
+		geracod_var(a);
+
+		buffer[getIndexBuffer()] = " = alloca ";
+		buffer[getIndexBuffer()] = getTyping(a -> nodeStruct.var -> typing);
+		buffer[getIndexBuffer()] = "\n";
+
+		printBuffer();
+		initialBuffer();
+
+		geracod_varDef(a -> nodeStruct.var -> nextVarNode);
+	}
+}
+
+
 void geraCodigo ( AST_Node *root ) {
 
  	if( root != NULL )
@@ -111,10 +145,7 @@ void geraCodigo ( AST_Node *root ) {
 
 static void geracod_def_var ( DefVar *a ) {
 
-
-
-
-
+	
 }
 
 
@@ -133,26 +164,76 @@ static void geracod_stat ( AST_Node *a ) {
 		}
 		else if( a -> nodeType == STAT_ASSIGN ) {
 
+			buffer[getIndexBuffer()] =  " store ";
+			buffer[getIndexBuffer()] = getTyping(a -> nodeStruct.stat -> u.assign.exp00Node -> nodeStruct.exp -> typing);
+			buffer[getIndexBuffer()] =  " ";
+
+			geracod_exp(a -> nodeStruct.stat -> u.assign.exp00Node);
+
+			buffer[getIndexBuffer()] =  ", ";
+			buffer[getIndexBuffer()] = getTyping(a -> nodeStruct.stat -> u.assign.varNode -> nodeStruct.var -> typing);
+			buffer[getIndexBuffer()] =  "* ";
+
+			geracod_var(a -> nodeStruct.stat -> u.assign.varNode);
+
+			buffer[getIndexBuffer()] =  "\n";
+
+			printBuffer();
+			initialBuffer();
 		}
 		else if( a -> nodeType == STAT_RETURN ) {
 
-			buffer[getIndexBuffer()] =  " ret ";
+			if( a -> nodeStruct.stat -> u.returnExp00Node -> nodeType == EXPR_INT || a -> nodeStruct.stat -> u.returnExp00Node -> nodeType == EXPR_HEXA
+				|| a -> nodeStruct.stat -> u.returnExp00Node -> nodeType == EXPR_CHAR || a -> nodeStruct.stat -> u.returnExp00Node -> nodeType == EXPR_FLOAT) {
+				buffer[getIndexBuffer()] =  " ret";
+				buffer[getIndexBuffer()] = getTyping(a -> nodeStruct.stat -> u.returnExp00Node -> nodeStruct.exp -> typing);
 
-			geracod_exp(a -> nodeStruct.stat -> u.returnExp00Node);
+				geracod_exp(a -> nodeStruct.stat -> u.returnExp00Node);
+			}
+			else {
+
+				geracod_exp(a -> nodeStruct.stat -> u.returnExp00Node);
+				buffer[getIndexBuffer()] =  "\n ret ";
+				buffer[getIndexBuffer()] = getTyping(a -> nodeStruct.stat -> u.returnExp00Node -> nodeStruct.exp -> typing);
+				buffer[getIndexBuffer()] = " ";
+				buffer[getIndexBuffer()] = lastTemp;
+			}
 		}
 		else if( a -> nodeType == STAT_FUNC_CALL ) {
+
+		}
+
+		geracod_stat(a->left);
+	}
+}
+
+
+static void  geracod_var ( AST_Node *a ){ 
+
+	if(a != NULL) {
+
+		if(a -> nodeType == VAR_UNIQUE) {
+			
+			char varValue[50];
+			strcpy(varValue, "%");
+			strcat(varValue, a -> nodeStruct.var -> varName);
+			buffer[getIndexBuffer()] = varValue;
+
+			printBuffer();
+			initialBuffer();
+		}
+		else if(a -> nodeType == VAR_INDEXED) {
 
 		}
 	}
 }
 
 
-static void  geracod_var ( AST_Node *a ){ }
-
-
 static void geracod_exp ( AST_Node *a ){ 
 
 	if( a != NULL ) {
+
+		char expValue[50];
 
 		if ( a -> nodeType == EXPR_VAR ) {
 			
@@ -174,8 +255,7 @@ static void geracod_exp ( AST_Node *a ){
 		}
 		else if ( a -> nodeType == EXPR_INT || a -> nodeType == EXPR_HEXA || a -> nodeType == EXPR_CHAR ) {
 
-			char expValue[20];
-			int n = sprintf(expValue, "i32 %d\n", a -> nodeStruct.exp -> u.ki);
+			int n = sprintf(expValue, "%d", a -> nodeStruct.exp -> u.ki);
 			buffer[getIndexBuffer()] = expValue;
 
 			printBuffer();
@@ -229,25 +309,43 @@ static void geracod_exp ( AST_Node *a ){
 			geracod_exp(a->left);
 			geracod_exp(a->right);
 		}
-		else if ( a -> nodeType == EXPR_ADD ) {
+		else if ( a -> nodeType == EXPR_ADD || a -> nodeType == EXPR_MIN
+				|| a -> nodeType == EXPR_MUL || a -> nodeType == EXPR_DIV ) {
 			
+			int n = sprintf(lastTemp, "%%myt%d", countTemp);
+			countTemp++;
+			strcpy(expValue, " ");
+			strcat(expValue, lastTemp);
+			strcat(expValue, " =");
+			buffer[getIndexBuffer()] = expValue;
+
+			if(a -> nodeStruct.exp -> typing -> typeKind == INTEGER) {
+				if(a -> nodeType == EXPR_ADD)
+					buffer[getIndexBuffer()] = " add i32 ";
+				else if(a -> nodeType == EXPR_MIN)
+					buffer[getIndexBuffer()] = " sub i32 ";
+				else if(a -> nodeType == EXPR_MUL)
+					buffer[getIndexBuffer()] = " mul i32 ";
+				else if(a -> nodeType == EXPR_DIV)
+					buffer[getIndexBuffer()] = " sdiv i32 "; // signed division
+			}
+			else if(a -> nodeStruct.exp -> typing -> typeKind == FLOAT) { // not sure if correct
+				if(a -> nodeType == EXPR_ADD)
+					buffer[getIndexBuffer()] = " fadd float ";
+				else if(a -> nodeType == EXPR_MIN)
+					buffer[getIndexBuffer()] = " fsub float ";
+				else if(a -> nodeType == EXPR_MUL)
+					buffer[getIndexBuffer()] = " fmul float ";
+				else if(a -> nodeType == EXPR_DIV)
+					buffer[getIndexBuffer()] = " fdiv float ";
+			}
+
 			geracod_exp(a->left);
+			buffer[getIndexBuffer()] = ", ";
 			geracod_exp(a->right);
-		}
-		else if ( a -> nodeType == EXPR_MIN ) {
-			
-			geracod_exp(a->left);
-			geracod_exp(a->right);
-		}
-		else if ( a -> nodeType == EXPR_MUL ) {
-			
-			geracod_exp(a->left);
-			geracod_exp(a->right);
-		}
-		else if ( a -> nodeType == EXPR_DIV ) {
-			
-			geracod_exp(a->left);
-			geracod_exp(a->right);
+
+			printBuffer();
+			initialBuffer();
 		}
 		else if ( a -> nodeType == EXPR_NOT ) {
 			
@@ -261,11 +359,11 @@ static void geracod_exp ( AST_Node *a ){
 }
 	
 
-static void geracod_def ( AST_Node *root ) {
+static void geracod_def ( AST_Node *a ) {
 	
-	if( root != NULL ) {
+	if( a != NULL ) {
 								
-		if( root -> nodeType == DEF_FUNC ) {
+		if( a -> nodeType == DEF_FUNC ) {
 				
 			char labelValue[10];
 			int n;
@@ -277,17 +375,17 @@ static void geracod_def ( AST_Node *root ) {
 			buffer[getIndexBuffer()] =  labelValue;
 			buffer[getIndexBuffer()] = ":\ndefine ";
 				
-			if ( root -> nodeStruct.def -> u.func.tagReturnType == 0 )
-				buffer[getIndexBuffer()] =  "void";
+			if ( a -> nodeStruct.def -> u.func.tagReturnType == 0 )
+				buffer[getIndexBuffer()] =  " void ";
 			else
-				buffer[getIndexBuffer()] = getBitsToNumber( root -> nodeStruct.def -> u.func.ret.dataTypeNode );
+				buffer[getIndexBuffer()] = getBitsToNumber( a -> nodeStruct.def -> u.func.ret.dataTypeNode );
 				
 			buffer[getIndexBuffer()] = " @";
-			buffer[getIndexBuffer()] = root -> nodeStruct.def -> u.func.funcName;
+			buffer[getIndexBuffer()] = a -> nodeStruct.def -> u.func.funcName;
 			buffer[getIndexBuffer()] = "(";
 
-			if(root -> nodeStruct.def -> u.func.param != NULL)
-				geracod_param(root -> nodeStruct.def -> u.func.param);
+			if(a -> nodeStruct.def -> u.func.param != NULL)
+				geracod_param(a -> nodeStruct.def -> u.func.param);
 
 			buffer[getIndexBuffer()] = ") {\n";
 			
@@ -297,22 +395,35 @@ static void geracod_def ( AST_Node *root ) {
 			n = sprintf(labelValue, "L%d:\n", currentLabel);
 			currentLabel++;
 			buffer[getIndexBuffer()] =  labelValue;
-				
-			geracod_def_var(root -> nodeStruct.def -> u.defVar);
-			geracod_stat(root -> nodeStruct.def -> u.func.block);
 
-			if(root -> nodeStruct.def -> u.func.tagReturnType == 0 && root -> nodeStruct.def -> u.func.block == NULL)
-				buffer[getIndexBuffer()] =  " ret void\n";
+			geracod_block(a -> nodeStruct.def -> u.func.block);
 
-			buffer[getIndexBuffer()] = "}";
+			if(a -> nodeStruct.def -> u.func.tagReturnType == 0 && a -> nodeStruct.def -> u.func.block == NULL)
+				buffer[getIndexBuffer()] =  " ret void";
+
+			buffer[getIndexBuffer()] = "\n}";
 		}
-		else if( root -> nodeType == DEF_VAR ) {
+		else if( a -> nodeType == DEF_VAR ) {
 
-
+			geracod_varDef(a -> nodeStruct.def -> u.defVar -> varListNode);
 		}
 	}
 }
 
+
+static void geracod_block ( AST_Node *a ) {
+
+	if( a != NULL ) {
+		
+		if ( a -> nodeType == DEF_VAR ) {
+			
+			geracod_def(a);
+			geracod_stat(a->right);
+		}
+		else if( a -> node == STAT )
+			geracod_stat(a);
+	}
+}
 
 static void geracod_param ( Param *param ) {
 

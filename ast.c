@@ -415,14 +415,19 @@ build_single_table (AST_Node *root)
 	
 		if ( root -> node == DEF ) {
 	
-			if ( root -> nodeType == DEF_VAR )
-		
-				for ( var = root -> nodeStruct.def -> u.defVar -> varListNode; var != NULL; var = var -> nodeStruct.var -> nextVarNode ) 
+			if ( root -> nodeType == DEF_VAR ) {
+
+				single_table_insert_current_scope (single_table,
+													root -> nodeStruct.def -> u.defVar -> varListNode -> nodeStruct.var -> varName,
+													root,
+													&present);
+
+				for ( var = root -> nodeStruct.def -> u.defVar -> varListNode -> nodeStruct.var -> nextVarNode; var != NULL; var = var -> nodeStruct.var -> nextVarNode ) {
 			
-					single_table_insert_current_scope (single_table,
-													   var -> nodeStruct.var -> varName, 
-													   root, 
-													   &present);			
+					single_table_insert_current_scope (single_table, var -> nodeStruct.var -> varName, root, &present);
+					var -> nodeStruct.var -> linkedVarNode = root;
+				}
+			}
 			else {
 					
 				
