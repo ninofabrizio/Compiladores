@@ -1,5 +1,9 @@
-int number() {
+int number(int c, int d) {
 	int a, b;
-	a = 5;
-	return 4/2;
+	a = 5 * 2;
+	return d;
+}
+
+int main(){
+	return number(6, 4);
 }

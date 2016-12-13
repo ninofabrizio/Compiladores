@@ -456,6 +456,7 @@ type_exp ( AST_Node *a, typeList *arguments ) {
 				arguments = tempList;
 			}
 			else {
+				type_exp(a -> nodeStruct.exp -> nextExpNode, arguments); // the last exp typing must exist first...
 				tempList -> typing = a -> nodeStruct.exp -> nextExpNode -> nodeStruct.exp -> typing;
 				tempList -> nextTypingNode = NULL;
 
@@ -464,8 +465,8 @@ type_exp ( AST_Node *a, typeList *arguments ) {
 			}
 		}
 		else if(a -> nodeStruct.exp -> nextExpNode == NULL && arguments != NULL && arguments -> typing == NULL) {
-			arguments -> typing = a -> nodeStruct.exp -> typing;
-			arguments -> nextTypingNode = NULL;
+				arguments -> typing = a -> nodeStruct.exp -> typing;
+				arguments -> nextTypingNode = NULL;
 		}
 
 		type_exp(a -> nodeStruct.exp -> nextExpNode, arguments);
