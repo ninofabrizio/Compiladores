@@ -1,9 +1,14 @@
+int one (int v) {
+	return 1;
+}
+
 int number(int c, int d) {
 	int a, b;
-	a = 5 * 2;
-	return d;
+	b = one(1);
+	a = d + c;
+	return a - b;
 }
 
 int main(){
-	return number(6, 4);
+	return number(-6, 4 / one(5000));
 }

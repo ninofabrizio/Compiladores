@@ -20,8 +20,9 @@ static Typing * createTypingValue ( typeEnum type );
 static Typing * logicExpressions ( Typing *type1, Typing *type2, nodeTypeEnum kind );
 static Typing * binaryExpressions ( Typing *type1, Typing *type2, nodeTypeEnum kind );
 static int notOfType ( typeEnum type, typeEnum comparison );
-static void verifyIfLiterals ( Typing *type1, Typing *type2, const char* enumT, int line );
+static void verifyIfLiteralsOrVoid ( Typing *type1, Typing *type2, const char* enumT, int line );
 static void getParametersList ( typeList * funcParameters, AST_Node *funcDefNode );
+static char* getType ( typeEnum typeKind );
 
 #define new(T) ((T*)myMalloc(sizeof(T)))
 
@@ -101,7 +102,7 @@ verifyTypeList ( Typing *type, typeList *types ) {
 	typeList *temp = NULL;
 	int ret = 1;
 
-	if(types -> typing != NULL && type -> typeKind != VOID) {
+	if(types -> typing != NULL) {
 		while(types != NULL && types -> typing != NULL && ret == 1) {
 
 			ret = verifySameType(type, types -> typing);
@@ -111,8 +112,7 @@ verifyTypeList ( Typing *type, typeList *types ) {
 			types = temp;
 		}
 	}
-	else if((types -> typing == NULL && type -> typeKind != VOID)
-			|| (types -> typing != NULL && type -> typeKind == VOID))
+	else if(types -> typing == NULL && type -> typeKind != VOID)
 		ret = 0;
 
 	if(types != NULL) {
@@ -256,13 +256,18 @@ notOfType ( typeEnum type, typeEnum comparison ) {
 }
 
 
-// Stops the program if one of the expressions' typings in a binary expression is STRING_TYPE
+// Stops the program if one of the expressions' typings in a binary expression is STRING_TYPE or VOID
 static void
-verifyIfLiterals ( Typing *type1, Typing *type2, const char* enumT, int line ) {
+verifyIfLiteralsOrVoid ( Typing *type1, Typing *type2, const char* enumT, int line ) {
 
 	if(type1 -> typeKind == STRING_TYPE || type2 -> typeKind == STRING_TYPE) {
 
 		printf("\n%s ONE OF THE EXPS IS LITERAL\tLINE: %d\n", enumT, line);
+		exit(0);
+	}
+	else if(type1 -> typeKind == VOID || type2 -> typeKind == VOID) {
+
+		printf("\n%s ONE OF THE EXPS IS VOID\tLINE: %d\n", enumT, line);
 		exit(0);
 	}
 }
@@ -324,6 +329,37 @@ getParametersList ( typeList * funcParameters, AST_Node *funcDefNode ) {
 }
 
 
+// Returns a string representing the name of the typeKind enum, or NULL if there's none (that's an internal error)
+static char*
+getType ( typeEnum typeKind ) {
+
+	char *type;
+
+	switch(typeKind) {
+		case INTEGER:
+			type = "INTEGER";
+			break;
+		case FLOAT:
+			type = "FLOAT";
+			break;
+		case VOID:
+			type = "VOID";
+			break;
+		case ARRAY:
+			type = "ARRAY";
+			break;
+		case STRING_TYPE:
+			type = "STRING_TYPE";
+			break;
+		default:
+			type = NULL;
+			break;
+	}
+
+	return type;
+}
+
+
 static void
 type_exp ( AST_Node *a, typeList *arguments ) {
 
@@ -362,7 +398,7 @@ type_exp ( AST_Node *a, typeList *arguments ) {
 
 			if(notOfType(temp -> typeKind, INTEGER)) {
 
-				printf("\nEXPR_NEW EXP IN THE RIGHT IS NOT INTEGER\tEXP ENUM TYPE: %d\tLINE: %d\n", temp -> typeKind, a -> line);
+				printf("\nEXPR_NEW EXP IN THE RIGHT IS NOT INTEGER\tEXP TYPE: %s\tLINE: %d\n", getType(temp -> typeKind), a -> line);
 				exit(0);
 			}
 
@@ -416,7 +452,7 @@ type_exp ( AST_Node *a, typeList *arguments ) {
 			type_exp(a->left, NULL);
 			type_exp(a->right, NULL);
 
-			verifyIfLiterals(a -> left -> nodeStruct.exp -> typing, a -> right -> nodeStruct.exp -> typing, exprType, a -> line);
+			verifyIfLiteralsOrVoid(a -> left -> nodeStruct.exp -> typing, a -> right -> nodeStruct.exp -> typing, exprType, a -> line);
 
 			a -> nodeStruct.exp -> typing = binaryExpressions(a -> left -> nodeStruct.exp -> typing, a -> right -> nodeStruct.exp -> typing, a -> nodeType);
 		}
@@ -495,7 +531,7 @@ type_var( AST_Node *a ) {
 
 			if(notOfType(a -> right -> nodeStruct.exp -> typing -> typeKind, INTEGER)) {
 
-				printf("\nVAR_INDEXED EXP IN THE RIGHT IS NOT INTEGER\tEXP ENUM TYPE: %d\tLINE: %d\n", a -> right -> nodeStruct.exp -> typing -> typeKind, a -> line);
+				printf("\nVAR_INDEXED EXP IN THE RIGHT IS NOT INTEGER\tEXP TYPE: %s\tLINE: %d\n", getType(a -> right -> nodeStruct.exp -> typing -> typeKind), a -> line);
 				exit(0);
 			}
 
@@ -592,7 +628,7 @@ type_stat ( AST_Node *a, typeList *retList ) {
 
 			if(verifySameType(t1, t2) == 0) {
 
-				printf("\nSTAT_ASSIGN VAR AND EXP ARE NOT THE SAME TYPE\tVAR ENUM TYPE: %d\tEXP ENUM TYPE: %d\tLINE: %d\n", t1 -> typeKind, t2 -> typeKind, a -> line);
+				printf("\nSTAT_ASSIGN VAR AND EXP ARE NOT THE SAME TYPE\tVAR TYPE: %s\tEXP TYPE: %s\tLINE: %d\n", getType(t1 -> typeKind), getType(t2 -> typeKind), a -> line);
 				exit(0);
 			}
 		}
