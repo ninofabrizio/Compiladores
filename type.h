@@ -13,6 +13,7 @@ enum typeEnum {
 	
 	INTEGER,
 	FLOAT,
+	CHARACTER,
 	VOID,
 	ARRAY,
 	STRING_TYPE

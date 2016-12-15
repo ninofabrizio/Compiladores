@@ -58,60 +58,60 @@
 %%
 
 
-program: definitions { $$ = $1; AST_Root = $$; } 
+program: definitions { $$ = $1; AST_Root = $$; }
 ; 
 
 
 
-definitions: definition definitions	{ $$ = connect_node_left( $1, $2 ); } 
-			| { $$ = NULL; } 
+definitions: definition definitions	{ $$ = /*connect_node_left($1, $2);*/ connect_definitions($1, $2); }
+			| { $$ = NULL; }
 ;
 
 
 
 definition: varDefinition	{ $$ = $1; }
-			| funcDefinition	{ $$ = $1; } 
+			| funcDefinition	{ $$ = $1; }
 ;
 
 
 
-varDefinition: type nameList ';'  { $$ = new_ast_defVariable_node(DEF, DEF_VAR, $1, $2); } 
+varDefinition: type nameList ';'  { $$ = new_ast_defVariable_node(DEF, DEF_VAR, $1, $2); }
 ; 
 
 
 
-nameList: TK_ID nameSequence	{ $$ = new_ast_variable_node(VAR, VAR_UNIQUE, $1, NULL, NULL, $2, currentLine); } 
+nameList: TK_ID nameSequence	{ $$ = new_ast_variable_node(VAR, VAR_UNIQUE, $1, NULL, NULL, $2, currentLine); }
 ;
 
 
 
 nameSequence: ',' TK_ID nameSequence	{ $$ = new_ast_variable_node(VAR, VAR_UNIQUE, $2, NULL, NULL, $3, currentLine); } 
-				|	{ $$ = NULL; } 
+				|	{ $$ = NULL; }
 ;
 
 
 
-type: baseType	{ $$ = $1; } 
-		| type '[' ']'	{ $$ = isArrayType($1); } 
+type: baseType	{ $$ = $1; }
+		| type '[' ']'	{ $$ = isArrayType($1); }
 ;
 
 
 
-baseType: TK_WORD_INT	{ $$ = new_ast_type_node(TYPE, TYPE_INT, "int", currentLine); } 
+baseType: TK_WORD_INT	{ $$ = new_ast_type_node(TYPE, TYPE_INT, "int", currentLine); }
 			| TK_WORD_CHAR	{ $$ = new_ast_type_node(TYPE, TYPE_CHAR, "char", currentLine); }
-			| TK_WORD_FLOAT	{ $$ = new_ast_type_node(TYPE, TYPE_FLOAT, "float", currentLine); } 
+			| TK_WORD_FLOAT	{ $$ = new_ast_type_node(TYPE, TYPE_FLOAT, "float", currentLine); }
 ;
 
 
 
 funcDefinition: TK_WORD_VOID TK_ID '(' parameters ')' block	{ $$ = new_func_def( "void", $2, $4, $6, NULL, currentLine ); }
 
-				| type  TK_ID '(' parameters ')' block { $$ = new_func_def( NULL, $2, $4, $6, $1, currentLine ); } 
+				| type  TK_ID '(' parameters ')' block { $$ = new_func_def( NULL, $2, $4, $6, $1, currentLine ); }
 ;
 
 
-parameters: parameter parametersSequence { $$ = connect_param_list( $1, $2 ); } 
-			|	{ $$ = NULL; } 
+parameters: parameter parametersSequence { $$ = connect_param_list( $1, $2 ); }
+			|	{ $$ = NULL; }
 ;
 
 

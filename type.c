@@ -59,8 +59,10 @@ getTypingFromType ( AST_Node *a ) {
 
 		typing = new(Typing);
 
-		if(a -> nodeType == TYPE_INT || a -> nodeType == TYPE_CHAR)
+		if(a -> nodeType == TYPE_INT)
 			typing -> typeKind = INTEGER;
+		else if(a -> nodeType == TYPE_CHAR)
+			typing -> typeKind = CHARACTER;
 		else if(a -> nodeType == TYPE_FLOAT)
 			typing -> typeKind = FLOAT;
 
@@ -175,20 +177,23 @@ verifyFuncParameters ( typeList *parameters, typeList *arguments ) {
 }
 
 
-// Returns a new Typing structure with a converted value to integer or float
+// Returns a new Typing structure with a converted value of wanted type
 static Typing *
 convertTo ( Typing *type, typeEnum thisType ) {
 
-	Typing *temp = type;
-	Typing *convertedTyping = new(Typing);
+	Typing *convertedTyping = new(Typing), *temp1 = type;
 
-	while(temp -> typeKind == ARRAY)
-		temp = temp -> nextTyping;
+	convertedTyping -> typeKind = thisType;
 
-	if(thisType == INTEGER)
-		convertedTyping -> typeKind = INTEGER;
-	else
-		convertedTyping -> typeKind = FLOAT;
+	while(temp1 != NULL && temp1 -> typeKind == ARRAY) {
+
+		Typing *temp2 = new(Typing);
+		temp2 -> typeKind = ARRAY;
+		temp2 -> nextTyping = convertedTyping;
+		convertedTyping = temp2;
+
+		temp1 = temp1 -> nextTyping;
+	}
 
 	return convertedTyping;
 }
@@ -233,6 +238,12 @@ binaryExpressions( Typing *type1, Typing *type2, nodeTypeEnum kind ) {
 		t1 = type2;
 		t2 = type2;
 	}
+
+	while(t1 -> typeKind == ARRAY)
+		t1 = t1 -> nextTyping;
+
+	while(t2 -> typeKind == ARRAY)
+		t2 = t2 -> nextTyping;
 
 	if(t1 -> typeKind == INTEGER)
 		binary -> typeKind = INTEGER;
@@ -339,6 +350,9 @@ getType ( typeEnum typeKind ) {
 		case INTEGER:
 			type = "INTEGER";
 			break;
+		case CHARACTER:
+			type = "CHARACTER";
+			break;
 		case FLOAT:
 			type = "FLOAT";
 			break;
@@ -374,7 +388,7 @@ type_exp ( AST_Node *a, typeList *arguments ) {
 
 			temp = a -> nodeStruct.exp -> u.varNode -> nodeStruct.var -> typing;
 
-			while(temp -> typeKind == ARRAY)
+			while(temp -> nextTyping != NULL && temp -> typeKind == ARRAY)
 				temp = temp -> nextTyping;
 
 			a -> nodeStruct.exp -> typing = createTypingValue(temp -> typeKind);
@@ -481,6 +495,9 @@ type_exp ( AST_Node *a, typeList *arguments ) {
 			exit(0);
 		}
 
+		if(a -> nodeStruct.exp -> typing -> typeKind == CHARACTER) // Promoting exp from "char" to "int"
+			a -> nodeStruct.exp -> typing -> typeKind = INTEGER;
+
 		if(a -> nodeStruct.exp -> nextExpNode != NULL && arguments != NULL) {
 
 			tempList = new(typeList);
@@ -583,10 +600,10 @@ type_stat ( AST_Node *a, typeList *retList ) {
 			type_exp(a -> nodeStruct.stat -> u.whileLoop.exp00Node, NULL);
 			type_stat(a -> nodeStruct.stat -> u.whileLoop.commandListNode, retList);
 
-			t1 = a -> nodeStruct.stat -> u.whileLoop.exp00Node -> nodeStruct.exp -> typing;
+			//t1 = a -> nodeStruct.stat -> u.whileLoop.exp00Node -> nodeStruct.exp -> typing;
 
-			if(notOfType(t1 -> typeKind, INTEGER))
-				t1 = convertTo(t1, INTEGER);
+			//if(notOfType(t1 -> typeKind, INTEGER))
+			//	t1 = convertTo(t1, INTEGER);
 
 			type = createTypingValue(INTEGER);
 			a -> nodeStruct.stat -> typing = type;
@@ -596,10 +613,10 @@ type_stat ( AST_Node *a, typeList *retList ) {
 			type_exp(a -> nodeStruct.stat -> u.ifCondition.exp00Node, NULL);
 			type_stat(a -> nodeStruct.stat -> u.ifCondition.block, retList);
 
-			t1 = a -> nodeStruct.stat -> u.ifCondition.exp00Node -> nodeStruct.exp -> typing;
+			//t1 = a -> nodeStruct.stat -> u.ifCondition.exp00Node -> nodeStruct.exp -> typing;
 
-			if(notOfType(t1 -> typeKind, INTEGER))
-				t1 = convertTo(t1, INTEGER);
+			//if(notOfType(t1 -> typeKind, INTEGER))
+			//	t1 = convertTo(t1, INTEGER);
 
 			type = createTypingValue(INTEGER);
 			a -> nodeStruct.stat -> typing = type;
@@ -610,10 +627,10 @@ type_stat ( AST_Node *a, typeList *retList ) {
 			type_stat(a -> nodeStruct.stat -> u.ifCondition.block, retList);
 			type_stat(a -> nodeStruct.stat -> u.ifCondition.elseNo, retList);
 
-			t1 = a -> nodeStruct.stat -> u.ifCondition.exp00Node -> nodeStruct.exp -> typing;
+			//t1 = a -> nodeStruct.stat -> u.ifCondition.exp00Node -> nodeStruct.exp -> typing;
 
-			if(notOfType(t1 -> typeKind, INTEGER))
-				t1 = convertTo(t1, INTEGER);
+			//if(notOfType(t1 -> typeKind, INTEGER))
+			//	t1 = convertTo(t1, INTEGER);
 
 			type = createTypingValue(INTEGER);
 			a -> nodeStruct.stat -> typing = type;
@@ -631,28 +648,38 @@ type_stat ( AST_Node *a, typeList *retList ) {
 				printf("\nSTAT_ASSIGN VAR AND EXP ARE NOT THE SAME TYPE\tVAR TYPE: %s\tEXP TYPE: %s\tLINE: %d\n", getType(t1 -> typeKind), getType(t2 -> typeKind), a -> line);
 				exit(0);
 			}
+
+			a -> nodeStruct.stat -> typing = createTypingValue(INTEGER);
 		}
 		else if( a -> nodeType == STAT_RETURN ) {
 			
 			type_exp(a -> nodeStruct.stat -> u.returnExp00Node, NULL);
 
-			if(a -> nodeStruct.stat -> u.returnExp00Node != NULL) {
-				t1 = a -> nodeStruct.stat -> u.returnExp00Node -> nodeStruct.exp -> typing;
+			if(a -> nodeStruct.stat -> u.returnExp00Node != NULL)
+				a -> nodeStruct.stat -> typing = createTypingValue( a -> nodeStruct.stat -> u.returnExp00Node -> nodeStruct.exp -> typing -> typeKind);
+			else
+				a -> nodeStruct.stat -> typing = createTypingValue(VOID);
 
-				if(retList -> typing == NULL) {
-					retList -> typing = t1;
-				}
-				else {
-					tempList = new(typeList);
-					tempList -> typing = t1;
-					tempList -> nextTypingNode = retList;
-					retList = tempList;
-				}
+			t1 = a -> nodeStruct.stat -> typing;
+
+			if(retList -> typing == NULL) {
+				retList -> typing = t1;
+			}
+			else {
+				tempList = new(typeList);
+				tempList -> typing = t1;
+				tempList -> nextTypingNode = retList;
+				retList = tempList;
 			}
 		}
 		else if( a -> nodeType == STAT_FUNC_CALL ) {
 		
 			type_call(a -> nodeStruct.stat -> u.callFunc);
+
+			if(a -> nodeStruct.stat -> u.callFunc -> linkedFuncNode -> nodeStruct.def -> u.func.tagReturnType == 1)
+				a -> nodeStruct.stat -> typing = getTypingFromType(a -> nodeStruct.stat -> u.callFunc -> linkedFuncNode -> nodeStruct.def -> u.func.ret.dataTypeNode);
+			else
+				a -> nodeStruct.stat -> typing = createTypingValue(VOID);
 		}
 		else {
 
@@ -759,6 +786,9 @@ type_def ( AST_Node *a ) {
 		}
 
 		type_tree(a->left);
+
+		if(a -> nodeType == DEF_VAR && a -> nodeStruct.def -> u.defVar -> varListNode -> nodeStruct.var -> isGlobal == T)
+			type_tree(a->right);
 	}
 }
 

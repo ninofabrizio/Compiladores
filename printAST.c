@@ -18,6 +18,8 @@ printTyping ( Typing *typing ) {
 		}
 		else if(typing -> typeKind == INTEGER)
 			printf("INTEGER\n");
+		else if(typing -> typeKind == CHARACTER)
+			printf("CHARACTER\n");
 		else if(typing -> typeKind == FLOAT)
 			printf("FLOAT\n");
 		else if(typing -> typeKind == VOID)
@@ -499,7 +501,9 @@ print_def ( AST_Node *a, int tabIndex ) {
 		printf("}\n");
 
 		print_tree(a->left, tabIndex);
-		//print_tree(a->right, tabIndex);
+		
+		if(a -> nodeType == DEF_VAR && a -> nodeStruct.def -> u.defVar -> varListNode -> nodeStruct.var -> isGlobal == true)
+			print_tree(a -> right, tabIndex);
 	
 		free(a -> nodeStruct.def);
 		free(a);
@@ -517,7 +521,6 @@ print_tree ( AST_Node *a, int tabIndex ) {
 			case EXPR: print_exp(a, tabIndex); break;
 			case STAT: print_stat(a, tabIndex); break;	   
 			case TYPE: print_type(a, tabIndex); break;
-	   	 	default: fprintf(stderr, "AST PRINTING ERROR: UNKNOWN NODE \"%c\"\n", a->nodeType); 
-			exit(0);
+	   	 	default: fprintf(stderr, "AST PRINTING ERROR: UNKNOWN NODE \"%c\"\n", a->nodeType); exit(0);
 	 	}
 }

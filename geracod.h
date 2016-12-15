@@ -13,8 +13,6 @@ char lastTemp[50];
 
 void geraCodigo ( AST_Node *root );
 extern void initialBuffer ();
-extern void setFilename( char *name );
-
-static void printLabelInstruction ();
+extern void setFilename ( char *name );
 
 #endif

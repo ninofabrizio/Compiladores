@@ -26,25 +26,26 @@ AST_Node* new_ast_expInteger_node ( int node, int node_type, int value, int line
 AST_Node* new_ast_expFloat_node ( int node, int node_type, float value, int line );
 AST_Node* new_ast_expLiteral_node ( int node, int node_type, const char *value, int line );
 AST_Node* new_ast_expFuncCall_node ( int node, int node_type, Call *funcCall, int line );
-AST_Node* new_ast_expVariable_node( int node, int node_type, AST_Node *variableNode );
-AST_Node* new_ast_variable_node( int node, int node_type, const char *id, AST_Node *exp1, AST_Node *exp2, AST_Node *nextVarNode, int line );
-AST_Node* new_ast_type_node( int node, int node_type, const char *baseType, int line );
-AST_Node* new_ast_defVariable_node( int node, int node_type, AST_Node* typeNode, AST_Node* varListNode );
-AST_Node* new_func_def( const char* returnVoid, const char *funcName, Param *param, AST_Node *block, AST_Node *nodeType, int line );
-AST_Node* new_command_func_calling( Call *func, int line );
-Call* new_funcCall( const char* id, AST_Node *expListNode );
-Param* new_param( AST_Node *type, const char *paramName, Param *nextParam );
-AST_Node* connect_exp_list( AST_Node *father, AST_Node *son );
-Param* connect_param_list( Param *father, Param *son );
-AST_Node* isArrayType( AST_Node *typeNode );
-AST_Node*connect_node_left(AST_Node *varDef, AST_Node *commandSeq);
-AST_Node*connect_node_right(AST_Node *varDef, AST_Node *commandSeq);
-AST_Node* new_stat_if( int node, int nodeType, AST_Node* n1, AST_Node* n2, AST_Node* n3);
-AST_Node* new_stat_while( int node, int nodeType, AST_Node* n1, AST_Node* n2);
-AST_Node* new_stat_assign( int node, int nodeType, AST_Node* n1, AST_Node* n2, int line);
-AST_Node* new_stat_ret( int node, int nodeType, AST_Node* n1, int line);
+AST_Node* new_ast_expVariable_node ( int node, int node_type, AST_Node *variableNode );
+AST_Node* new_ast_variable_node ( int node, int node_type, const char *id, AST_Node *exp1, AST_Node *exp2, AST_Node *nextVarNode, int line );
+AST_Node* new_ast_type_node ( int node, int node_type, const char *baseType, int line );
+AST_Node* new_ast_defVariable_node ( int node, int node_type, AST_Node* typeNode, AST_Node* varListNode );
+AST_Node* new_func_def ( const char* returnVoid, const char *funcName, Param *param, AST_Node *block, AST_Node *nodeType, int line );
+AST_Node* new_command_func_calling ( Call *func, int line );
+Call* new_funcCall ( const char* id, AST_Node *expListNode );
+Param* new_param ( AST_Node *type, const char *paramName, Param *nextParam );
+AST_Node* connect_exp_list ( AST_Node *father, AST_Node *son );
+Param* connect_param_list ( Param *father, Param *son );
+AST_Node* isArrayType ( AST_Node *typeNode );
+AST_Node* connect_node_left ( AST_Node *node1, AST_Node *node2 );
+AST_Node* connect_node_right ( AST_Node *node1, AST_Node *node2 );
+AST_Node* connect_definitions ( AST_Node *node1, AST_Node *node2 );
+AST_Node* new_stat_if ( int node, int nodeType, AST_Node* n1, AST_Node* n2, AST_Node* n3 );
+AST_Node* new_stat_while ( int node, int nodeType, AST_Node* n1, AST_Node* n2 );
+AST_Node* new_stat_assign ( int node, int nodeType, AST_Node* n1, AST_Node* n2, int line );
+AST_Node* new_stat_ret ( int node, int nodeType, AST_Node* n1, int line );
 
-extern void build_single_table (AST_Node *a);
+extern void build_single_table ( AST_Node *a );
 extern void print_single_table ( Stack *mySingleTable );
 
 
@@ -100,6 +101,7 @@ enum nodeTypeEnum {
 	EXPR_LIT
 };
 
+typedef enum { F, T } bool;
 
 // Tree node
 
@@ -132,9 +134,9 @@ struct Call {
 
 	const char *funcName;
 	
-	AST_Node *expressionNode;
+	AST_Node *expressionNode; // This is for the arguments sequence
 
-	AST_Node *linkedFuncNode;
+	AST_Node *linkedFuncNode; // This is for the linking
 
 };
 
@@ -152,6 +154,8 @@ struct Var {
 	AST_Node *nextVarNode; // This is for a sequence of variables (ex.: "int a, b, c;")
 	
 	AST_Node *linkedVarNode; // This is for the linking
+
+	bool isGlobal;
 	
 	const char *varName;
 

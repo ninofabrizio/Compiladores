@@ -147,6 +147,7 @@ new_ast_variable_node( int node, int node_type, const char *id, AST_Node *exp01,
 	var -> nextVarNode = nextVarNode;
 	var -> typing = NULL;
 	var -> linkedVarNode = NULL;
+	var -> isGlobal = F;
 
 	treeNode = new_ast_node(node, node_type, exp01, exp02, NULL, line);
 	
@@ -382,7 +383,7 @@ connect_param_list( Param *father, Param *son ) {
 AST_Node*
 connect_node_left(AST_Node *node1, AST_Node *node2) {
 	
-	if ( node1 == NULL)
+	if (node1 == NULL)
 		return node2;
 	
 	node1 -> left = node2;
@@ -393,11 +394,60 @@ connect_node_left(AST_Node *node1, AST_Node *node2) {
 AST_Node*
 connect_node_right(AST_Node *node1, AST_Node *node2) {
 	
-	if ( node1 == NULL)
+	if (node1 == NULL)
 		return node2;
 	
 	node1 -> right = node2;
 	return node1;	
+}
+
+
+void
+turnVarGlobal ( AST_Node *node ) {
+	
+	if(node != NULL && node -> nodeType == DEF_VAR) {
+		node -> nodeStruct.def -> u.defVar -> varListNode -> nodeStruct.var -> isGlobal = T;
+
+		AST_Node *nextVarNode = node -> nodeStruct.def -> u.defVar -> varListNode -> nodeStruct.var -> nextVarNode;
+
+		while(nextVarNode != NULL) {
+
+			nextVarNode -> nodeStruct.var -> isGlobal = T;
+			nextVarNode = nextVarNode -> nodeStruct.var -> nextVarNode;
+		}
+	}
+}
+
+
+AST_Node*
+connect_definitions ( AST_Node *node1, AST_Node *node2 ) {
+
+	turnVarGlobal(node1);
+	turnVarGlobal(node2);
+
+	if(node2 == NULL)
+		return node1;
+	else if(node1 == NULL)
+		return node2;
+
+	if(node1 -> nodeType == node2 -> nodeType) {
+
+		node1 -> left = node2;
+		return node1;
+	}
+	else {
+
+		if(node1 -> nodeType == DEF_VAR) {
+
+			node1 -> right = node2;
+			return node1;
+		}
+		else { // if(node2 -> nodeType == DEF_VAR)
+
+			node2 -> right = node1;
+			return node2;
+		}
+	}
 }
 
 
