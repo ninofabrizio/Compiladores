@@ -394,8 +394,8 @@ static void geracod_stat ( AST_Node *a ) {
 		int res = 0;
 
 		if( a -> nodeType == STAT_WHILE ) {
-
-			printf("\nLLVM: STAT_WHILE NOT IMPLEMENTED!\n");
+		
+			printf("\nLLVM: STAT_WHILE NOT IMPLEMENTED!\n");			
 		}
 		else if( a -> nodeType == STAT_IF ) {
 

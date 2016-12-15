@@ -45,7 +45,7 @@ int main( int argc, char *argv[] ) {
 	setFilename(argv[0]);
 	geraCodigo(AST_Root);
 
-	print_tree(AST_Root, 0);
+	//print_tree(AST_Root, 0);
 
 	fclose(file);
 

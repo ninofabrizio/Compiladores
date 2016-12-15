@@ -46,7 +46,7 @@ AST_Node* new_stat_assign ( int node, int nodeType, AST_Node* n1, AST_Node* n2, 
 AST_Node* new_stat_ret ( int node, int nodeType, AST_Node* n1, int line );
 
 extern void build_single_table ( AST_Node *a );
-extern void print_single_table ( Stack *mySingleTable );
+
 
 
 enum nodeEnum {

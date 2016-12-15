@@ -1,14 +1,14 @@
-int one (int v) {
-	return v >= 1;
-}
+
+int global;
 
 int number(int c, int d) {
 	int a, b;
-	b = one(0);
+	global = 4;
 	a = d + c;
 	return a - b;
 }
 
-int main(){
-	return number(-6, 4 / one(5000));
+int main() {
+	global = 2;	
+	return number(-6, 4 / 7);
 }
